@@ -2,28 +2,31 @@
   {
     "id":1,
     "nome":"⚔️ Espada Longa",
-    "tipo":"Arma",
+    "tipo":"arma",
     "quantidade":1
   },
-
   {
     "id":2,
-    "nome":"🧪 Poção de Cura",
-    "tipo":"Consumível",
-    "quantidade":3
+    "nome":"🛡️ Armadura de Couro",
+    "tipo":"armadura",
+    "quantidade":1
   },
-
   {
     "id":3,
-    "nome":"🍖 Carne Seca",
-    "tipo":"Alimento",
-    "quantidade":5
+    "nome":"💍 Anel de Mana",
+    "tipo":"acessorio",
+    "quantidade":1
   },
-
   {
     "id":4,
     "nome":"🏹 Flechas",
-    "tipo":"Munição",
+    "tipo":"municao",
     "quantidade":20
+  },
+  {
+    "id":5,
+    "nome":"🧪 Poção de Cura",
+    "tipo":"consumivel",
+    "quantidade":3
   }
 ]

@@ -1,3 +1,5 @@
+import SistemaEquipamento from "../../../components/Personagem/SistemaEquipamento";
+import Equipamentos from "../../../components/Personagem/Equipamentos";
 import personagens from "../../../data/personagens.json";
 import Inventario from "../../../components/Personagem/Inventario";
 import Link from "next/link";
@@ -126,7 +128,7 @@ return (
 </div>
 
 </div>
-<Inventario/>
+<SistemaEquipamento/>
 </div>
 
 </div>
