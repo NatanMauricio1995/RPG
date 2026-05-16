@@ -1,4 +1,4 @@
-import ListaPersonagens from "../../components/Personagem/ListaPersonagens";
+import ListaPersonagens from "../../components/Personagem/Lista/ListaPersonagens";
 
 export default function Personagens(){
 

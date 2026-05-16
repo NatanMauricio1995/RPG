@@ -1,43 +1,31 @@
 [
   {
     "id":1,
+
     "nome":"Kael",
-    "classe":"Clérigo",
+
+    "racaId":1,
+
+    "classeId":2,
+
     "nivel":3,
 
+    "xpAtual":320,
+    "xpNecessario":500,
+
     "vidaAtual":25,
-    "vidaMaxima":30,
 
     "ouro":150,
 
-    "atributos":{
+    "atributosBase":{
       "forca":10,
       "destreza":12,
       "constituicao":14,
       "inteligencia":8,
       "sabedoria":16,
       "carisma":13
-    }
-  },
+    },
 
-  {
-    "id":2,
-    "nome":"Arthos",
-    "classe":"Guerreiro",
-    "nivel":5,
-
-    "vidaAtual":42,
-    "vidaMaxima":50,
-
-    "ouro":250,
-
-    "atributos":{
-      "forca":18,
-      "destreza":12,
-      "constituicao":15,
-      "inteligencia":8,
-      "sabedoria":9,
-      "carisma":11
-    }
+    "habilidadesExtras":[]
   }
 ]

@@ -1,0 +1,65 @@
+[
+  {
+    "id":1,
+
+    "nome":"Cura Menor",
+
+    "classeId":2,
+
+    "nivelMinimo":1,
+
+    "descricao":"Recupera pequena quantidade de vida.",
+
+    "custoMana":5,
+
+    "tipo":"cura"
+  },
+
+  {
+    "id":2,
+
+    "nome":"Escudo Sagrado",
+
+    "classeId":2,
+
+    "nivelMinimo":3,
+
+    "descricao":"Aumenta defesa temporariamente.",
+
+    "custoMana":8,
+
+    "tipo":"buff"
+  },
+
+  {
+    "id":3,
+
+    "nome":"Ressurreição Divina",
+
+    "classeId":2,
+
+    "nivelMinimo":10,
+
+    "descricao":"Revive um aliado.",
+
+    "custoMana":30,
+
+    "tipo":"cura"
+  },
+
+  {
+    "id":4,
+
+    "nome":"Golpe Pesado",
+
+    "classeId":1,
+
+    "nivelMinimo":1,
+
+    "descricao":"Ataque poderoso.",
+
+    "custoMana":0,
+
+    "tipo":"ataque"
+  }
+]

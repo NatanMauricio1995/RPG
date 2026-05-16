@@ -1,1 +1,14 @@
-README.md npm rpg-manager/tsconfig.json rpg-manager/README.md rpg-manager/postcss.config.mjs rpg-manager/package.json rpg-manager/package-lock.json rpg-manager/next.config.ts rpg-manager/next-env.d.ts rpg-manager/eslint.config.mjs rpg-manager/CLAUDE.md rpg-manager/AGENTS.md rpg-manager/.gitignore rpg-manager/styles/vida.css rpg-manager/styles/modalNivel.css rpg-manager/styles/layout.css rpg-manager/styles/inventario.css rpg-manager/styles/ficha.css rpg-manager/styles/componentes.css rpg-manager/styles rpg-manager/public rpg-manager/node_modules rpg-manager/hooks/usePersonagem.ts rpg-manager/hooks/useNivel.ts rpg-manager/hooks/useInventario.ts rpg-manager/hooks/useEquipamento.ts rpg-manager/hooks rpg-manager/data rpg-manager/components/Personagem/ListaPersonagens.tsx rpg-manager/components/Personagem/Equipamentos.tsx rpg-manager/components/Personagem/Nivel/ModalNivel.tsx rpg-manager/components/Personagem/Nivel rpg-manager/components/Personagem/Inventario/ItemCard.tsx rpg-manager/components/Personagem/Inventario/Inventario.tsx rpg-manager/components/Personagem/Inventario rpg-manager/components/Personagem/Ficha/InformacoesBasicas.tsx rpg-manager/components/Personagem/Ficha/FichaPersonagem.tsx rpg-manager/components/Personagem/Ficha/BarraVida.tsx rpg-manager/components/Personagem/Ficha/Atributos.tsx rpg-manager/components/Personagem/Ficha rpg-manager/components/Personagem/Equipamentos/SlotEquipamento.tsx rpg-manager/components/Personagem/Equipamentos/SistemaEquipamento.tsx rpg-manager/components/Personagem/Equipamentos rpg-manager/components/Personagem rpg-manager/components/Layout/Topo.tsx rpg-manager/components/Layout/Sidebar.tsx rpg-manager/components/Layout rpg-manager/components/Clima rpg-manager/components rpg-manager/app/page.tsx rpg-manager/app/layout.tsx rpg-manager/app/globals.css rpg-manager/app/favicon.ico rpg-manager/app/personagens/page.tsx rpg-manager/app/personagens/[id]/page.tsx rpg-manager/app/personagens/[id] rpg-manager/app/personagens rpg-manager/app rpg-manager/.next rpg-manager
+export function calcularAtributoFinal(
+
+base:number,
+bonus:number
+
+){
+
+return(
+
+base+bonus
+
+);
+
+}

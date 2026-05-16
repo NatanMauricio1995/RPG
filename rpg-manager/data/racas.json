@@ -1,0 +1,40 @@
+[
+  {
+    "id":1,
+
+    "nome":"Humano",
+
+    "bonus":{
+
+      "forca":1,
+      "destreza":1,
+      "constituicao":1,
+      "inteligencia":1,
+      "sabedoria":1,
+      "carisma":1
+    },
+
+    "deslocamento":9,
+
+    "habilidades":[
+      "Versatilidade"
+    ]
+  },
+
+  {
+    "id":2,
+
+    "nome":"Elfo",
+
+    "bonus":{
+
+      "destreza":2
+    },
+
+    "deslocamento":10,
+
+    "habilidades":[
+      "Visão Noturna"
+    ]
+  }
+]

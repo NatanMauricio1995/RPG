@@ -1,0 +1,21 @@
+[
+  {
+    "id":1,
+
+    "nome":"Guerreiro",
+
+    "vidaPorNivel":10,
+
+    "atributoPrincipal":"forca"
+  },
+
+  {
+    "id":2,
+
+    "nome":"Clérigo",
+
+    "vidaPorNivel":8,
+
+    "atributoPrincipal":"sabedoria"
+  }
+]

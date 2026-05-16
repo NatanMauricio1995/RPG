@@ -1,5 +1,7 @@
 "use client";
 
+import {calcularAtributoFinal} from "../../../services/calculoService";
+
 type Props={
 
 personagemAtual:any;
@@ -61,22 +63,26 @@ className="atributoCard"
 <p>
 
 {valor as number}
-
 <span
 className="bonus"
 >
 
-+{
++ {
 bonus(nome)
 }
 
 </span>
 
-=
+= 
 
 {
-(valor as number)+
+calcularAtributoFinal(
+
+valor as number,
+
 bonus(nome)
+
+)
 }
 
 </p>
