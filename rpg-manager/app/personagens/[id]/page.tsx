@@ -13,97 +13,12 @@ export default function Ficha(){
 
 const params=useParams();
 
-const personagem=personagens.find(
-(item)=>
-item.id===Number(params.id)
+const personagemInicial=
+personagens.find(
+(item)=>item.id===Number(params.id)
 );
 
-
-const [inventario,setInventario]=
-useState(itens);
-
-
-const [equipados,setEquipados]=
-useState({
-
-arma:null,
-armadura:null,
-acessorio:null,
-municao:null
-
-});
-
-const [vidaAtual,setVidaAtual]=
-useState(personagem.vidaAtual);
-
-
-function receberDano(valor:number){
-
-setVidaAtual((vida)=>{
-
-const novaVida=
-vida-valor;
-
-if(novaVida<0){
-
-return 0;
-
-}
-
-return novaVida;
-
-});
-
-}
-
-
-function curar(valor:number){
-
-setVidaAtual((vida)=>{
-
-const novaVida=
-vida+valor;
-
-if(
-novaVida>
-personagem.vidaMaxima
-){
-
-return personagem.vidaMaxima;
-
-}
-
-return novaVida;
-
-});
-
-}
-
-function bonus(atributo:string){
-
-let total=0;
-
-Object.values(
-equipados
-).forEach((item:any)=>{
-
-if(
-item?.bonus?.[atributo]
-){
-
-total+=
-item.bonus[atributo];
-
-}
-
-});
-
-return total;
-
-}
-
-
-if(!personagem){
+if(!personagemInicial){
 
 return(
 
@@ -118,6 +33,186 @@ return(
 );
 
 }
+
+
+const [personagemAtual,setPersonagemAtual]=
+useState(personagemInicial);
+
+const [inventario,setInventario]=
+useState(itens);
+
+const [equipados,setEquipados]=
+useState({
+
+arma:null,
+armadura:null,
+acessorio:null,
+municao:null
+
+});
+
+const [subindoNivel,setSubindoNivel]=
+useState(false);
+
+const [pontosRestantes,setPontosRestantes]=
+useState(4);
+
+const [atributosTemp,setAtributosTemp]=
+useState({
+
+forca:0,
+destreza:0,
+constituicao:0,
+inteligencia:0,
+sabedoria:0,
+carisma:0
+
+});
+
+
+function bonus(atributo:string){
+
+let total=0;
+
+Object.values(
+equipados
+).forEach((item:any)=>{
+
+if(item?.bonus?.[atributo]){
+
+total+=item.bonus[atributo];
+
+}
+
+});
+
+return total;
+
+}
+
+
+function adicionarPonto(
+atributo:string
+){
+
+if(
+pontosRestantes<=0
+)return;
+
+setAtributosTemp(
+(anterior:any)=>({
+
+...anterior,
+[atributo]:
+anterior[atributo]+1
+
+})
+);
+
+setPontosRestantes(
+anterior=>anterior-1
+);
+
+}
+
+
+function removerPonto(
+atributo:string
+){
+
+if(
+atributosTemp[
+atributo as keyof typeof atributosTemp
+]<=0
+)return;
+
+setAtributosTemp(
+(anterior:any)=>({
+
+...anterior,
+[atributo]:
+anterior[atributo]-1
+
+})
+);
+
+setPontosRestantes(
+anterior=>anterior+1
+);
+
+}
+
+
+
+function confirmarNivel(){
+
+const novosAtributos={
+
+forca:
+personagemAtual.atributos.forca+
+atributosTemp.forca,
+
+destreza:
+personagemAtual.atributos.destreza+
+atributosTemp.destreza,
+
+constituicao:
+personagemAtual.atributos.constituicao+
+atributosTemp.constituicao,
+
+inteligencia:
+personagemAtual.atributos.inteligencia+
+atributosTemp.inteligencia,
+
+sabedoria:
+personagemAtual.atributos.sabedoria+
+atributosTemp.sabedoria,
+
+carisma:
+personagemAtual.atributos.carisma+
+atributosTemp.carisma
+
+};
+
+const vidaGanha=6;
+
+setPersonagemAtual({
+
+...personagemAtual,
+
+nivel:
+personagemAtual.nivel+1,
+
+vidaMaxima:
+personagemAtual.vidaMaxima+
+vidaGanha,
+
+vidaAtual:
+personagemAtual.vidaMaxima+
+vidaGanha,
+
+atributos:
+novosAtributos
+
+});
+
+setSubindoNivel(false);
+
+setPontosRestantes(4);
+
+setAtributosTemp({
+
+forca:0,
+destreza:0,
+constituicao:0,
+inteligencia:0,
+sabedoria:0,
+carisma:0
+
+});
+
+}
+
 
 
 return(
@@ -139,11 +234,9 @@ className="botaoVoltar"
 
 <div className="ficha">
 
-<div className="cabecalhoFicha">
-
 <h1>
 
-🧙 {personagem.nome}
+🧙 {personagemAtual.nome}
 
 </h1>
 
@@ -155,9 +248,7 @@ className="botaoVoltar"
 🎭 Classe
 
 <p>
-
-{personagem.classe}
-
+{personagemAtual.classe}
 </p>
 
 </div>
@@ -169,9 +260,19 @@ className="botaoVoltar"
 
 <p>
 
-{personagem.nivel}
+{personagemAtual.nivel}
 
 </p>
+
+<button
+onClick={()=>
+setSubindoNivel(true)
+}
+>
+
+⬆️ Subir nível
+
+</button>
 
 </div>
 
@@ -182,47 +283,13 @@ className="botaoVoltar"
 
 <p>
 
-{vidaAtual}/
-{personagem.vidaMaxima}
+{personagemAtual.vidaAtual}/
+{personagemAtual.vidaMaxima}
 
 </p>
 
-<div className="barraVidaContainer">
-
-<div
-className="barraVida"
-style={{
-width:`${
-(vidaAtual/personagem.vidaMaxima)*100
-}%`
-}}
->
-
 </div>
 
-</div>
-
-<div className="controleVida">
-
-<button
-onClick={()=>receberDano(5)}
->
-
--5
-
-</button>
-
-<button
-onClick={()=>curar(5)}
->
-
-+5
-
-</button>
-
-</div>
-
-</div>
 
 <div className="infoCard">
 
@@ -230,7 +297,7 @@ onClick={()=>curar(5)}
 
 <p>
 
-{personagem.ouro}
+{personagemAtual.ouro}
 
 </p>
 
@@ -238,215 +305,63 @@ onClick={()=>curar(5)}
 
 </div>
 
-</div>
 
 
 <h2>
-
 📊 Atributos
-
 </h2>
-
 
 <div className="atributosGrid">
 
+{
 
-<div className="atributoCard">
+Object.entries(
+personagemAtual.atributos
+).map(
 
-💪
+([nome,valor])=>(
+
+<div
+key={nome}
+className="atributoCard"
+>
 
 <h3>
 
-Força
+{nome}
 
 </h3>
 
 <p>
 
-{personagem.atributos.forca}
+{valor as number}
 
-<span className="bonus">
+<span
+className="bonus"
+>
 
-+{bonus("forca")}
-
-</span>
-
-=
-
-{" "}
-
-{personagem.atributos.forca+
-bonus("forca")}
-
-</p>
-
-</div>
-
-
-
-<div className="atributoCard">
-
-🏃
-
-<h3>
-
-Destreza
-
-</h3>
-
-<p>
-
-{personagem.atributos.destreza}
-
-<span className="bonus">
-
-+{bonus("destreza")}
++{
+bonus(nome)
+}
 
 </span>
 
 =
 
-{" "}
-
-{personagem.atributos.destreza+
-bonus("destreza")}
-
-</p>
-
-</div>
-
-
-
-<div className="atributoCard">
-
-🛡️
-
-<h3>
-
-Constituição
-
-</h3>
-
-<p>
-
-{personagem.atributos.constituicao}
-
-<span className="bonus">
-
-+{bonus("constituicao")}
-
-</span>
-
-=
-
-{" "}
-
-{personagem.atributos.constituicao+
-bonus("constituicao")}
+{
+(valor as number)+
+bonus(nome)
+}
 
 </p>
 
 </div>
 
+)
 
+)
 
-<div className="atributoCard">
-
-🧠
-
-<h3>
-
-Inteligência
-
-</h3>
-
-<p>
-
-{personagem.atributos.inteligencia}
-
-<span className="bonus">
-
-+{bonus("inteligencia")}
-
-</span>
-
-=
-
-{" "}
-
-{personagem.atributos.inteligencia+
-bonus("inteligencia")}
-
-</p>
-
-</div>
-
-
-
-<div className="atributoCard">
-
-✨
-
-<h3>
-
-Sabedoria
-
-</h3>
-
-<p>
-
-{personagem.atributos.sabedoria}
-
-<span className="bonus">
-
-+{bonus("sabedoria")}
-
-</span>
-
-=
-
-{" "}
-
-{personagem.atributos.sabedoria+
-bonus("sabedoria")}
-
-</p>
-
-</div>
-
-
-
-<div className="atributoCard">
-
-🎭
-
-<h3>
-
-Carisma
-
-</h3>
-
-<p>
-
-{personagem.atributos.carisma}
-
-<span className="bonus">
-
-+{bonus("carisma")}
-
-</span>
-
-=
-
-{" "}
-
-{personagem.atributos.carisma+
-bonus("carisma")}
-
-</p>
-
-</div>
-
+}
 
 </div>
 
@@ -460,6 +375,106 @@ equipados={equipados}
 setEquipados={setEquipados}
 
 />
+
+
+{
+
+subindoNivel && (
+
+<div
+className="modalNivel"
+>
+
+<h2>
+
+🎉 Subiu de nível
+
+</h2>
+
+<p>
+
+Pontos restantes:
+
+{pontosRestantes}
+
+</p>
+
+
+{
+
+Object.entries(
+personagemAtual.atributos
+).map(
+
+([nome,valor])=>(
+
+<div
+key={nome}
+>
+
+{nome}
+
+{" "}
+
+(
+{(valor as number)+
+atributosTemp[
+nome as keyof typeof atributosTemp
+]
+}
+
+)
+
+<button
+onClick={()=>
+adicionarPonto(nome)
+}
+>
+
++
+
+</button>
+
+<button
+onClick={()=>
+removerPonto(nome)
+}
+>
+
+-
+
+</button>
+
+</div>
+
+)
+
+)
+
+}
+
+
+<button
+
+disabled={
+pontosRestantes>0
+}
+
+onClick={
+confirmarNivel
+}
+
+>
+
+Confirmar
+
+</button>
+
+</div>
+
+)
+
+}
 
 </div>
 
