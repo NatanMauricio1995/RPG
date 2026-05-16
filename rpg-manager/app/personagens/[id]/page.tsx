@@ -7,7 +7,7 @@ import personagens from "../../../data/personagens.json";
 import itens from "../../../data/itens.json";
 
 import Link from "next/link";
-import SistemaEquipamento from "../../../components/Personagem/SistemaEquipamento";
+import SistemaEquipamento from "../../../components/Personagem/Equipamentos/SistemaEquipamento";
 
 export default function Ficha(){
 
@@ -242,7 +242,17 @@ className="botaoVoltar"
 
 
 <div className="informacoesBasicas">
+<div className="infoCard">
 
+🧬 Raça
+
+<p>
+
+{personagemAtual.raca}
+
+</p>
+
+</div>
 <div className="infoCard">
 
 🎭 Classe
@@ -328,7 +338,16 @@ className="atributoCard"
 
 <h3>
 
-{nome}
+{
+{
+forca:"💪 Força",
+destreza:"🏃 Destreza",
+constituicao:"🛡️ Constituição",
+inteligencia:"🧠 Inteligência",
+sabedoria:"✨ Sabedoria",
+carisma:"🎭 Carisma"
+}[nome]
+}
 
 </h3>
 
@@ -381,24 +400,66 @@ setEquipados={setEquipados}
 
 subindoNivel && (
 
-<div
-className="modalNivel"
->
+<div className="overlayNivel">
 
-<h2>
+<div className="modalNivel">
 
+<h1>
 🎉 Subiu de nível
+</h1>
 
-</h2>
+<div className="infoNivel">
+
+<div className="infoNivelCard">
+
+⭐ Próximo nível
 
 <p>
 
-Pontos restantes:
+{personagemAtual.nivel}
+→
+{personagemAtual.nivel+1}
+
+</p>
+
+</div>
+
+
+<div className="infoNivelCard">
+
+❤️ Vida
+
+<p>
+
++6
+
+</p>
+
+</div>
+
+
+<div className="infoNivelCard">
+
+⭐ Restantes
+
+<p>
 
 {pontosRestantes}
 
 </p>
 
+</div>
+
+</div>
+
+
+<h2>
+
+Distribuir atributos
+
+</h2>
+
+<div className="atributosNivelGrid">
 
 {
 
@@ -410,30 +471,52 @@ personagemAtual.atributos
 
 <div
 key={nome}
+className="atributoCard"
 >
+
+<h3>
 
 {nome}
 
-{" "}
+</h3>
 
-(
-{(valor as number)+
+<p className="calculoNivel">
+
+<span>
+
+{valor as number}
+
+</span>
+
+<span className="bonusNivel">
+
++
+
+{
 atributosTemp[
 nome as keyof typeof atributosTemp
 ]
 }
 
-)
+</span>
 
-<button
-onClick={()=>
-adicionarPonto(nome)
+<span>
+
+=
+
+{
+(valor as number)+
+atributosTemp[
+nome as keyof typeof atributosTemp
+]
 }
->
 
-+
+</span>
 
-</button>
+</p>
+
+
+<div className="controleAtributo">
 
 <button
 onClick={()=>
@@ -441,9 +524,21 @@ removerPonto(nome)
 }
 >
 
--
+➖
 
 </button>
+
+<button
+onClick={()=>
+adicionarPonto(nome)
+}
+>
+
+➕
+
+</button>
+
+</div>
 
 </div>
 
@@ -452,6 +547,21 @@ removerPonto(nome)
 )
 
 }
+
+</div>
+
+
+<div className="botoesNivel">
+
+<button
+onClick={()=>
+setSubindoNivel(false)
+}
+>
+
+Cancelar
+
+</button>
 
 
 <button
@@ -469,6 +579,10 @@ confirmarNivel
 Confirmar
 
 </button>
+
+</div>
+
+</div>
 
 </div>
 

@@ -1,7 +1,8 @@
+
 import "./globals.css";
 
-import Topo from "../components/Topo/Topo";
-import Sidebar from "../components/Sidebar/Sidebar";
+import Topo from "../components/Layout/Topo";
+import Sidebar from "../components/Layout/Sidebar";
 
 export const metadata = {
   title: "RPG Manager",
