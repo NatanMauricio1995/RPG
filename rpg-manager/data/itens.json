@@ -3,30 +3,50 @@
     "id":1,
     "nome":"⚔️ Espada Longa",
     "tipo":"arma",
-    "quantidade":1
+    "quantidade":1,
+
+    "bonus":{
+      "forca":2
+    }
   },
+
   {
     "id":2,
     "nome":"🛡️ Armadura de Couro",
     "tipo":"armadura",
-    "quantidade":1
+    "quantidade":1,
+
+    "bonus":{
+      "constituicao":3
+    }
   },
+
   {
     "id":3,
     "nome":"💍 Anel de Mana",
     "tipo":"acessorio",
-    "quantidade":1
+    "quantidade":1,
+
+    "bonus":{
+      "sabedoria":2
+    }
   },
+
   {
     "id":4,
     "nome":"🏹 Flechas",
     "tipo":"municao",
-    "quantidade":20
+    "quantidade":20,
+
+    "bonus":{}
   },
+
   {
     "id":5,
     "nome":"🧪 Poção de Cura",
     "tipo":"consumivel",
-    "quantidade":3
+    "quantidade":3,
+
+    "bonus":{}
   }
 ]

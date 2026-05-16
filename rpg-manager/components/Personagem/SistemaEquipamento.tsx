@@ -1,45 +1,51 @@
 "use client";
 
-import { useState } from "react";
-import itensIniciais from "../../data/itens.json";
+type Props = {
+  inventario:any[];
+  setInventario:any;
+  equipados:any;
+  setEquipados:any;
+};
 
-export default function SistemaEquipamento() {
-
-const [inventario,setInventario]=useState(itensIniciais);
-
-const [equipados,setEquipados]=useState({
-
-arma:null,
-armadura:null,
-acessorio:null,
-municao:null
-
-} as Record<string,any>);
-
+export default function SistemaEquipamento({
+  inventario,
+  setInventario,
+  equipados,
+  setEquipados
+}:Props){
 
 function equipar(item:any){
 
+const slot=item.tipo;
+
 if(
-item.tipo!=="arma" &&
-item.tipo!=="armadura" &&
-item.tipo!=="acessorio" &&
-item.tipo!=="municao"
+slot!=="arma" &&
+slot!=="armadura" &&
+slot!=="acessorio" &&
+slot!=="municao"
 ){
 return;
 }
 
-const slot=item.tipo;
+if(equipados[slot]){
 
-setEquipados((anterior)=>({
+setInventario((anterior:any)=>[
+...anterior,
+equipados[slot]
+]);
+
+}
+
+setEquipados((anterior:any)=>({
 
 ...anterior,
 [slot]:item
 
 }));
 
-setInventario(
-inventario.filter(
-(i)=>i.id!==item.id
+setInventario((anterior:any)=>
+anterior.filter(
+(i:any)=>i.id!==item.id
 )
 );
 
@@ -52,14 +58,16 @@ const item=equipados[slot];
 
 if(!item)return;
 
-setInventario((anterior)=>[
+setInventario((anterior:any)=>[
 ...anterior,
 item
 ]);
 
-setEquipados((anterior)=>({
+setEquipados((anterior:any)=>({
+
 ...anterior,
 [slot]:null
+
 }));
 
 }
@@ -67,13 +75,13 @@ setEquipados((anterior)=>({
 
 function desequiparTudo(){
 
-const itensVolta=Object.values(
+const itens=Object.values(
 equipados
 ).filter(Boolean);
 
-setInventario((anterior)=>[
+setInventario((anterior:any)=>[
 ...anterior,
-...itensVolta
+...itens
 ]);
 
 setEquipados({
@@ -95,11 +103,11 @@ return(
 <h2>⚔️ Equipamentos</h2>
 
 <button
-onClick={desequiparTudo}
 className="botaoAcao"
+onClick={desequiparTudo}
 >
 
-Remover tudo
+Desequipar tudo
 
 </button>
 
@@ -107,16 +115,20 @@ Remover tudo
 
 <div className="itemCard">
 
-<h3>Mão principal</h3>
+<h3>⚔️ Mão principal</h3>
 
 <p>
+
 {equipados.arma?.nome || "Vazio"}
+
 </p>
 
 <button
 onClick={()=>desequipar("arma")}
 >
+
 Desequipar
+
 </button>
 
 </div>
@@ -124,16 +136,20 @@ Desequipar
 
 <div className="itemCard">
 
-<h3>Armadura</h3>
+<h3>🛡️ Armadura</h3>
 
 <p>
+
 {equipados.armadura?.nome || "Vazio"}
+
 </p>
 
 <button
 onClick={()=>desequipar("armadura")}
 >
+
 Desequipar
+
 </button>
 
 </div>
@@ -141,16 +157,20 @@ Desequipar
 
 <div className="itemCard">
 
-<h3>Acessório</h3>
+<h3>💍 Acessório</h3>
 
 <p>
+
 {equipados.acessorio?.nome || "Vazio"}
+
 </p>
 
 <button
 onClick={()=>desequipar("acessorio")}
 >
+
 Desequipar
+
 </button>
 
 </div>
@@ -158,28 +178,33 @@ Desequipar
 
 <div className="itemCard">
 
-<h3>Munição</h3>
+<h3>🏹 Munição</h3>
 
 <p>
+
 {equipados.municao?.nome || "Vazio"}
+
 </p>
 
 <button
 onClick={()=>desequipar("municao")}
 >
+
 Desequipar
+
 </button>
 
 </div>
 
 </div>
+
 
 
 <h2>🎒 Inventário</h2>
 
 <div className="inventarioGrid">
 
-{inventario.map((item)=>(
+{inventario.map((item:any)=>(
 
 <div
 key={item.id}
@@ -194,15 +219,13 @@ className="itemCard"
 
 <p>
 
-Tipo:
-{item.tipo}
+Tipo: {item.tipo}
 
 </p>
 
 <p>
 
-Quantidade:
-{item.quantidade}
+Quantidade: {item.quantidade}
 
 </p>
 
