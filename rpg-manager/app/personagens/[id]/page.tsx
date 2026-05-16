@@ -33,6 +33,51 @@ municao:null
 
 });
 
+const [vidaAtual,setVidaAtual]=
+useState(personagem.vidaAtual);
+
+
+function receberDano(valor:number){
+
+setVidaAtual((vida)=>{
+
+const novaVida=
+vida-valor;
+
+if(novaVida<0){
+
+return 0;
+
+}
+
+return novaVida;
+
+});
+
+}
+
+
+function curar(valor:number){
+
+setVidaAtual((vida)=>{
+
+const novaVida=
+vida+valor;
+
+if(
+novaVida>
+personagem.vidaMaxima
+){
+
+return personagem.vidaMaxima;
+
+}
+
+return novaVida;
+
+});
+
+}
 
 function bonus(atributo:string){
 
@@ -137,13 +182,47 @@ className="botaoVoltar"
 
 <p>
 
-{personagem.vidaAtual}/
+{vidaAtual}/
 {personagem.vidaMaxima}
 
 </p>
 
+<div className="barraVidaContainer">
+
+<div
+className="barraVida"
+style={{
+width:`${
+(vidaAtual/personagem.vidaMaxima)*100
+}%`
+}}
+>
+
 </div>
 
+</div>
+
+<div className="controleVida">
+
+<button
+onClick={()=>receberDano(5)}
+>
+
+-5
+
+</button>
+
+<button
+onClick={()=>curar(5)}
+>
+
++5
+
+</button>
+
+</div>
+
+</div>
 
 <div className="infoCard">
 
