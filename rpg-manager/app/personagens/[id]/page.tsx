@@ -1,29 +1,103 @@
-"use client";
+import personagens from "../../../data/personagens.json";
+import Link from "next/link";
 
-import { useRouter } from "next/navigation";
+export default async function Ficha({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
 
-export default function Ficha() {
+const { id } = await params;
 
-const router = useRouter();
+const personagem = personagens.find(
+(item) => item.id === Number(id)
+);
+
+if (!personagem) {
 
 return (
 
 <div>
 
-<button
-onClick={() => router.back()}
-className="botaoVoltar"
->
+<Link href="/personagens">
+
+<button className="botaoVoltar">
 
 ⬅️ Voltar
 
 </button>
 
-<h1>Ficha do Personagem</h1>
+</Link>
+
+<h1>❌ Personagem não encontrado</h1>
+
+<p>ID recebido: {id}</p>
+
+</div>
+
+);
+
+}
+
+return (
+
+<div>
+
+<Link href="/personagens">
+
+<button className="botaoVoltar">
+
+⬅️ Voltar
+
+</button>
+
+</Link>
+
+<h1>🧙 {personagem.nome}</h1>
 
 <p>
-Aqui aparecerão os dados
+Classe: {personagem.classe}
 </p>
+
+<p>
+Nível: {personagem.nivel}
+</p>
+
+<p>
+❤️ HP:
+{personagem.vidaAtual}/
+{personagem.vidaMaxima}
+</p>
+
+<h2>📊 Atributos</h2>
+
+<p>
+💪 Força: {personagem.atributos.forca}
+</p>
+
+<p>
+🏃 Destreza: {personagem.atributos.destreza}
+</p>
+
+<p>
+🛡️ Constituição: {personagem.atributos.constituicao}
+</p>
+
+<p>
+🧠 Inteligência: {personagem.atributos.inteligencia}
+</p>
+
+<p>
+✨ Sabedoria: {personagem.atributos.sabedoria}
+</p>
+
+<p>
+🎭 Carisma: {personagem.atributos.carisma}
+</p>
+
+<h2>
+💰 Ouro: {personagem.ouro}
+</h2>
 
 </div>
 

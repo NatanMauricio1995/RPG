@@ -4,8 +4,20 @@
     "nome":"Kael",
     "classe":"Clérigo",
     "nivel":3,
+
     "vidaAtual":25,
-    "vidaMaxima":30
+    "vidaMaxima":30,
+
+    "ouro":150,
+
+    "atributos":{
+      "forca":10,
+      "destreza":12,
+      "constituicao":14,
+      "inteligencia":8,
+      "sabedoria":16,
+      "carisma":13
+    }
   },
 
   {
@@ -13,7 +25,19 @@
     "nome":"Arthos",
     "classe":"Guerreiro",
     "nivel":5,
+
     "vidaAtual":42,
-    "vidaMaxima":50
+    "vidaMaxima":50,
+
+    "ouro":250,
+
+    "atributos":{
+      "forca":18,
+      "destreza":12,
+      "constituicao":15,
+      "inteligencia":8,
+      "sabedoria":9,
+      "carisma":11
+    }
   }
 ]
