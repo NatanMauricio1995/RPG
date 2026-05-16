@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 type Props={
 
 monstro:any;
@@ -26,35 +28,35 @@ return(
 
 <p>
 
-🏷️ Tipo: 
+🏷️ Tipo:
 {monstro.tipo}
 
 </p>
 
 <p>
 
-⭐ Nível: 
+⭐ Nível:
 {monstro.nivel}
 
 </p>
 
 <p>
 
-❤️ Vida: 
+❤️ Vida:
 {monstro.vida}
 
 </p>
 
 <p>
 
-🛡️ Defesa: 
+🛡️ Defesa:
 {monstro.defesa}
 
 </p>
 
 <p>
 
-✨ Experiência: 
+✨ Experiência:
 {monstro.experiencia}
 
 </p>
@@ -63,11 +65,17 @@ return(
 
 <div className="acoesMonstro">
 
+<Link
+href={`/bestiario/${monstro.id}`}
+>
+
 <button>
 
 📖 Abrir
 
 </button>
+
+</Link>
 
 </div>
 
