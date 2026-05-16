@@ -6,6 +6,7 @@ import "../styles/vida.css";
 import "../styles/componentes.css";
 import "../styles/personagens.css";
 import "./globals.css";
+import "../styles/bestiario.css";
 
 import Topo from "../components/Layout/Topo";
 import Sidebar from "../components/Layout/Sidebar";
