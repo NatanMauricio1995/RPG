@@ -1,0 +1,94 @@
+[
+  {
+    "id":1,
+
+    "nome":"Goblin",
+
+    "tipoId":1,
+
+    "nivel":1,
+
+    "vida":12,
+
+    "classeArmadura":13,
+
+    "deslocamento":9,
+
+    "xp":50,
+
+    "atributos":{
+      "forca":8,
+      "destreza":14,
+      "constituicao":10,
+      "inteligencia":8,
+      "sabedoria":8,
+      "carisma":6
+    },
+
+    "habilidades":[
+      1
+    ]
+  },
+
+  {
+    "id":2,
+
+    "nome":"Lobo",
+
+    "tipoId":2,
+
+    "nivel":2,
+
+    "vida":18,
+
+    "classeArmadura":12,
+
+    "deslocamento":12,
+
+    "xp":100,
+
+    "atributos":{
+      "forca":12,
+      "destreza":15,
+      "constituicao":12,
+      "inteligencia":3,
+      "sabedoria":12,
+      "carisma":6
+    },
+
+    "habilidades":[
+      2
+    ]
+  },
+
+  {
+    "id":3,
+
+    "nome":"Esqueleto",
+
+    "tipoId":3,
+
+    "nivel":3,
+
+    "vida":25,
+
+    "classeArmadura":15,
+
+    "deslocamento":9,
+
+    "xp":150,
+
+    "atributos":{
+      "forca":10,
+      "destreza":10,
+      "constituicao":14,
+      "inteligencia":5,
+      "sabedoria":8,
+      "carisma":4
+    },
+
+    "habilidades":[
+      3
+    ]
+  }
+]

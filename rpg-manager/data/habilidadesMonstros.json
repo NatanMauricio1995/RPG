@@ -1,0 +1,19 @@
+[
+  {
+    "id":1,
+    "nome":"Ataque Surpresa",
+    "descricao":"Recebe bônus ao atacar primeiro"
+  },
+
+  {
+    "id":2,
+    "nome":"Mordida",
+    "descricao":"Ataque físico com dano adicional"
+  },
+
+  {
+    "id":3,
+    "nome":"Regeneração",
+    "descricao":"Recupera vida a cada turno"
+  }
+]
