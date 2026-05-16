@@ -1,4 +1,5 @@
 import personagens from "../../../data/personagens.json";
+import Inventario from "../../../components/Personagem/Inventario";
 import Link from "next/link";
 
 export default async function Ficha({
@@ -22,16 +23,12 @@ return (
 <Link href="/personagens">
 
 <button className="botaoVoltar">
-
 ⬅️ Voltar
-
 </button>
 
 </Link>
 
 <h1>❌ Personagem não encontrado</h1>
-
-<p>ID recebido: {id}</p>
 
 </div>
 
@@ -46,58 +43,91 @@ return (
 <Link href="/personagens">
 
 <button className="botaoVoltar">
-
 ⬅️ Voltar
-
 </button>
 
 </Link>
 
-<h1>🧙 {personagem.nome}</h1>
+<div className="ficha">
 
-<p>
-Classe: {personagem.classe}
-</p>
+<div className="cabecalhoFicha">
 
-<p>
-Nível: {personagem.nivel}
-</p>
+<h1>
+🧙 {personagem.nome}
+</h1>
 
+<div className="informacoesBasicas">
+
+<div className="infoCard">
+🎭 Classe
+<p>{personagem.classe}</p>
+</div>
+
+<div className="infoCard">
+⭐ Nível
+<p>{personagem.nivel}</p>
+</div>
+
+<div className="infoCard">
+❤️ Vida
 <p>
-❤️ HP:
-{personagem.vidaAtual}/
-{personagem.vidaMaxima}
+{personagem.vidaAtual}/{personagem.vidaMaxima}
 </p>
+</div>
+
+<div className="infoCard">
+💰 Ouro
+<p>{personagem.ouro}</p>
+</div>
+
+</div>
+
+</div>
+
 
 <h2>📊 Atributos</h2>
 
-<p>
-💪 Força: {personagem.atributos.forca}
-</p>
+<div className="atributosGrid">
 
-<p>
-🏃 Destreza: {personagem.atributos.destreza}
-</p>
+<div className="atributoCard">
+💪
+<h3>Força</h3>
+<p>{personagem.atributos.forca}</p>
+</div>
 
-<p>
-🛡️ Constituição: {personagem.atributos.constituicao}
-</p>
+<div className="atributoCard">
+🏃
+<h3>Destreza</h3>
+<p>{personagem.atributos.destreza}</p>
+</div>
 
-<p>
-🧠 Inteligência: {personagem.atributos.inteligencia}
-</p>
+<div className="atributoCard">
+🛡️
+<h3>Constituição</h3>
+<p>{personagem.atributos.constituicao}</p>
+</div>
 
-<p>
-✨ Sabedoria: {personagem.atributos.sabedoria}
-</p>
+<div className="atributoCard">
+🧠
+<h3>Inteligência</h3>
+<p>{personagem.atributos.inteligencia}</p>
+</div>
 
-<p>
-🎭 Carisma: {personagem.atributos.carisma}
-</p>
+<div className="atributoCard">
+✨
+<h3>Sabedoria</h3>
+<p>{personagem.atributos.sabedoria}</p>
+</div>
 
-<h2>
-💰 Ouro: {personagem.ouro}
-</h2>
+<div className="atributoCard">
+🎭
+<h3>Carisma</h3>
+<p>{personagem.atributos.carisma}</p>
+</div>
+
+</div>
+<Inventario/>
+</div>
 
 </div>
 

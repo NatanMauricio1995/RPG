@@ -1,0 +1,29 @@
+[
+  {
+    "id":1,
+    "nome":"⚔️ Espada Longa",
+    "tipo":"Arma",
+    "quantidade":1
+  },
+
+  {
+    "id":2,
+    "nome":"🧪 Poção de Cura",
+    "tipo":"Consumível",
+    "quantidade":3
+  },
+
+  {
+    "id":3,
+    "nome":"🍖 Carne Seca",
+    "tipo":"Alimento",
+    "quantidade":5
+  },
+
+  {
+    "id":4,
+    "nome":"🏹 Flechas",
+    "tipo":"Munição",
+    "quantidade":20
+  }
+]
