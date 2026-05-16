@@ -71,3 +71,25 @@ color:orange;
 flex:1;
 padding:30px;
 }
+
+.botaoVoltar{
+
+padding:10px 15px;
+
+margin-bottom:20px;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-size:16px;
+
+}
+
+.botaoVoltar:hover{
+
+transform:scale(1.05);
+
+}
