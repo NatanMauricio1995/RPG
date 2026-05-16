@@ -70,12 +70,7 @@ return(
 
 Estação:
 
-<select
-value={estacao}
-onChange={(e)=>
-alterarEstacao(e.target.value)
-}
->
+<select value={estacao} onChange={(e)=> alterarEstacao(e.target.value) }>
 
 {estacoes.map((item)=>(
 

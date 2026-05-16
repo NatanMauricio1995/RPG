@@ -1,0 +1,19 @@
+[
+  {
+    "id":1,
+    "nome":"Kael",
+    "classe":"Clérigo",
+    "nivel":3,
+    "vidaAtual":25,
+    "vidaMaxima":30
+  },
+
+  {
+    "id":2,
+    "nome":"Arthos",
+    "classe":"Guerreiro",
+    "nivel":5,
+    "vidaAtual":42,
+    "vidaMaxima":50
+  }
+]
