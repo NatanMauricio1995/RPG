@@ -1,11 +1,9 @@
 [
   {
     "id":1,
-
     "nome":"Humano",
 
     "bonus":{
-
       "forca":1,
       "destreza":1,
       "constituicao":1,
@@ -23,11 +21,9 @@
 
   {
     "id":2,
-
     "nome":"Elfo",
 
     "bonus":{
-
       "destreza":2
     },
 
@@ -35,6 +31,21 @@
 
     "habilidades":[
       "Visão Noturna"
+    ]
+  },
+
+  {
+    "id":3,
+    "nome":"Anão",
+
+    "bonus":{
+      "constituicao":2
+    },
+
+    "deslocamento":7,
+
+    "habilidades":[
+      "Resistência Anã"
     ]
   }
 ]

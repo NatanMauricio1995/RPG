@@ -3,16 +3,16 @@
 type Props={
 
 pesquisa:string;
-
 setPesquisa:any;
 
 classe:string;
-
 setClasse:any;
 
 raca:string;
-
 setRaca:any;
+
+classes:string[];
+racas:string[];
 
 }
 
@@ -25,7 +25,10 @@ classe,
 setClasse,
 
 raca,
-setRaca
+setRaca,
+
+classes,
+racas
 
 }:Props){
 
@@ -50,9 +53,7 @@ e.target.value
 />
 
 
-<input
-
-placeholder="🎭 Classe"
+<select
 
 value={classe}
 
@@ -64,12 +65,38 @@ e.target.value
 
 }
 
-/>
+>
+
+<option value="">
+
+🎭 Todas classes
+
+</option>
+
+{
+
+classes.map(
+(item)=>(
+
+<option
+key={item}
+>
+
+{item}
+
+</option>
+
+)
+
+)
+
+}
+
+</select>
 
 
-<input
 
-placeholder="🧬 Raça"
+<select
 
 value={raca}
 
@@ -81,7 +108,43 @@ e.target.value
 
 }
 
-/>
+>
+
+<option value="">
+
+🧬 Todas raças
+
+</option>
+
+{
+
+racas.map(
+(item)=>(
+
+<option
+key={item}
+>
+
+{item}
+
+</option>
+
+)
+
+)
+
+}
+
+</select>
+
+
+<button
+className="novoPersonagem"
+>
+
+➕ Novo Personagem
+
+</button>
 
 </div>
 

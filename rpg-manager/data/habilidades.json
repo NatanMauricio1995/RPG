@@ -8,11 +8,11 @@
 
     "nivelMinimo":1,
 
-    "descricao":"Recupera pequena quantidade de vida.",
+    "descricao":"Recupera pequena quantidade de vida",
 
-    "custoMana":5,
+    "tipo":"cura",
 
-    "tipo":"cura"
+    "custoMana":5
   },
 
   {
@@ -24,31 +24,15 @@
 
     "nivelMinimo":3,
 
-    "descricao":"Aumenta defesa temporariamente.",
+    "descricao":"Aumenta defesa temporariamente",
 
-    "custoMana":8,
+    "tipo":"buff",
 
-    "tipo":"buff"
+    "custoMana":8
   },
 
   {
     "id":3,
-
-    "nome":"Ressurreição Divina",
-
-    "classeId":2,
-
-    "nivelMinimo":10,
-
-    "descricao":"Revive um aliado.",
-
-    "custoMana":30,
-
-    "tipo":"cura"
-  },
-
-  {
-    "id":4,
 
     "nome":"Golpe Pesado",
 
@@ -56,10 +40,26 @@
 
     "nivelMinimo":1,
 
-    "descricao":"Ataque poderoso.",
+    "descricao":"Ataque poderoso",
 
-    "custoMana":0,
+    "tipo":"ataque",
 
-    "tipo":"ataque"
+    "custoMana":0
+  },
+
+  {
+    "id":4,
+
+    "nome":"Fúria",
+
+    "classeId":1,
+
+    "nivelMinimo":5,
+
+    "descricao":"Aumenta dano temporariamente",
+
+    "tipo":"buff",
+
+    "custoMana":0
   }
 ]

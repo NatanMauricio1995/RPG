@@ -5,6 +5,12 @@ import {useState} from "react";
 import personagensData
 from "../../../data/personagens.json";
 
+import racas
+from "../../../data/racas.json";
+
+import classes
+from "../../../data/classes.json";
+
 import CardPersonagem
 from "./CardPersonagem";
 
@@ -22,14 +28,76 @@ useState("");
 const [raca,setRaca]=
 useState("");
 
+
 const personagens=
 
-personagensData.filter(
+personagensData
+
+.map(
+(personagem)=>{
+
+const classeEncontrada=
+
+classes.find(
+(c)=>
+c.id===
+personagem.classeId
+);
+
+
+const racaEncontrada=
+
+racas.find(
+(r)=>
+r.id===
+personagem.racaId
+);
+
+
+const vidaBase=10;
+
+const vidaMaxima=
+
+vidaBase+
+
+(
+(classeEncontrada?.vidaPorNivel || 0)
+*
+personagem.nivel
+)
+
++
+
+personagem
+.atributosBase
+.constituicao;
+
+
+return{
+
+...personagem,
+
+classe:
+classeEncontrada?.nome || "",
+
+raca:
+racaEncontrada?.nome || "",
+
+vidaMaxima
+
+};
+
+}
+
+)
+
+.filter(
 (personagem)=>{
 
 const nomeOk=
 
-personagem.nome
+(personagem.nome || "")
+
 .toLowerCase()
 
 .includes(
@@ -42,7 +110,8 @@ pesquisa
 
 const classeOk=
 
-personagem.classe
+(personagem.classe || "")
+
 .toLowerCase()
 
 .includes(
@@ -55,7 +124,8 @@ classe
 
 const racaOk=
 
-personagem.raca
+(personagem.raca || "")
+
 .toLowerCase()
 
 .includes(
@@ -64,6 +134,7 @@ raca
 .toLowerCase()
 
 );
+
 
 return(
 
@@ -76,6 +147,36 @@ racaOk
 }
 
 );
+
+
+const classesUnicas=
+
+[
+
+...new Set(
+
+personagens.map(
+p=>p.classe
+)
+
+)
+
+];
+
+
+const racasUnicas=
+
+[
+
+...new Set(
+
+personagens.map(
+p=>p.raca
+)
+
+)
+
+];
 
 
 return(
@@ -99,6 +200,10 @@ setClasse={setClasse}
 
 raca={raca}
 setRaca={setRaca}
+
+classes={classesUnicas}
+
+racas={racasUnicas}
 
 />
 

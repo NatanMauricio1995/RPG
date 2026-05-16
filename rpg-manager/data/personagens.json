@@ -17,6 +17,10 @@
 
     "ouro":150,
 
+    "habilidadesEscolhidas":[
+      1
+    ],
+
     "atributosBase":{
       "forca":10,
       "destreza":12,
@@ -24,8 +28,38 @@
       "inteligencia":8,
       "sabedoria":16,
       "carisma":13
-    },
+    }
+  },
 
-    "habilidadesExtras":[]
+  {
+    "id":2,
+
+    "nome":"Arthos",
+
+    "racaId":1,
+
+    "classeId":1,
+
+    "nivel":5,
+
+    "xpAtual":900,
+    "xpNecessario":1000,
+
+    "vidaAtual":42,
+
+    "ouro":250,
+
+    "habilidadesEscolhidas":[
+      3
+    ],
+
+    "atributosBase":{
+      "forca":18,
+      "destreza":12,
+      "constituicao":15,
+      "inteligencia":8,
+      "sabedoria":9,
+      "carisma":11
+    }
   }
 ]

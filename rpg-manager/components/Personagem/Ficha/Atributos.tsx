@@ -44,7 +44,7 @@ return(
 {
 
 Object.entries(
-personagemAtual.atributos
+personagemAtual.atributosBase || {}
 ).map(
 
 ([nome,valor])=>(

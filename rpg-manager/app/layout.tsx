@@ -1,4 +1,10 @@
-
+import "../styles/layout.css";
+import "../styles/ficha.css";
+import "../styles/inventario.css";
+import "../styles/modalNivel.css";
+import "../styles/vida.css";
+import "../styles/componentes.css";
+import "../styles/personagens.css";
 import "./globals.css";
 
 import Topo from "../components/Layout/Topo";

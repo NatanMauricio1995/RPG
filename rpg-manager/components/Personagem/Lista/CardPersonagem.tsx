@@ -24,34 +24,21 @@ return(
 
 </h2>
 
-<p>
+<div className="dadosPersonagem">
 
-🧬 {personagem.raca}
+<p>🧬 {personagem.raca}</p>
 
-</p>
+<p>🎭 {personagem.classe}</p>
 
-<p>
+<p>⭐ Nível: {personagem.nivel}</p>
 
-🎭 {personagem.classe}
+<p className="vidaPersonagem">
 
-</p>
-
-<p>
-
-⭐ Nível:
-{personagem.nivel}
+❤️ {personagem.vidaAtual}/{personagem.vidaMaxima}
 
 </p>
 
-<p>
-
-❤️
-{personagem.vidaAtual}
-/
-{personagem.vidaMaxima}
-
-</p>
-
+</div>
 
 <div className="acoesPersonagem">
 
@@ -61,23 +48,21 @@ href={`/personagens/${personagem.id}`}
 
 <button>
 
-Abrir
+📖 Abrir
 
 </button>
 
 </Link>
 
-
 <button>
 
-✏️
+✏️ Editar
 
 </button>
 
-
 <button>
 
-🗑️
+🗑️ Excluir
 
 </button>
 

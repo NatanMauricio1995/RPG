@@ -17,5 +17,15 @@
     "vidaPorNivel":8,
 
     "atributoPrincipal":"sabedoria"
+  },
+
+  {
+    "id":3,
+
+    "nome":"Mago",
+
+    "vidaPorNivel":6,
+
+    "atributoPrincipal":"inteligencia"
   }
 ]
