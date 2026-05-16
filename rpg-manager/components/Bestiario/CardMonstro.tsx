@@ -26,36 +26,36 @@ return(
 
 <p>
 
-🏷️ Tipo:
+🏷️ Tipo: 
 {monstro.tipo}
 
 </p>
 
 <p>
 
-⭐ Nível:
+⭐ Nível: 
 {monstro.nivel}
 
 </p>
 
 <p>
 
-❤️ Vida:
+❤️ Vida: 
 {monstro.vida}
 
 </p>
 
 <p>
 
-🛡️ CA:
-{monstro.classeArmadura}
+🛡️ Defesa: 
+{monstro.defesa}
 
 </p>
 
 <p>
 
-✨ XP:
-{monstro.xp}
+✨ Experiência: 
+{monstro.experiencia}
 
 </p>
 

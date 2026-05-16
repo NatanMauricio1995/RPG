@@ -10,11 +10,11 @@
 
     "vida":12,
 
-    "classeArmadura":13,
+    "defesa":13,
 
     "deslocamento":9,
 
-    "xp":50,
+    "experiencia":50,
 
     "atributos":{
       "forca":8,
@@ -25,9 +25,7 @@
       "carisma":6
     },
 
-    "habilidades":[
-      1
-    ]
+    "habilidades":[1]
   },
 
   {
@@ -41,11 +39,11 @@
 
     "vida":18,
 
-    "classeArmadura":12,
+    "defesa":12,
 
     "deslocamento":12,
 
-    "xp":100,
+    "experiencia":100,
 
     "atributos":{
       "forca":12,
@@ -56,9 +54,7 @@
       "carisma":6
     },
 
-    "habilidades":[
-      2
-    ]
+    "habilidades":[2]
   },
 
   {
@@ -72,11 +68,11 @@
 
     "vida":25,
 
-    "classeArmadura":15,
+    "defesa":15,
 
     "deslocamento":9,
 
-    "xp":150,
+    "experiencia":150,
 
     "atributos":{
       "forca":10,
@@ -87,8 +83,6 @@
       "carisma":4
     },
 
-    "habilidades":[
-      3
-    ]
+    "habilidades":[3]
   }
 ]
