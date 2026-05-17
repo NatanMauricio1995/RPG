@@ -145,42 +145,49 @@ color:#777;
 
 .slotCabeca{
 
-top:50px;
-left:380px;
+top:55px;
+left:355px;
 
 }
 
 .slotArma{
 
-top:180px;
-left:95px;
+top:190px;
+left:120px;
 
 }
 
 .slotEscudo{
 
-top:180px;
-right:95px;
+top:190px;
+right:120px;
 
 }
 
 .slotArmadura{
 
 top:310px;
-left:380px;
+left:355px;
 
 }
 
 .slotCintura{
 
 top:470px;
-left:380px;
+left:355px;
+
+}
+
+.slotAcessorio{
+
+top:380px;
+right:180px;
 
 }
 
 .slotBolsa{
 
-bottom:55px;
-right:55px;
+bottom:70px;
+right:70px;
 
 }

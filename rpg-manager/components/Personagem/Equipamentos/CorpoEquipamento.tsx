@@ -117,7 +117,12 @@ classe:"slotCintura"
 },
 
 {
-nome:"inventario",
+nome:"acessorio",
+classe:"slotAcessorio"
+},
+
+{
+nome:"bolsa",
 classe:"slotBolsa"
 }
 

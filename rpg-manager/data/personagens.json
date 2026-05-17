@@ -29,11 +29,19 @@
 
 "equipados":{
 
+"cabeca":null,
+
 "arma":1,
+
+"escudo":null,
 
 "armadura":101,
 
-"acessorio":201
+"cintura":null,
+
+"acessorio":201,
+
+"bolsa":null
 
 },
 
@@ -77,11 +85,19 @@
 
 "equipados":{
 
+"cabeca":null,
+
 "arma":2,
+
+"escudo":null,
 
 "armadura":null,
 
-"acessorio":null
+"cintura":null,
+
+"acessorio":null,
+
+"bolsa":null
 
 },
 

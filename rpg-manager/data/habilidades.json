@@ -1,25 +1,71 @@
 [
 {
 "id":1,
-"nome":"Ataque Poderoso",
-"descricao":"Recebe +2 em dano"
+"nome":"Versatilidade Humana"
 },
 
 {
 "id":2,
-"nome":"Segundo Fôlego",
-"descricao":"Recupera vida"
+"nome":"Visão no Escuro"
 },
 
 {
 "id":3,
-"nome":"Canalizar Energia",
-"descricao":"Cura aliados"
+"nome":"Resistência Anã"
 },
 
 {
 "id":4,
-"nome":"Recuperação Arcana",
-"descricao":"Recupera magia"
+"nome":"Sentidos Aguçados"
+},
+
+{
+"id":5,
+"nome":"Ancestral Feérico"
+},
+
+{
+"id":6,
+"nome":"Sortudo"
+},
+
+{
+"id":7,
+"nome":"Bravura"
+},
+
+{
+"id":8,
+"nome":"Sopro Dracônico"
+},
+
+{
+"id":9,
+"nome":"Esperteza Gnômica"
+},
+
+{
+"id":10,
+"nome":"Versatilidade em Perícias"
+},
+
+{
+"id":11,
+"nome":"Ancestral Feérico"
+},
+
+{
+"id":12,
+"nome":"Ataques Selvagens"
+},
+
+{
+"id":13,
+"nome":"Resistência Implacável"
+},
+
+{
+"id":14,
+"nome":"Resistência Infernal"
 }
 ]

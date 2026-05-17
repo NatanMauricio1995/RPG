@@ -1,7 +1,6 @@
 "use client";
 
-import {useState}
-from "react";
+import {useState} from "react";
 
 import armas
 from "../data/armas.json";
@@ -30,10 +29,26 @@ const bancoItens=[
 ];
 
 
+if(!personagemAtual){
+
+return{
+
+inventario:[],
+setInventario:()=>{},
+
+equipados:{},
+setEquipados:()=>{}
+
+};
+
+}
+
+
 const inventarioInicial=
 
-personagemAtual?.inventario
-?.map(
+personagemAtual.inventario
+
+.map(
 (id:number)=>
 
 bancoItens.find(
@@ -46,12 +61,24 @@ item.id===id
 
 .filter(
 Boolean
-)
-
-||[];
+);
 
 
 const equipadosInicial={
+
+cabeca:
+
+bancoItens.find(
+(item)=>
+
+item.id===
+personagemAtual
+?.equipados
+?.cabeca
+)
+
+||null,
+
 
 arma:
 
@@ -62,6 +89,20 @@ item.id===
 personagemAtual
 ?.equipados
 ?.arma
+)
+
+||null,
+
+
+escudo:
+
+bancoItens.find(
+(item)=>
+
+item.id===
+personagemAtual
+?.equipados
+?.escudo
 )
 
 ||null,
@@ -81,6 +122,20 @@ personagemAtual
 ||null,
 
 
+cintura:
+
+bancoItens.find(
+(item)=>
+
+item.id===
+personagemAtual
+?.equipados
+?.cintura
+)
+
+||null,
+
+
 acessorio:
 
 bancoItens.find(
@@ -94,7 +149,19 @@ personagemAtual
 
 ||null,
 
-municao:null
+
+bolsa:
+
+bancoItens.find(
+(item)=>
+
+item.id===
+personagemAtual
+?.equipados
+?.bolsa
+)
+
+||null
 
 };
 
