@@ -189,3 +189,25 @@ gap:10px;
 flex-wrap:wrap;
 
 }
+
+.imagemFichaItem{
+
+width:350px;
+
+height:350px;
+
+object-fit:contain;
+
+background:#1a1a1a;
+
+padding:10px;
+
+border-radius:15px;
+
+border:2px solid #c89b3c;
+
+display:block;
+
+margin:20px auto;
+
+}

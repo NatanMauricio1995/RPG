@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import Image from "next/image";
 
 type Props={
@@ -82,11 +82,17 @@ className="imagemItem"
 
 <div className="rodapeCartaItem">
 
+<Link
+href={`/itens/${item.id}`}
+>
+
 <button>
 
 📖 Abrir
 
 </button>
+
+</Link>
 
 <button>
 

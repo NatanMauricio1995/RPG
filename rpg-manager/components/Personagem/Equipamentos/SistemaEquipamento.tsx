@@ -1,94 +1,209 @@
 "use client";
 
-type Props = {
-  inventario:any[];
-  setInventario:any;
-  equipados:any;
-  setEquipados:any;
+import CorpoEquipamento
+from "./CorpoEquipamento";
+
+import Image
+from "next/image";
+
+import Link
+from "next/link";
+
+type Props={
+
+inventario:any[];
+
+setInventario:any;
+
+equipados:any;
+
+setEquipados:any;
+
 };
 
 export default function SistemaEquipamento({
-  inventario,
-  setInventario,
-  equipados,
-  setEquipados
+
+inventario,
+setInventario,
+
+equipados,
+setEquipados
+
 }:Props){
 
-function equipar(item:any){
 
-const slot=item.tipo;
+function equipar(
+item:any
+){
+
+let slot="";
+
+
+switch(
+item.subtipo
+){
+
+case "Arma":
+
+slot="arma";
+
+break;
+
+
+case "Armadura":
+
+slot="armadura";
+
+break;
+
+
+case "Acessório":
+
+slot="acessorio";
+
+break;
+
+
+case "Munição":
+
+slot="municao";
+
+break;
+
+
+default:
+
+return;
+
+}
+
 
 if(
-slot!=="arma" &&
-slot!=="armadura" &&
-slot!=="acessorio" &&
-slot!=="municao"
-){
-return;
-}
-
-if(equipados[slot]){
-
-setInventario((anterior:any)=>[
-...anterior,
 equipados[slot]
-]);
+){
 
-}
-
-setEquipados((anterior:any)=>({
+setInventario(
+(anterior:any)=>[
 
 ...anterior,
-[slot]:item
 
-}));
+equipados[
+slot
+]
 
-setInventario((anterior:any)=>
-anterior.filter(
-(i:any)=>i.id!==item.id
-)
+]
+
 );
 
 }
 
 
-function desequipar(slot:string){
+setEquipados(
+(anterior:any)=>({
 
-const item=equipados[slot];
-
-if(!item)return;
-
-setInventario((anterior:any)=>[
 ...anterior,
+
+[slot]:
 item
-]);
 
-setEquipados((anterior:any)=>({
+})
 
-...anterior,
-[slot]:null
+);
 
-}));
+
+setInventario(
+(anterior:any)=>
+
+anterior.filter(
+(i:any)=>
+
+i.id!==item.id
+
+)
+
+);
 
 }
 
 
+
+function desequipar(
+slot:string
+){
+
+const item=
+
+equipados[
+slot
+];
+
+if(
+!item
+)
+return;
+
+
+setInventario(
+(anterior:any)=>[
+
+...anterior,
+
+item
+
+]
+
+);
+
+
+setEquipados(
+(anterior:any)=>({
+
+...anterior,
+
+[slot]:
+null
+
+})
+
+);
+
+}
+
+
+
 function desequiparTudo(){
 
-const itens=Object.values(
-equipados
-).filter(Boolean);
+const itens=
 
-setInventario((anterior:any)=>[
+Object.values(
+equipados
+)
+
+.filter(
+Boolean
+);
+
+
+setInventario(
+(anterior:any)=>[
+
 ...anterior,
+
 ...itens
-]);
+
+]
+
+);
+
 
 setEquipados({
 
 arma:null,
+
 armadura:null,
+
 acessorio:null,
+
 municao:null
 
 });
@@ -96,120 +211,101 @@ municao:null
 }
 
 
+
 return(
 
 <div>
 
-<h2>⚔️ Equipamentos</h2>
+<h2>
+
+⚔️ Equipamentos
+
+</h2>
+
 
 <button
+
 className="botaoAcao"
-onClick={desequiparTudo}
+
+onClick={
+desequiparTudo
+}
+
 >
 
 Desequipar tudo
 
 </button>
 
-<div className="inventarioGrid">
 
-<div className="itemCard">
+<CorpoEquipamento
 
-<h3>⚔️ Mão principal</h3>
+equipados={equipados}
 
-<p>
+setEquipados={setEquipados}
 
-{equipados.arma?.nome || "Vazio"}
+inventario={inventario}
 
-</p>
+setInventario={setInventario}
 
-<button
-onClick={()=>desequipar("arma")}
->
-
-Desequipar
-
-</button>
-
-</div>
+/>
 
 
-<div className="itemCard">
+<h2>
 
-<h3>🛡️ Armadura</h3>
+🎒 Inventário
 
-<p>
+</h2>
 
-{equipados.armadura?.nome || "Vazio"}
-
-</p>
-
-<button
-onClick={()=>desequipar("armadura")}
->
-
-Desequipar
-
-</button>
-
-</div>
-
-
-<div className="itemCard">
-
-<h3>💍 Acessório</h3>
-
-<p>
-
-{equipados.acessorio?.nome || "Vazio"}
-
-</p>
-
-<button
-onClick={()=>desequipar("acessorio")}
->
-
-Desequipar
-
-</button>
-
-</div>
-
-
-<div className="itemCard">
-
-<h3>🏹 Munição</h3>
-
-<p>
-
-{equipados.municao?.nome || "Vazio"}
-
-</p>
-
-<button
-onClick={()=>desequipar("municao")}
->
-
-Desequipar
-
-</button>
-
-</div>
-
-</div>
-
-
-
-<h2>🎒 Inventário</h2>
-
-<div className="inventarioGrid">
-
-{inventario.map((item:any)=>(
 
 <div
-key={item.id}
-className="itemCard"
+className="inventarioGrid"
 >
+
+{
+
+inventario.map(
+(item:any)=>(
+
+<div
+
+key={item.id}
+
+className="itemCard"
+
+draggable
+
+onDragStart={(evento)=>
+
+evento
+.dataTransfer
+.setData(
+"id",
+item.id
+)
+
+}
+
+>
+<Image
+
+src={
+item.imagem ||
+"/imagens/itens/padrao.png"
+}
+
+alt={
+item.nome
+}
+
+width={120}
+
+height={120}
+
+className="imagemItemInventario"
+
+/>
+
 
 <h3>
 
@@ -217,38 +313,61 @@ className="itemCard"
 
 </h3>
 
-<p>
-
-Tipo: {item.tipo}
-
-</p>
 
 <p>
 
-Quantidade: {item.quantidade}
+📦
+{item.subtipo}
 
 </p>
 
-{(
-item.tipo==="arma" ||
-item.tipo==="armadura" ||
-item.tipo==="acessorio" ||
-item.tipo==="municao"
-)&&(
+
+<Link
+href={`/itens/${item.id}`}
+>
+
+<button>
+
+📖 Abrir
+
+</button>
+
+</Link>
+
+
+{
+
+item.tipo==="Equipamento"
+
+&& (
 
 <button
-onClick={()=>equipar(item)}
+
+onClick={()=>
+
+equipar(
+item
+)
+
+}
+
 >
 
 Equipar
 
 </button>
 
-)}
+)
+
+}
 
 </div>
 
-))}
+)
+
+)
+
+}
 
 </div>
 
