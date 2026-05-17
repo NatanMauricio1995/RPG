@@ -7,7 +7,7 @@ import Link
 from "next/link";
 
 import itens
-from "../../../data/itens.json";
+from "../../../data/sistema/itens.json";
 
 import FichaItem
 from "../../../components/Itens/FichaItem";

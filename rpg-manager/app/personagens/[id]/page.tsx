@@ -46,18 +46,13 @@ return(
 );
 
 }
-
 const{
 
 inventario,
-setInventario,
 
-equipados,
-setEquipados
+equipados
 
-}=useInventario(
-personagemAtual
-);
+}=useInventario();
 
 const{
 
@@ -153,15 +148,7 @@ bonus={bonus}
 />
 
 
-<SistemaEquipamento
-
-inventario={inventario}
-setInventario={setInventario}
-
-equipados={equipados}
-setEquipados={setEquipados}
-
-/>
+<SistemaEquipamento/>
 
 
 <ModalNivel

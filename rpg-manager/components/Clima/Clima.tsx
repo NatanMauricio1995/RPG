@@ -1,7 +1,7 @@
 "use client";
 import useCalendario from "../../hooks/useCalendario";
 import { useState } from "react";
-import dadosClima from "../../data/clima.json";
+import dadosClima from "../../data/sistema/clima.json";
 
 export default function Clima() {
 

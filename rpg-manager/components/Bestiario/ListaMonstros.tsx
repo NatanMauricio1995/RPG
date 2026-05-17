@@ -3,10 +3,10 @@
 import {useState} from "react";
 
 import monstrosData
-from "../../data/monstros.json";
+from "../../data/sistema/monstros.json";
 
 import tiposMonstros
-from "../../data/tiposMonstros.json";
+from "../../data/sistema/tiposMonstros.json";
 
 import CardMonstro
 from "./CardMonstro";

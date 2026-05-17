@@ -3,7 +3,7 @@
 import {useState} from "react";
 
 import itensData
-from "../../data/itens.json";
+from "../../data/sistema/itens.json";
 
 import CardItem
 from "./CardItem";

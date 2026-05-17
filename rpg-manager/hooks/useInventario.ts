@@ -2,17 +2,10 @@
 
 import {useState} from "react";
 
-import armas
-from "../data/armas.json";
-
-import armaduras
-from "../data/armaduras.json";
-
-import acessorios
-from "../data/acessorios.json";
-
-import consumiveis
-from "../data/consumiveis.json";
+import armas from "../data/sistema/armas.json";
+import armaduras from "../data/sistema/armaduras.json";
+import acessorios from "../data/sistema/acessorios.json";
+import consumiveis from "../data/sistema/consumiveis.json";
 
 
 export default function useInventario(

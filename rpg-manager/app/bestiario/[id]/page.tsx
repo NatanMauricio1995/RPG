@@ -7,7 +7,7 @@ import Link
 from "next/link";
 
 import monstros
-from "../../../data/monstros.json";
+from "../../../data/sistema/monstros.json";
 
 import tiposMonstros
 from "../../../data/tiposMonstros.json";

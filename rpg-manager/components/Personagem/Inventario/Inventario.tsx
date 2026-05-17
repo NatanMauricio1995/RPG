@@ -1,4 +1,4 @@
-import itens from "../../data/itens.json";
+import itens from "../../data/sistema/itens.json";
 
 export default function Inventario(){
 

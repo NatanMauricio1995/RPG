@@ -1,95 +1,150 @@
-.overlayNivel{
-position:fixed;
+/* ============================================
+   MODAL DE NÍVEL
+   ============================================ */
 
-top:0;
-left:0;
-
-width:100%;
-height:100%;
-
-background:rgba(
-0,
-0,
-0,
-0.7
-);
-
-display:flex;
-
-justify-content:center;
-align-items:center;
+.overlayNivel {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+  animation: fadeInOverlay 0.3s ease;
 }
 
-.modalNivel{
-background:#222;
-
-padding:25px;
-
-border-radius:15px;
-
-width:900px;
-
-max-width:95vw;
-
-max-height:90vh;
-
-overflow-y:auto;
-
-border:1px solid #444;
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.atributoNivelCard{
-
-background:#252525;
-
-padding:15px;
-
-border-radius:10px;
-
-border:1px solid #444;
-
-text-align:center;
-
-display:flex;
-
-flex-direction:column;
-
-justify-content:space-between;
-
-min-height:150px;
-
+.modalNivel {
+  background: linear-gradient(160deg, #1e1a10 0%, var(--pedra-media) 60%, #1a1612 100%);
+  padding: 30px;
+  border-radius: 16px;
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 2px solid var(--ouro-escuro);
+  box-shadow:
+    0 0 60px rgba(0,0,0,0.8),
+    0 0 30px var(--sombra-ouro),
+    inset 0 0 40px rgba(0,0,0,0.4);
+  position: relative;
+  animation: slideUpModal 0.35s ease;
 }
 
-.atributoNivelCard h3{
-
-font-size:16px;
-
-margin-bottom:10px;
-
+@keyframes slideUpModal {
+  from { transform: translateY(30px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
-.atributoNivelCard p{
-
-font-size:18px;
-
-margin-bottom:10px;
-
+/* Ornamento superior */
+.modalNivel::before {
+  content: '';
+  display: block;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ouro), transparent);
+  margin: 0 auto 25px auto;
 }
 
-.atributosNivelGrid{
+/* Ornamento inferior */
+.modalNivel::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--ouro-escuro), transparent);
+  margin: 25px auto 0 auto;
+}
 
-display:grid;
+.modalNivel h2 {
+  font-family: 'Cinzel Decorative', serif;
+  color: var(--ouro-claro);
+  font-size: 22px;
+  text-align: center;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 20px var(--sombra-ouro);
+  margin-bottom: 5px;
+}
 
-grid-template-columns:
-repeat(
-auto-fit,
-minmax(220px,1fr)
-);
+.atributosNivelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  width: 100%;
+  margin-top: 20px;
+}
 
-gap:15px;
+.atributoNivelCard {
+  background: var(--pedra-clara);
+  padding: 18px 15px;
+  border-radius: 10px;
+  border: 1px solid var(--pedra-borda);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 150px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+}
 
-width:100%;
+/* Linha decorativa no topo do card */
+.atributoNivelCard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ouro-escuro), transparent);
+}
 
-margin-top:20px;
+.atributoNivelCard:hover {
+  border-color: var(--ouro-escuro);
+  box-shadow: 0 0 20px rgba(200, 155, 60, 0.15);
+  transform: translateY(-2px);
+}
 
+.atributoNivelCard h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--texto-dimmed);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.atributoNivelCard p {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 28px;
+  margin-bottom: 10px;
+  color: var(--ouro-claro);
+  text-shadow: 0 0 12px var(--sombra-ouro);
+  line-height: 1;
+}
+
+/* Botões dentro do modal */
+.atributoNivelCard button {
+  padding: 8px 12px;
+  background: linear-gradient(135deg, var(--ouro-escuro), #5a4210);
+  color: #1a1408;
+  border: 1px solid var(--ouro);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: all 0.25s;
+  margin-top: 8px;
+}
+
+.atributoNivelCard button:hover {
+  background: linear-gradient(135deg, var(--ouro), var(--ouro-escuro));
+  box-shadow: 0 0 10px var(--sombra-ouro);
 }

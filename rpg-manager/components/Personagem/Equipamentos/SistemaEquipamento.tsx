@@ -1,5 +1,8 @@
 "use client";
 
+import{useInventario}
+from "../../../contexts/InventarioContext";
+
 import CorpoEquipamento
 from "./CorpoEquipamento";
 
@@ -9,19 +12,10 @@ from "next/image";
 import Link
 from "next/link";
 
-type Props={
 
-inventario:any[];
+export default function SistemaEquipamento(){
 
-setInventario:any;
-
-equipados:any;
-
-setEquipados:any;
-
-};
-
-export default function SistemaEquipamento({
+const{
 
 inventario,
 setInventario,
@@ -29,7 +23,7 @@ setInventario,
 equipados,
 setEquipados
 
-}:Props){
+}=useInventario();{
 
 
 function equipar(
@@ -210,7 +204,7 @@ municao:null
 
 }
 
-
+}
 
 return(
 

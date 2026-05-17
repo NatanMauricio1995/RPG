@@ -8,43 +8,77 @@ import "../styles/personagens.css";
 import "./globals.css";
 import "../styles/bestiario.css";
 import "../styles/itens.css";
+import {InventarioProvider} 
+from "../contexts/InventarioContext";
 
-import Topo from "../components/Layout/Topo";
-import Sidebar from "../components/Layout/Sidebar";
+import {CalendarioProvider}
+from "../contexts/CalendarioContext";
+
+import Topo
+from "../components/Layout/Topo";
+
+import Sidebar
+from "../components/Layout/Sidebar";
+
 
 export const metadata = {
-  title: "RPG Manager",
-  description: "Gerenciador de mesa RPG"
+
+title:"RPG Manager",
+
+description:
+"Gerenciador de mesa RPG"
+
 };
 
+
 export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="pt-BR">
-      <body>
 
-        <div className="container">
+children,
 
-          <Topo/>
+}:{
 
-          <div className="conteudo">
+children:React.ReactNode
 
-            <Sidebar/>
+}){
 
-            <main className="principal">
+return(
 
-              {children}
+<html lang="pt-BR">
 
-            </main>
+<body>
 
-          </div>
+<CalendarioProvider>
+<InventarioProvider>
 
-        </div>
+<div className="container">
 
-      </body>
-    </html>
-  );
+<Topo/>
+
+
+<div className="conteudo">
+
+<Sidebar/>
+
+<main
+className="principal"
+>
+
+{children}
+
+</main>
+
+</div>
+
+</div>
+
+</InventarioProvider>
+
+</CalendarioProvider>
+
+</body>
+
+</html>
+
+);
+
 }

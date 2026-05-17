@@ -1,19 +1,10 @@
 "use client";
-
-import {useState}
-from "react";
-
-import personagens
-from "../data/personagens.json";
-
-import racas
-from "../data/racas.json";
-
-import classes
-from "../data/classes.json";
-
-import niveis
-from "../data/niveis.json";
+import {calcularVida} from "../services/calculoService";
+import {useState} from "react";
+import personagens from "../data/campanha/personagens.json";
+import racas from "../data/sistema/racas.json";
+import classes from "../data/sistema/classes.json";
+import niveis from "../data/sistema/niveis.json";
 
 export default function usePersonagem(
 id:number
@@ -131,16 +122,15 @@ personagemBase
 
 const vidaMaxima=
 
-(classe?.vidaBase||8)
+calcularVida(
 
-+
-
-(
+classe?.vidaBase||8,
 
 atributosComBonus
-.constituicao
-*
-personagemBase.nivel
+.constituicao,
+
+personagemBase
+.nivel
 
 );
 

@@ -2,14 +2,11 @@
 
 import {useState} from "react";
 
-import personagensData
-from "../../../data/personagens.json";
+import personagensData from "../../../data/campanha/personagens.json";
 
-import racas
-from "../../../data/racas.json";
+import racas from "../../../data/sistema/racas.json";
 
-import classes
-from "../../../data/classes.json";
+import classes from "../../../data/sistema/classes.json";
 
 import CardPersonagem
 from "./CardPersonagem";
