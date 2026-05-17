@@ -55,7 +55,9 @@ setInventario,
 equipados,
 setEquipados
 
-}=useInventario();
+}=useInventario(
+personagemAtual
+);
 
 const{
 
@@ -64,7 +66,6 @@ bonus
 }=useEquipamento(
 equipados
 );
-
 
 const{
 

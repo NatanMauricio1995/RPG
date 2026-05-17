@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import {useState}
+from "react";
 
-import personagens from "../data/personagens.json";
-import racas from "../data/racas.json";
-import classes from "../data/classes.json";
-import habilidades from "../data/habilidades.json";
+import personagens
+from "../data/personagens.json";
+
+import racas
+from "../data/racas.json";
+
+import classes
+from "../data/classes.json";
 
 export default function usePersonagem(
 id:number
@@ -14,15 +19,18 @@ id:number
 const personagemBase=
 
 personagens.find(
-(item)=>
-item.id===id
+(p)=>
+
+p.id===id
 );
+
 
 if(!personagemBase){
 
 return{
 
 personagemAtual:null,
+
 setPersonagemAtual:()=>{}
 
 };
@@ -30,83 +38,40 @@ setPersonagemAtual:()=>{}
 }
 
 
-const raca=
-
-racas.find(
-(item)=>
-item.id===
-personagemBase.racaId
-);
-
-
 const classe=
 
 classes.find(
-(item)=>
-item.id===
+(c)=>
+
+c.id===
 personagemBase.classeId
 );
 
 
-const habilidadesLiberadas=
+const raca=
 
-habilidades.filter(
+racas.find(
+(r)=>
 
-(item)=>
-
-item.classeId===
-
-personagemBase.classeId
-
-&&
-
-item.nivelMinimo<=
-personagemBase.nivel
-
+r.id===
+personagemBase.racaId
 );
-
-
-const vidaBase=10;
-
-const bonusConstituicao=
-
-personagemBase
-.atributosBase
-.constituicao;
-
-const vidaMaxima=
-
-vidaBase+
-
-(
-(classe?.vidaPorNivel || 0)
-*
-personagemBase.nivel
-)
-
-+
-
-bonusConstituicao;
 
 
 const personagemCompleto={
 
 ...personagemBase,
 
-raca:
-raca?.nome,
-
 classe:
-classe?.nome,
+classe?.nome || "",
 
-vidaMaxima,
-
-habilidades:
-habilidadesLiberadas
+raca:
+raca?.nome || ""
 
 };
 
-const [
+
+const[
 
 personagemAtual,
 setPersonagemAtual
@@ -114,6 +79,7 @@ setPersonagemAtual
 ]=useState(
 personagemCompleto
 );
+
 
 return{
 
