@@ -1,0 +1,138 @@
+{
+  "anoAtual":1247,
+
+  "mesAtual":1,
+
+  "diaAtual":1,
+
+  "hora":8,
+
+  "minuto":0,
+
+  "diaFestivoAtual":0,
+
+  "emPeriodoFestivo":false,
+
+  "estacoes":[
+
+    "Primavera",
+    "Verão",
+    "Outono",
+    "Inverno"
+
+  ],
+
+  "meses":[
+
+    {
+      "id":1,
+      "nome":"Lua do Despertar",
+      "dias":30
+    },
+
+    {
+      "id":2,
+      "nome":"Sol Ascendente",
+      "dias":30
+    },
+
+    {
+      "id":3,
+      "nome":"Ventos Eternos",
+      "dias":30
+    },
+
+    {
+      "id":4,
+      "nome":"Flores Eternas",
+      "dias":30
+    },
+
+    {
+      "id":5,
+      "nome":"Céu Ardente",
+      "dias":30
+    },
+
+    {
+      "id":6,
+      "nome":"Chamas Douradas",
+      "dias":30
+    },
+
+    {
+      "id":7,
+      "nome":"Folhas Vermelhas",
+      "dias":30
+    },
+
+    {
+      "id":8,
+      "nome":"Brumas Antigas",
+      "dias":30
+    },
+
+    {
+      "id":9,
+      "nome":"Sombras Longas",
+      "dias":30
+    },
+
+    {
+      "id":10,
+      "nome":"Neve Silenciosa",
+      "dias":30
+    },
+
+    {
+      "id":11,
+      "nome":"Gelo Profundo",
+      "dias":30
+    },
+
+    {
+      "id":12,
+      "nome":"Lua Final",
+      "dias":30
+    }
+
+  ],
+
+  "diasFestivos":[
+
+    {
+      "id":1,
+      "nome":"Festival das Estrelas"
+    },
+
+    {
+      "id":2,
+      "nome":"Dia dos Heróis"
+    },
+
+    {
+      "id":3,
+      "nome":"Celebração dos Espíritos"
+    },
+
+    {
+      "id":4,
+      "nome":"Noite das Chamas"
+    },
+
+    {
+      "id":5,
+      "nome":"Renovação do Mundo"
+    }
+
+  ],
+
+  "fasesLua":[
+
+    "Nova",
+    "Crescente",
+    "Cheia",
+    "Minguante"
+
+  ]
+}
