@@ -3,91 +3,59 @@
 import Image from "next/image";
 
 type Props={
-
 equipados:any;
-
 setEquipados:any;
-
 inventario:any[];
-
 setInventario:any;
-
 };
 
 export default function CorpoEquipamento({
-
 equipados,
 setEquipados,
-
 inventario,
 setInventario
-
 }:Props){
 
-
-function permitirDrop(
-evento:any
-){
-
+function permitirDrop(evento:any){
 evento.preventDefault();
-
 }
 
-
 function soltarItem(
-
 evento:any,
 slot:string
-
 ){
 
 evento.preventDefault();
 
 const itemId=
-
-evento.dataTransfer.getData(
-"id"
-);
-
+evento.dataTransfer.getData("id");
 
 const item=
 
 inventario.find(
 (i:any)=>
-
-i.id===
-Number(itemId)
+i.id===Number(itemId)
 );
 
-if(!item)
-return;
+if(!item)return;
 
-
-setEquipados(
-(anterior:any)=>({
+setEquipados((anterior:any)=>({
 
 ...anterior,
 
-[slot]:
-item
+[slot]:item
 
-})
-);
+}));
 
-
-setInventario(
-(anterior:any)=>
+setInventario((anterior:any)=>
 
 anterior.filter(
-(i:any)=>
-
-i.id!==item.id
+(i:any)=>i.id!==item.id
 )
 
 );
 
 }
-
 
 const slots=[
 
@@ -128,85 +96,64 @@ classe:"slotBolsa"
 
 ];
 
-
 return(
 
 <div className="containerCorpo">
 
 <Image
-
 src="/imagens/interface/corpo.png"
-
-alt="Corpo"
-
+alt="Corpo do personagem"
 width={850}
-
 height={850}
-
 className="imagemCorpo"
-
 />
-
 
 {
 
-slots.map(
-(slot)=>(
+slots.map((slot)=>(
 
 <div
-
 key={slot.nome}
-
-className={
-`slotEquipamento ${slot.classe}`
-}
-
-onDragOver={
-permitirDrop
-}
-
+className={`slotEquipamento ${slot.classe}`}
+onDragOver={permitirDrop}
 onDrop={(evento)=>
-
 soltarItem(
 evento,
 slot.nome
 )
-
 }
-
 >
 
 {
 
-equipados[
-slot.nome
-]
+equipados[slot.nome]
 
 ?
 
 <Image
-
 src={
-equipados[
-slot.nome
-].imagem
+equipados[slot.nome]?.imagem?.trim()
+
+?
+
+equipados[slot.nome].imagem
+
+:
+
+"/imagens/itens/padrao.png"
 }
-
-alt=""
-
+alt={
+equipados[slot.nome]?.nome ||
+"Item equipado"
+}
 width={90}
-
 height={90}
-
 className="imagemSlot"
-
 />
 
 :
 
-<div
-className="slotVazio"
->
+<div className="slotVazio">
 
 +
 
@@ -216,9 +163,7 @@ className="slotVazio"
 
 </div>
 
-)
-
-)
+))
 
 }
 

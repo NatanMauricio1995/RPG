@@ -1,18 +1,14 @@
 "use client";
 
 import{
-
 createContext,
 useContext,
 useState
-
 }
-
 from "react";
 
 
 const InventarioContext=
-
 createContext<any>(
 null
 );
@@ -29,37 +25,44 @@ children:React.ReactNode
 }){
 
 const[
-
 inventario,
 setInventario
-
-]=useState(
-[]
-);
+]=useState<any[]>([]);
 
 
 const[
-
 equipados,
 setEquipados
-
 ]=useState({
 
 cabeca:null,
-
 arma:null,
-
 escudo:null,
-
 armadura:null,
-
 cintura:null,
-
 acessorio:null,
-
 bolsa:null
 
 });
+
+
+function carregarInventario(
+
+novoInventario:any[],
+
+novosEquipados:any
+
+){
+
+setInventario(
+novoInventario
+);
+
+setEquipados(
+novosEquipados
+);
+
+}
 
 
 return(
@@ -72,7 +75,9 @@ inventario,
 setInventario,
 
 equipados,
-setEquipados
+setEquipados,
+
+carregarInventario
 
 }}
 
