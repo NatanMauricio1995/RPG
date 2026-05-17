@@ -1,51 +1,51 @@
 [
-  {
-    "id":1,
-    "nome":"Humano",
+{
+"id":1,
+"nome":"Humano",
 
-    "bonus":{
-      "forca":1,
-      "destreza":1,
-      "constituicao":1,
-      "inteligencia":1,
-      "sabedoria":1,
-      "carisma":1
-    },
+"bonus":{
+"forca":1,
+"destreza":1,
+"constituicao":1,
+"inteligencia":1,
+"sabedoria":1,
+"carisma":1
+},
 
-    "deslocamento":9,
+"deslocamento":9,
 
-    "habilidades":[
-      "Versatilidade"
-    ]
-  },
+"habilidades":[
+1
+]
+},
 
-  {
-    "id":2,
-    "nome":"Elfo",
+{
+"id":2,
+"nome":"Elfo",
 
-    "bonus":{
-      "destreza":2
-    },
+"bonus":{
+"destreza":2
+},
 
-    "deslocamento":10,
+"deslocamento":9,
 
-    "habilidades":[
-      "Visão Noturna"
-    ]
-  },
+"habilidades":[
+2
+]
+},
 
-  {
-    "id":3,
-    "nome":"Anão",
+{
+"id":3,
+"nome":"Anão",
 
-    "bonus":{
-      "constituicao":2
-    },
+"bonus":{
+"constituicao":2
+},
 
-    "deslocamento":7,
+"deslocamento":7,
 
-    "habilidades":[
-      "Resistência Anã"
-    ]
-  }
+"habilidades":[
+3
+]
+}
 ]

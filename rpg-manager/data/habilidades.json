@@ -1,65 +1,25 @@
 [
-  {
-    "id":1,
+{
+"id":1,
+"nome":"Ataque Poderoso",
+"descricao":"Recebe +2 em dano"
+},
 
-    "nome":"Cura Menor",
+{
+"id":2,
+"nome":"Segundo Fôlego",
+"descricao":"Recupera vida"
+},
 
-    "classeId":2,
+{
+"id":3,
+"nome":"Canalizar Energia",
+"descricao":"Cura aliados"
+},
 
-    "nivelMinimo":1,
-
-    "descricao":"Recupera pequena quantidade de vida",
-
-    "tipo":"cura",
-
-    "custoMana":5
-  },
-
-  {
-    "id":2,
-
-    "nome":"Escudo Sagrado",
-
-    "classeId":2,
-
-    "nivelMinimo":3,
-
-    "descricao":"Aumenta defesa temporariamente",
-
-    "tipo":"buff",
-
-    "custoMana":8
-  },
-
-  {
-    "id":3,
-
-    "nome":"Golpe Pesado",
-
-    "classeId":1,
-
-    "nivelMinimo":1,
-
-    "descricao":"Ataque poderoso",
-
-    "tipo":"ataque",
-
-    "custoMana":0
-  },
-
-  {
-    "id":4,
-
-    "nome":"Fúria",
-
-    "classeId":1,
-
-    "nivelMinimo":5,
-
-    "descricao":"Aumenta dano temporariamente",
-
-    "tipo":"buff",
-
-    "custoMana":0
-  }
+{
+"id":4,
+"nome":"Recuperação Arcana",
+"descricao":"Recupera magia"
+}
 ]

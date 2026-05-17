@@ -1,69 +1,99 @@
 [
-  {
-    "id":1,
+{
+"id":1,
 
-    "nome":"Kael",
+"nome":"Kael",
 
-    "imagem":"/imagens/personagens/kael.png",
+"imagem":"/imagens/personagens/kael.png",
 
-    "racaId":1,
+"racaId":1,
 
-    "classeId":2,
+"classeId":2,
 
-    "nivel":3,
+"nivel":3,
 
-    "xpAtual":320,
-    "xpNecessario":500,
+"xpAtual":320,
 
-    "vidaAtual":25,
+"xpNecessario":500,
 
-    "ouro":150,
+"vidaAtual":25,
 
-    "habilidadesEscolhidas":[
-      1
-    ],
+"ouro":150,
 
-    "atributosBase":{
-      "forca":10,
-      "destreza":12,
-      "constituicao":14,
-      "inteligencia":8,
-      "sabedoria":16,
-      "carisma":13
-    }
-  },
+"inventario":[
+1,
+101,
+201,
+301
+],
 
-  {
-    "id":2,
+"equipados":{
 
-    "nome":"Eldrin",
+"arma":1,
 
-    "imagem":"/imagens/personagens/eldrin.png",
+"armadura":101,
 
-    "racaId":2,
+"acessorio":201
 
-    "classeId":3,
+},
 
-    "nivel":5,
+"atributosBase":{
 
-    "xpAtual":950,
-    "xpNecessario":1200,
+"forca":10,
+"destreza":12,
+"constituicao":14,
+"inteligencia":8,
+"sabedoria":16,
+"carisma":13
 
-    "vidaAtual":34,
+}
+},
 
-    "ouro":300,
+{
+"id":2,
 
-    "habilidadesEscolhidas":[
-      1
-    ],
+"nome":"Eldrin",
 
-    "atributosBase":{
-      "forca":6,
-      "destreza":12,
-      "constituicao":10,
-      "inteligencia":18,
-      "sabedoria":15,
-      "carisma":11
-    }
-  }
+"imagem":"/imagens/personagens/eldrin.png",
+
+"racaId":2,
+
+"classeId":3,
+
+"nivel":5,
+
+"xpAtual":950,
+
+"xpNecessario":1200,
+
+"vidaAtual":34,
+
+"ouro":300,
+
+"inventario":[
+2,
+301
+],
+
+"equipados":{
+
+"arma":2,
+
+"armadura":null,
+
+"acessorio":null
+
+},
+
+"atributosBase":{
+
+"forca":6,
+"destreza":12,
+"constituicao":10,
+"inteligencia":18,
+"sabedoria":15,
+"carisma":11
+
+}
+}
 ]

@@ -1,31 +1,90 @@
 [
-  {
-    "id":1,
+{
+"id":1,
 
-    "nome":"Guerreiro",
+"nome":"Guerreiro",
 
-    "vidaPorNivel":10,
+"dadoVida":"1d10",
 
-    "atributoPrincipal":"forca"
-  },
+"vidaBase":10,
 
-  {
-    "id":2,
+"proficiencias":[
 
-    "nome":"Clérigo",
+"Armas Simples",
+"Armas Marciais",
+"Armaduras Leves",
+"Armaduras Médias",
+"Escudos"
 
-    "vidaPorNivel":8,
+],
 
-    "atributoPrincipal":"sabedoria"
-  },
+"habilidadesPorNivel":[
 
-  {
-    "id":3,
+{
+"nivel":1,
+"habilidades":[1]
+},
 
-    "nome":"Mago",
+{
+"nivel":2,
+"habilidades":[2]
+}
 
-    "vidaPorNivel":6,
+]
 
-    "atributoPrincipal":"inteligencia"
-  }
+},
+
+{
+"id":2,
+
+"nome":"Clérigo",
+
+"dadoVida":"1d8",
+
+"vidaBase":8,
+
+"proficiencias":[
+
+"Armas Simples",
+"Armaduras Leves"
+
+],
+
+"habilidadesPorNivel":[
+
+{
+"nivel":1,
+"habilidades":[3]
+}
+
+]
+
+},
+
+{
+"id":3,
+
+"nome":"Mago",
+
+"dadoVida":"1d6",
+
+"vidaBase":6,
+
+"proficiencias":[
+
+"Adagas",
+"Cajados"
+
+],
+
+"habilidadesPorNivel":[
+
+{
+"nivel":1,
+"habilidades":[4]
+}
+
+]
+
+}
 ]
