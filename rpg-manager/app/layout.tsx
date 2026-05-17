@@ -7,6 +7,7 @@ import "../styles/componentes.css";
 import "../styles/personagens.css";
 import "./globals.css";
 import "../styles/bestiario.css";
+import "../styles/itens.css";
 
 import Topo from "../components/Layout/Topo";
 import Sidebar from "../components/Layout/Sidebar";
