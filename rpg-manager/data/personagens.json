@@ -4,6 +4,8 @@
 
     "nome":"Kael",
 
+    "imagem":"/imagens/personagens/kael.png",
+
     "racaId":1,
 
     "classeId":2,
@@ -34,31 +36,33 @@
   {
     "id":2,
 
-    "nome":"Arthos",
+    "nome":"Eldrin",
 
-    "racaId":1,
+    "imagem":"/imagens/personagens/eldrin.png",
 
-    "classeId":1,
+    "racaId":2,
+
+    "classeId":3,
 
     "nivel":5,
 
-    "xpAtual":900,
-    "xpNecessario":1000,
+    "xpAtual":950,
+    "xpNecessario":1200,
 
-    "vidaAtual":42,
+    "vidaAtual":34,
 
-    "ouro":250,
+    "ouro":300,
 
     "habilidadesEscolhidas":[
-      3
+      1
     ],
 
     "atributosBase":{
-      "forca":18,
+      "forca":6,
       "destreza":12,
-      "constituicao":15,
-      "inteligencia":8,
-      "sabedoria":9,
+      "constituicao":10,
+      "inteligencia":18,
+      "sabedoria":15,
       "carisma":11
     }
   }

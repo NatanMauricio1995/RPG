@@ -1,8 +1,9 @@
 [
   {
     "id":1,
-
     "nome":"Goblin",
+
+    "imagem":"/imagens/monstros/goblin.png",
 
     "tipoId":1,
 
@@ -30,8 +31,9 @@
 
   {
     "id":2,
-
     "nome":"Lobo",
+
+    "imagem":"/imagens/monstros/lobo.png",
 
     "tipoId":2,
 
@@ -59,8 +61,9 @@
 
   {
     "id":3,
-
     "nome":"Esqueleto",
+
+    "imagem":"/imagens/monstros/esqueleto.png",
 
     "tipoId":3,
 

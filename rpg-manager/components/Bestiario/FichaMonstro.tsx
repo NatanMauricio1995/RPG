@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import habilidadesMonstros
 from "../../data/habilidadesMonstros.json";
 
@@ -48,7 +48,25 @@ return(
 👹 {monstro.nome}
 
 </h1>
+<Image
 
+src={
+
+monstro.imagem ||
+
+"/imagens/monstros/padrao.png"
+
+}
+
+alt={monstro.nome}
+
+width={350}
+
+height={350}
+
+className="imagemFichaMonstro"
+
+/>
 
 <div className="informacoesBasicas">
 

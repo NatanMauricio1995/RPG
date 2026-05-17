@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 type Props={
 
@@ -16,7 +17,9 @@ monstro
 
 return(
 
-<div className="cardMonstro">
+<div className="cartaMonstro">
+
+<div className="topoCarta">
 
 <h2>
 
@@ -24,19 +27,41 @@ return(
 
 </h2>
 
-<div className="dadosMonstro">
+<span>
+
+⭐ {monstro.nivel}
+
+</span>
+
+</div>
+
+
+<div className="imagemCarta">
+
+<Image
+
+src={
+monstro.imagem
+}
+
+alt={
+monstro.nome
+}
+
+fill
+
+className="imagemMonstro"
+
+/>
+
+</div>
+
+
+<div className="corpoCarta">
 
 <p>
 
-🏷️ Tipo:
-{monstro.tipo}
-
-</p>
-
-<p>
-
-⭐ Nível:
-{monstro.nivel}
+🏷️ {monstro.tipo}
 
 </p>
 
@@ -63,7 +88,8 @@ return(
 
 </div>
 
-<div className="acoesMonstro">
+
+<div className="rodapeCarta">
 
 <Link
 href={`/bestiario/${monstro.id}`}

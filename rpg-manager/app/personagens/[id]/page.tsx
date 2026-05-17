@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import usePersonagem from "../../../hooks/usePersonagem";
 import useNivel from "../../../hooks/useNivel";
 import useEquipamento from "../../../hooks/useEquipamento";
@@ -112,6 +113,25 @@ className="botaoVoltar"
 🧙 {personagemAtual.nome}
 
 </h1>
+
+<Image
+
+src={
+personagemAtual.imagem ||
+"/imagens/personagens/padrao.png"
+}
+
+alt={
+personagemAtual.nome
+}
+
+width={350}
+
+height={350}
+
+className="imagemFichaPersonagem"
+
+/>
 
 
 <InformacoesBasicas

@@ -53,3 +53,33 @@ font-weight:bold;
 margin-left:8px;
 margin-right:8px;
 }
+
+.imagemFichaPersonagem{
+
+width:350px;
+
+height:350px;
+
+object-fit:contain;
+
+background:#1a1a1a;
+
+padding:10px;
+
+border-radius:15px;
+
+border:2px solid #c89b3c;
+
+display:block;
+
+margin:20px auto;
+
+box-shadow:
+0 0 20px rgba(
+200,
+155,
+60,
+0.3
+);
+
+}

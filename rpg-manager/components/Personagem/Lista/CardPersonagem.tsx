@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 
 type Props={
 
@@ -16,7 +17,9 @@ personagem
 
 return(
 
-<div className="cardPersonagem">
+<div className="cartaPersonagem">
+
+<div className="topoCartaPersonagem">
 
 <h2>
 
@@ -24,23 +27,71 @@ return(
 
 </h2>
 
-<div className="dadosPersonagem">
+<span>
 
-<p>🧬 {personagem.raca}</p>
+⭐ {personagem.nivel}
 
-<p>🎭 {personagem.classe}</p>
+</span>
 
-<p>⭐ Nível: {personagem.nivel}</p>
+</div>
 
-<p className="vidaPersonagem">
 
-❤️ {personagem.vidaAtual}/{personagem.vidaMaxima}
+<div className="imagemCartaPersonagem">
+
+<Image
+
+src={
+personagem.imagem ||
+"/imagens/personagens/padrao.png"
+}
+
+alt={
+personagem.nome
+}
+
+fill
+
+className="imagemPersonagem"
+
+/>
+
+</div>
+
+
+<div className="corpoCartaPersonagem">
+
+<p>
+
+🧬 {personagem.raca}
+
+</p>
+
+<p>
+
+🎭 {personagem.classe}
+
+</p>
+
+<p>
+
+❤️ Vida:
+{personagem.vidaAtual}
+/
+{personagem.vidaMaxima}
+
+</p>
+
+<p>
+
+💰 Ouro:
+{personagem.ouro}
 
 </p>
 
 </div>
 
-<div className="acoesPersonagem">
+
+<div className="rodapeCartaPersonagem">
 
 <Link
 href={`/personagens/${personagem.id}`}
