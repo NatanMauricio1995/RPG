@@ -1,5 +1,5 @@
 "use client";
-
+import useCalendario from "../../hooks/useCalendario";
 import { useState } from "react";
 import dadosClima from "../../data/clima.json";
 
@@ -61,6 +61,28 @@ setClima(novoClima);
 setIntensidade(novaIntensidade);
 
 }
+
+const{
+
+dados
+
+}=useCalendario();
+
+
+const mesAtual=
+
+dados.meses.find(
+(m)=>
+
+m.id===
+dados.mesAtual
+);
+
+const{
+
+avancarDia
+
+}=useCalendario();
 
 return(
 
@@ -152,6 +174,17 @@ value={item}
 🎲 Aleatório
 </button>
 
+<button
+
+onClick={
+avancarDia
+}
+
+>
+
+➡️ Próximo dia
+
+</button>
 </>
 
 );

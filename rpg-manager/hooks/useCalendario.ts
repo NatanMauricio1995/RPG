@@ -1,86 +1,108 @@
 "use client";
 
-import {useState}
+import {
+useEffect,
+useState
+}
 from "react";
 
-import calendario
+import calendarioInicial
 from "../data/calendario.json";
 
 export default function useCalendario(){
 
 const[
-
 dados,
 setDados
-
 ]=useState(
-calendario
+calendarioInicial
 );
+
+const[
+carregado,
+setCarregado
+]=useState(
+false
+);
+
+
+useEffect(()=>{
+
+const salvo=
+
+localStorage.getItem(
+"calendarioRPG"
+);
+
+if(salvo){
+
+setDados(
+JSON.parse(
+salvo
+)
+);
+
+}
+
+setCarregado(
+true
+);
+
+},[]);
+
+
+useEffect(()=>{
+
+if(carregado){
+
+localStorage.setItem(
+
+"calendarioRPG",
+
+JSON.stringify(
+dados
+)
+
+);
+
+}
+
+},[
+dados,
+carregado
+]);
 
 
 function avancarDia(){
 
-let{
+let novoDia=
+dados.diaAtual+1;
 
-diaAtual,
-mesAtual,
-anoAtual,
+let novoMes=
+dados.mesAtual;
 
-diaFestivoAtual,
-emPeriodoFestivo
-
-}=dados;
-
-
-if(emPeriodoFestivo){
-
-diaFestivoAtual++;
+let novoAno=
+dados.anoAtual;
 
 
 if(
-
-diaFestivoAtual>
-
-dados.diasFestivos.length
-
+novoDia>30
 ){
 
-diaFestivoAtual=0;
+novoDia=1;
 
-emPeriodoFestivo=false;
-
-diaAtual=1;
-
-mesAtual=1;
-
-anoAtual++;
-
-}
-
-}else{
-
-diaAtual++;
-
-if(diaAtual>30){
-
-diaAtual=1;
-
-mesAtual++;
+novoMes++;
 
 }
 
 
-if(mesAtual>12){
+if(
+novoMes>12
+){
 
-mesAtual=12;
+novoMes=1;
 
-diaAtual=30;
-
-emPeriodoFestivo=true;
-
-diaFestivoAtual=1;
-
-}
+novoAno++;
 
 }
 
@@ -89,35 +111,40 @@ setDados({
 
 ...dados,
 
-diaAtual,
+diaAtual:
+novoDia,
 
-mesAtual,
+mesAtual:
+novoMes,
 
-anoAtual,
-
-diaFestivoAtual,
-
-emPeriodoFestivo
+anoAtual:
+novoAno
 
 });
 
 }
+
 
 function mudarDia(
-novoDia:number
+novoDia:number,
+novoMes?:number
 ){
 
 setDados({
 
 ...dados,
 
-diaAtual:novoDia,
+diaAtual:
+novoDia,
 
-emPeriodoFestivo:false
+mesAtual:
+novoMes||
+dados.mesAtual
 
 });
 
 }
+
 
 return{
 
@@ -125,7 +152,9 @@ dados,
 
 avancarDia,
 
-mudarDia
+mudarDia,
+
+carregado
 
 };
 

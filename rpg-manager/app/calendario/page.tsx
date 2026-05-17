@@ -8,74 +8,50 @@ export default function Calendario(){
 const{
 
 dados,
+mudarDia,
 avancarDia,
-mudarDia
+carregado
 
 }=useCalendario();
 
+if(
+!carregado
+){
 
-const mes=
+return null;
 
-dados.meses.find(
-(m)=>
-
-m.id===
-dados.mesAtual
-);
-
-
-const diasSemana=[
-
-"Dom",
-"Seg",
-"Ter",
-"Qua",
-"Qui",
-"Sex",
-"Sab"
-
-];
-
-
-const diasMes=
-
-Array.from(
-
-{
-
-length:
-30
-
-},
-
-(_,i)=>i+1
-
-);
-
+}
 
 return(
 
-<div
-className="paginaCalendario"
->
+<div>
 
 <h1>
 
-📅 Calendário
+📅 Ano {dados.anoAtual}
 
 </h1>
 
 
+{
+
+dados.meses.map(
+(mes)=>(
+
+<div
+key={mes.id}
+className="blocoMes"
+>
+
 <h2>
 
-{mes?.nome}
+{mes.nome}
 
 </h2>
 
 <p>
 
-Ano:
-{dados.anoAtual}
+🍃 {mes.estacao}
 
 </p>
 
@@ -86,7 +62,7 @@ className="gridCalendario"
 
 {
 
-diasSemana.map(
+dados.diasSemana.map(
 (dia)=>(
 
 <div
@@ -110,7 +86,17 @@ className="cabecalhoCalendario"
 
 {
 
-diasMes.map(
+Array.from(
+
+{
+length:30
+},
+
+(_,i)=>i+1
+
+)
+
+.map(
 (dia)=>(
 
 <div
@@ -119,6 +105,8 @@ key={dia}
 
 className={
 
+mes.id===dados.mesAtual
+&&
 dia===dados.diaAtual
 
 ?
@@ -131,13 +119,14 @@ dia===dados.diaAtual
 
 }
 
-onClick={()=>
+onClick={()=>{
 
 mudarDia(
-dia
+dia,
+mes.id
 )
 
-}
+}}
 
 >
 
@@ -153,20 +142,39 @@ dia
 
 </div>
 
+</div>
 
-<button
+)
 
-className="botaoAcao"
+)
 
-onClick={
-avancarDia
 }
 
+
+<h2>
+
+🎉 Dias Festivos
+
+</h2>
+
+{
+
+dados.diasFestivos.map(
+(item:string)=>(
+
+<p
+key={item}
 >
 
-➡️ Próximo dia
+{item}
 
-</button>
+</p>
+
+)
+
+)
+
+}
 
 </div>
 
