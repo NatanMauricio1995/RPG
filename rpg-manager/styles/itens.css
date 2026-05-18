@@ -487,3 +487,31 @@ margin-top:-8px;
 font-style:italic;
 line-height:1.4;
 }
+
+.bonusGrid{
+display:grid;
+grid-template-columns:1fr 120px;
+gap:10px;
+margin-bottom:10px;
+}
+
+.efeitoContainer{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-bottom:15px;
+}
+
+.botaoRemover{
+padding:8px;
+background:#752020;
+border:1px solid #a33;
+border-radius:8px;
+color:white;
+cursor:pointer;
+transition:.3s;
+}
+
+.botaoRemover:hover{
+background:#a33;
+}
