@@ -10,7 +10,7 @@ import monstros
 from "../../../data/sistema/monstros.json";
 
 import tiposMonstros
-from "../../../data/tiposMonstros.json";
+from "../../../data/sistema/tiposMonstros.json";
 
 import FichaMonstro
 from "../../../components/Bestiario/FichaMonstro";

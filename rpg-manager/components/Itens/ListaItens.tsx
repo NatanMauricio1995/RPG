@@ -1,6 +1,7 @@
 "use client";
 
 import {useState} from "react";
+import Link from "next/link";
 
 import itensData
 from "../../data/sistema/itens.json";
@@ -10,11 +11,17 @@ from "./CardItem";
 
 export default function ListaItens(){
 
-const [itens,setItens]=
-useState(itensData);
+const[
+itens,
+setItens
+]=useState(
+itensData
+);
 
-const [tipo,setTipo]=
-useState("");
+const[
+tipo,
+setTipo
+]=useState("");
 
 
 function excluirItem(
@@ -65,6 +72,11 @@ className="topoItens"
 
 </h1>
 
+
+<Link
+href="/itens/inserir"
+>
+
 <button
 className="botaoNovo"
 >
@@ -73,13 +85,13 @@ className="botaoNovo"
 
 </button>
 
+</Link>
+
 </div>
 
 
 <select
-
 value={tipo}
-
 onChange={(e)=>
 
 setTipo(
@@ -87,7 +99,6 @@ e.target.value
 )
 
 }
-
 >
 
 <option value="">
@@ -127,17 +138,9 @@ itensFiltrados.map(
 (item)=>(
 
 <CardItem
-
-key={
-item.id
-}
-
+key={item.id}
 item={item}
-
-onExcluir={
-excluirItem
-}
-
+onExcluir={excluirItem}
 />
 
 )

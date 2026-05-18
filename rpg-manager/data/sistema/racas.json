@@ -3,19 +3,19 @@
 "id":1,
 "nome":"Humano",
 
+"imagem":"/imagens/racas/humano.png",
+
 "tamanho":"Médio",
 
 "deslocamento":9,
 
 "bonus":{
-
 "forca":1,
 "destreza":1,
 "constituicao":1,
 "inteligencia":1,
 "sabedoria":1,
 "carisma":1
-
 },
 
 "idiomas":[
@@ -25,20 +25,21 @@
 "habilidades":[
 1
 ]
+
 },
 
 {
 "id":2,
 "nome":"Anão",
 
+"imagem":"/imagens/racas/anao.png",
+
 "tamanho":"Médio",
 
 "deslocamento":7,
 
 "bonus":{
-
 "constituicao":2
-
 },
 
 "idiomas":[
@@ -50,20 +51,21 @@
 2,
 3
 ]
+
 },
 
 {
 "id":3,
 "nome":"Elfo",
 
+"imagem":"/imagens/racas/elfo.png",
+
 "tamanho":"Médio",
 
 "deslocamento":9,
 
 "bonus":{
-
 "destreza":2
-
 },
 
 "idiomas":[
@@ -75,20 +77,21 @@
 4,
 5
 ]
+
 },
 
 {
 "id":4,
 "nome":"Halfling",
 
+"imagem":"/imagens/racas/halfling.png",
+
 "tamanho":"Pequeno",
 
 "deslocamento":7,
 
 "bonus":{
-
 "destreza":2
-
 },
 
 "idiomas":[
@@ -100,21 +103,22 @@
 6,
 7
 ]
+
 },
 
 {
 "id":5,
 "nome":"Draconato",
 
+"imagem":"/imagens/racas/draconato.png",
+
 "tamanho":"Médio",
 
 "deslocamento":9,
 
 "bonus":{
-
 "forca":2,
 "carisma":1
-
 },
 
 "idiomas":[
@@ -125,20 +129,21 @@
 "habilidades":[
 8
 ]
+
 },
 
 {
 "id":6,
 "nome":"Gnomo",
 
+"imagem":"/imagens/racas/gnomo.png",
+
 "tamanho":"Pequeno",
 
 "deslocamento":7,
 
 "bonus":{
-
 "inteligencia":2
-
 },
 
 "idiomas":[
@@ -149,20 +154,21 @@
 "habilidades":[
 9
 ]
+
 },
 
 {
 "id":7,
 "nome":"Meio-Elfo",
 
+"imagem":"/imagens/racas/meioelfo.png",
+
 "tamanho":"Médio",
 
 "deslocamento":9,
 
 "bonus":{
-
 "carisma":2
-
 },
 
 "idiomas":[
@@ -174,21 +180,22 @@
 10,
 11
 ]
+
 },
 
 {
 "id":8,
 "nome":"Meio-Orc",
 
+"imagem":"/imagens/racas/meioorc.png",
+
 "tamanho":"Médio",
 
 "deslocamento":9,
 
 "bonus":{
-
 "forca":2,
 "constituicao":1
-
 },
 
 "idiomas":[
@@ -200,21 +207,22 @@
 12,
 13
 ]
+
 },
 
 {
 "id":9,
 "nome":"Tiefling",
 
+"imagem":"/imagens/racas/tiefling.png",
+
 "tamanho":"Médio",
 
 "deslocamento":9,
 
 "bonus":{
-
 "inteligencia":1,
 "carisma":2
-
 },
 
 "idiomas":[
@@ -225,5 +233,6 @@
 "habilidades":[
 14
 ]
+
 }
 ]

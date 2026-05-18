@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import habilidadesMonstros
-from "../../data/habilidadesMonstros.json";
+from "../../data/sistema/habilidadesMonstros.json";
 
 type Props={
 
