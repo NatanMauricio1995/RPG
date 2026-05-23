@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 type Props={
 
 pesquisa:string;
@@ -138,13 +140,15 @@ key={item}
 </select>
 
 
-<button
-className="novoPersonagem"
->
+<Link href="/personagens/inserir">
+
+<button className="novoPersonagem">
 
 ➕ Novo Personagem
 
 </button>
+
+</Link>
 
 </div>
 

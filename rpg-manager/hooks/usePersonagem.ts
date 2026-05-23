@@ -1,175 +1,49 @@
 "use client";
-import {calcularVida} from "../services/calculoService";
-import {useState} from "react";
-import personagens from "../data/campanha/personagens.json";
-import racas from "../data/sistema/racas.json";
-import classes from "../data/sistema/classes.json";
-import niveis from "../data/sistema/niveis.json";
+import {useEffect,useState} from "react";
+import {
+buscarPersonagem,
+completarPersonagem
+} from "../services/personagemService";
 
 export default function usePersonagem(
 id:number
 ){
-
-const personagemBase=
-
-personagens.find(
-(p)=>
-
-p.id===id
-);
-
-
-if(!personagemBase){
-
-return{
-
-personagemAtual:null,
-
-setPersonagemAtual:()=>{}
-
-};
-
-}
-
-
-const classe=
-
-classes.find(
-(c)=>
-
-c.id===
-personagemBase.classeId
-);
-
-
-const raca=
-
-racas.find(
-(r)=>
-
-r.id===
-personagemBase.racaId
-);
-
-
-const dadosNivel=
-
-niveis.find(
-(n)=>
-
-n.nivel===
-personagemBase.nivel
-);
-
-
-const atributosComBonus={
-
-forca:
-
-personagemBase
-.atributosBase
-.forca+
-
-(raca?.bonus?.forca||0),
-
-
-destreza:
-
-personagemBase
-.atributosBase
-.destreza+
-
-(raca?.bonus?.destreza||0),
-
-
-constituicao:
-
-personagemBase
-.atributosBase
-.constituicao+
-
-(raca?.bonus?.constituicao||0),
-
-
-inteligencia:
-
-personagemBase
-.atributosBase
-.inteligencia+
-
-(raca?.bonus?.inteligencia||0),
-
-
-sabedoria:
-
-personagemBase
-.atributosBase
-.sabedoria+
-
-(raca?.bonus?.sabedoria||0),
-
-
-carisma:
-
-personagemBase
-.atributosBase
-.carisma+
-
-(raca?.bonus?.carisma||0)
-
-};
-
-
-const vidaMaxima=
-
-calcularVida(
-
-classe?.vidaBase||8,
-
-atributosComBonus
-.constituicao,
-
-personagemBase
-.nivel
-
-);
-
-
-const personagemCompleto={
-
-...personagemBase,
-
-classe:
-classe?.nome || "",
-
-raca:
-raca?.nome || "",
-
-classeDados:
-classe,
-
-racaDados:
-raca,
-
-dadosNivel:
-dadosNivel,
-
-atributos:
-atributosComBonus,
-
-vidaMaxima
-
-};
-
 
 const[
 
 personagemAtual,
 setPersonagemAtual
 
-]=useState(
-personagemCompleto
+]=useState<any>(()=>{
+
+const personagemBase=
+buscarPersonagem(
+id
 );
+
+return personagemBase
+? completarPersonagem(personagemBase)
+: null;
+
+});
+
+
+useEffect(()=>{
+
+const personagemAtualizado=
+buscarPersonagem(
+id
+);
+
+setPersonagemAtual(
+personagemAtualizado
+? completarPersonagem(personagemAtualizado)
+: null
+);
+
+},[
+id
+]);
 
 
 return{

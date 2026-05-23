@@ -42,7 +42,7 @@ return(
 
 src={
 personagem.imagem ||
-"/imagens/personagens/padrao.png"
+"/imagens/racas/padrao.png"
 }
 
 alt={
@@ -105,11 +105,17 @@ href={`/personagens/${personagem.id}`}
 
 </Link>
 
+<Link
+href={`/personagens/${personagem.id}/editar`}
+>
+
 <button>
 
 ✏️ Editar
 
 </button>
+
+</Link>
 
 <button>
 

@@ -246,3 +246,85 @@
   box-shadow: 0 0 12px var(--sombra-ouro);
   transform: translateY(-1px);
 }
+
+/* ── FORMULARIO PERSONAGEM ── */
+.formularioPersonagem {
+  max-width: 900px;
+  background: var(--pedra-clara);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 0 18px rgba(0,0,0,0.35);
+}
+
+.formularioPersonagem label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--ouro-claro);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.formularioPersonagem input,
+.formularioPersonagem select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--pedra-media);
+  color: var(--texto);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 6px;
+  font-family: 'IM Fell English', serif;
+  font-size: 15px;
+}
+
+.formularioPersonagem input:focus,
+.formularioPersonagem select:focus {
+  outline: none;
+  border-color: var(--ouro-escuro);
+  box-shadow: 0 0 10px rgba(200, 155, 60, 0.2);
+}
+
+.formularioPersonagemGrid,
+.atributosFormularioPersonagem {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.previewImagemPersonagem {
+  margin: 14px 0;
+  width: 240px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #12100a, #1a1612);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.previewImagemPersonagem img {
+  object-fit: contain;
+}
+
+.botaoSalvarPersonagem {
+  margin-top: 22px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, var(--ouro-escuro), #6b520f);
+  color: #1a1408;
+  border: 1px solid var(--ouro);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.botaoSalvarPersonagem:hover {
+  background: linear-gradient(135deg, var(--ouro), var(--ouro-escuro));
+  box-shadow: 0 4px 15px var(--sombra-ouro);
+}

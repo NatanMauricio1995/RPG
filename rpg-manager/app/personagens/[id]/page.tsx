@@ -119,6 +119,18 @@ className="botaoVoltar"
 
 </Link>
 
+<Link href={`/personagens/${personagemAtual.id}/editar`}>
+
+<button
+className="botaoVoltar"
+>
+
+✏️ Editar
+
+</button>
+
+</Link>
+
 
 <div className="ficha">
 
@@ -132,7 +144,7 @@ className="botaoVoltar"
 <Image
 src={
 personagemAtual.imagem ||
-"/imagens/personagens/padrao.png"
+"/imagens/racas/padrao.png"
 }
 alt={
 personagemAtual.nome

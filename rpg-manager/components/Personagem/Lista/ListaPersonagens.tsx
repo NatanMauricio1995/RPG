@@ -1,12 +1,11 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect,useState} from "react";
 
-import personagensData from "../../../data/campanha/personagens.json";
-
-import racas from "../../../data/sistema/racas.json";
-
-import classes from "../../../data/sistema/classes.json";
+import {
+completarPersonagem,
+listarPersonagens
+} from "../../../services/personagemService";
 
 import CardPersonagem
 from "./CardPersonagem";
@@ -26,63 +25,31 @@ const [raca,setRaca]=
 useState("");
 
 
+const [
+personagensBase,
+setPersonagensBase
+]=useState<any[]>([]);
+
+
+useEffect(()=>{
+
+setPersonagensBase(
+listarPersonagens()
+);
+
+},[]);
+
+
 const personagens=
 
-personagensData
+personagensBase
 
 .map(
 (personagem)=>{
 
-const classeEncontrada=
-
-classes.find(
-(c)=>
-c.id===
-personagem.classeId
-);
-
-
-const racaEncontrada=
-
-racas.find(
-(r)=>
-r.id===
-personagem.racaId
-);
-
-
-const vidaBase=10;
-
-const vidaMaxima=
-
-vidaBase+
-
-(
-(classeEncontrada?.vidaPorNivel || 0)
-*
-personagem.nivel
-)
-
-+
-
+return completarPersonagem(
 personagem
-.atributosBase
-.constituicao;
-
-
-return{
-
-...personagem,
-
-classe:
-classeEncontrada?.nome || "",
-
-raca:
-racaEncontrada?.nome || "",
-
-vidaMaxima
-
-};
+);
 
 }
 
