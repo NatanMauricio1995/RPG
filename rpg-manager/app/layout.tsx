@@ -8,6 +8,7 @@ import "../styles/personagens.css";
 import "./globals.css";
 import "../styles/bestiario.css";
 import "../styles/itens.css";
+import "../styles/combate.css";
 import {InventarioProvider} 
 from "../contexts/InventarioContext";
 

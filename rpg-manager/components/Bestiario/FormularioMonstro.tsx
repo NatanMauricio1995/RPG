@@ -322,7 +322,7 @@ anterior=>({
 ...anterior,
 
 imagem:
-leitor.result
+String(leitor.result || "/imagens/monstros/padrao.png")
 
 })
 

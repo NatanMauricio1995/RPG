@@ -97,6 +97,31 @@ bonus(nome)
 
 </div>
 
+<div className="atributosGrid atributosDerivados">
+
+{[
+["vida","Vida Máxima"],
+["mana","Mana"],
+["critico","Crítico"],
+["armadura","Armadura"],
+["velocidade","Velocidade"],
+["escudo","Escudo"]
+].map(([chave,rotulo])=>(
+
+<div
+key={chave}
+className="atributoCard"
+>
+<h3>{rotulo}</h3>
+<p>
+{bonus(chave)>0 ? `+ ${bonus(chave)}` : bonus(chave)}
+</p>
+</div>
+
+))}
+
+</div>
+
 </>
 
 );

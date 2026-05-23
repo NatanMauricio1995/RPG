@@ -211,7 +211,7 @@ setItem(anterior=>({
 ...anterior,
 
 imagem:
-leitor.result
+String(leitor.result || "/imagens/itens/padrao.png")
 
 }));
 
@@ -351,6 +351,12 @@ e.target.value
 <option value="critico">Crítico</option>
 <option value="armadura">Armadura</option>
 <option value="velocidade">Velocidade</option>
+<option value="veneno">Veneno</option>
+<option value="sangramento">Sangramento</option>
+<option value="paralisia">Paralisia</option>
+<option value="medo">Medo</option>
+<option value="cura">Cura</option>
+<option value="escudo">Escudo</option>
 
 </select>
 

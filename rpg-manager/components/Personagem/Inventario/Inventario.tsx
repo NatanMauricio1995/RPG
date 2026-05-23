@@ -1,4 +1,4 @@
-import itens from "../../data/sistema/itens.json";
+import itens from "../../../data/sistema/itens.json";
 
 export default function Inventario(){
 
@@ -10,7 +10,7 @@ return(
 
 <div className="inventarioGrid">
 
-{itens.map((item)=>(
+{itens.map((item:any)=>(
 
 <div
 key={item.id}

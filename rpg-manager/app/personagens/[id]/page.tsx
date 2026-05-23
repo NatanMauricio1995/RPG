@@ -9,6 +9,7 @@ import usePersonagem from "../../../hooks/usePersonagem";
 import useNivel from "../../../hooks/useNivel";
 import useEquipamento from "../../../hooks/useEquipamento";
 import { useInventario } from "../../../contexts/InventarioContext";
+import {resolverEquipados,resolverInventario} from "../../../services/itemService";
 
 import InformacoesBasicas from "../../../components/Personagem/Ficha/InformacoesBasicas";
 import Atributos from "../../../components/Personagem/Ficha/Atributos";
@@ -77,16 +78,10 @@ return;
 
 const inventarioCorrigido=
 
-(personagemAtual.inventario||[])
-
+resolverInventario(personagemAtual.inventario || [])
 .map((item:any)=>({
-
 ...item,
-
-imagem:
-item.imagem ||
-"/imagens/itens/padrao.png"
-
+imagem:item.imagem || "/imagens/itens/padrao.png"
 }));
 
 
@@ -94,7 +89,7 @@ carregarInventario(
 
 inventarioCorrigido,
 
-personagemAtual.equipados||{}
+resolverEquipados(personagemAtual.equipados || {})
 
 );
 

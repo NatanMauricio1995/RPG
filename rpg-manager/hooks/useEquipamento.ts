@@ -1,41 +1,29 @@
+import {calcularBonusEquipados} from "../services/efeitosService";
+import {resolverEquipados} from "../services/itemService";
+
 export default function useEquipamento(
 equipados:any
 ){
+
+const equipamentosResolvidos=
+resolverEquipados(equipados || {});
+
+const bonusCalculado=
+calcularBonusEquipados(equipamentosResolvidos);
 
 function bonus(
 atributo:string
 ){
 
-let total=0;
-
-Object.values(
-equipados
-).forEach(
-(item:any)=>{
-
-if(
-item?.bonus?.[
-atributo
-]
-){
-
-total+=
-item.bonus[
-atributo
-];
-
-}
-
-}
-);
-
-return total;
+return bonusCalculado[atributo] || 0;
 
 }
 
 return{
 
-bonus
+bonus,
+bonusCalculado,
+equipamentosResolvidos
 
 };
 
