@@ -307,6 +307,10 @@ margin-top:6px;
 color:var(--texto-dimmed);
 }
 
+.painelAcoesCombate .alertaControleCombate{
+color:#e8b45f;
+}
+
 .painelAcoesCombate select{
 display:block;
 width:100%;

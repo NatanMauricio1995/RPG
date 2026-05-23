@@ -39,7 +39,7 @@ vida:10,
 mana:0,
 armadura:0,
 
-imagem:"/imagens/monstros/padrao.png",
+imagem:"/imagens/monstros/goblin.png",
 
 atributos:{
 forca:0,
@@ -322,7 +322,7 @@ anterior=>({
 ...anterior,
 
 imagem:
-String(leitor.result || "/imagens/monstros/padrao.png")
+String(leitor.result || "/imagens/monstros/goblin.png")
 
 })
 

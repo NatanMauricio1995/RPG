@@ -1,17 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import {useMemo,useState} from "react";
 import {listarPersonagens} from "../../services/personagemService";
 import {
-Combatente,
 EstadoCombate,
+combatenteEstaControlado,
 executarAtaqueBasico,
 executarHabilidade,
 iniciarCombate,
 listarMonstrosCombate,
 passarTurno
 } from "../../services/combateService";
+import PainelSelecaoCombate from "../../components/Combate/PainelSelecaoCombate";
+import GrupoCombatentes from "../../components/Combate/GrupoCombatentes";
+import LogCombate from "../../components/Combate/LogCombate";
 
 export default function CombatePage(){
 
@@ -145,7 +147,7 @@ Iniciar Combate
 </div>
 
 <section className="preparacaoCombate">
-<PainelSelecao
+<PainelSelecaoCombate
 titulo="Aliados"
 itens={personagens}
 selecionados={personagensSelecionados}
@@ -154,7 +156,7 @@ alternarSelecao(id,personagensSelecionados,setPersonagensSelecionados)
 }
 />
 
-<PainelSelecao
+<PainelSelecaoCombate
 titulo="Inimigos"
 itens={monstros}
 selecionados={monstrosSelecionados}
@@ -210,6 +212,9 @@ atualId={combatenteAtual.id}
 <small>Turno atual</small>
 <h2>{combatenteAtual.nome}</h2>
 <p>Iniciativa {combatenteAtual.rolagemIniciativa}+{Math.round(combatenteAtual.velocidade)} = {Math.round(combatenteAtual.iniciativa)}</p>
+{combatenteEstaControlado(combatenteAtual) &&(
+<p className="alertaControleCombate">Efeito de controle ativo. A ação pode ser anulada pelo combate.</p>
+)}
 </div>
 
 <label>
@@ -262,161 +267,6 @@ title={`${habilidade.tipo} | mana ${habilidade.custoMana} | recarga ${habilidade
 
 </div>
 
-);
-
-}
-
-function PainelSelecao({
-titulo,
-itens,
-selecionados,
-onAlternar
-}:{
-titulo:string;
-itens:any[];
-selecionados:number[];
-onAlternar:(id:number)=>void;
-}){
-
-return(
-<div className="painelSelecaoCombate">
-<h2>{titulo}</h2>
-<div className="listaSelecaoCombate">
-{itens.map((item:any)=>(
-<button
-key={item.id}
-className={selecionados.includes(Number(item.id)) ? "selecionado" : ""}
-onClick={()=>onAlternar(Number(item.id))}
->
-<Image
-src={item.imagem || "/imagens/racas/padrao.png"}
-alt={item.nome}
-width={64}
-height={64}
-/>
-<span>{item.nome}</span>
-<small>Nível {item.nivel || 1}</small>
-</button>
-))}
-</div>
-</div>
-);
-
-}
-
-function GrupoCombatentes({
-titulo,
-combatentes,
-atualId
-}:{
-titulo:string;
-combatentes:Combatente[];
-atualId:string;
-}){
-
-return(
-<div className="grupoCombatentes">
-<h2>{titulo}</h2>
-{combatentes.map((combatente)=>(
-<article
-key={combatente.id}
-className={`cardCombatente ${combatente.id===atualId ? "ativo" : ""} ${!combatente.vivo ? "morto" : ""}`}
->
-<Image
-src={combatente.imagem}
-alt={combatente.nome}
-width={86}
-height={86}
-/>
-<div className="dadosCombatente">
-<div className="linhaNomeCombatente">
-<h3>{combatente.nome}</h3>
-<span>CA {combatente.armadura}</span>
-</div>
-<BarraStatus
-classe="vida"
-valor={combatente.vidaAtual}
-maximo={combatente.vidaMaxima}
-rotulo="Vida"
-/>
-<BarraStatus
-classe="mana"
-valor={combatente.manaAtual}
-maximo={Math.max(1,combatente.manaMaxima)}
-rotulo="Mana"
-/>
-<div className="metasCombatente">
-<span>Crítico {combatente.critico}%</span>
-<span>Esquiva {combatente.esquiva}%</span>
-<span>Escudo {combatente.escudo}</span>
-</div>
-{combatente.efeitos.length>0 &&(
-<div className="efeitosAtivosCombate">
-{combatente.efeitos.map((efeito,index)=>(
-<span key={`${efeito.tipo}-${index}`}>
-{efeito.tipo} {efeito.valor}/{efeito.duracao}
-</span>
-))}
-</div>
-)}
-</div>
-</article>
-))}
-</div>
-);
-
-}
-
-function BarraStatus({
-classe,
-valor,
-maximo,
-rotulo
-}:{
-classe:string;
-valor:number;
-maximo:number;
-rotulo:string;
-}){
-
-const largura=Math.max(0,Math.min(100,(valor/maximo)*100));
-
-return(
-<div className="barraCombate">
-<div className="barraTopo">
-<span>{rotulo}</span>
-<span>{Math.round(valor)} / {Math.round(maximo)}</span>
-</div>
-<div className="barraTrilho">
-<div
-className={`barraPreenchimento ${classe}`}
-style={{width:`${largura}%`}}
-/>
-</div>
-</div>
-);
-
-}
-
-function LogCombate({
-estado
-}:{
-estado:EstadoCombate;
-}){
-
-return(
-<div className="logCombate">
-<h2>Histórico de Combate</h2>
-{estado.log.map((entrada)=>(
-<div
-key={entrada.id}
-className={`entradaLog ${entrada.tipo}`}
->
-<small>Turno {entrada.turno}</small>
-<p>{entrada.texto}</p>
-</div>
-))}
-</div>
 );
 
 }

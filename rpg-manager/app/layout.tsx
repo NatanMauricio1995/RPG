@@ -9,6 +9,7 @@ import "./globals.css";
 import "../styles/bestiario.css";
 import "../styles/itens.css";
 import "../styles/combate.css";
+import "../styles/npcs.css";
 import {InventarioProvider} 
 from "../contexts/InventarioContext";
 

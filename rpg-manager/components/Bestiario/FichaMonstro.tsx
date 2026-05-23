@@ -68,7 +68,7 @@ return(
 <Image
 src={
 monstro.imagem ||
-"/imagens/monstros/padrao.png"
+"/imagens/monstros/goblin.png"
 }
 alt={monstro.nome}
 width={350}

@@ -147,6 +147,15 @@ const alvo=buscarCombatente(estado,alvoId);
 if(!atacante || !alvo || !atacante.vivo || !alvo.vivo)
 return estado;
 
+const controle=resolverControleTurno(atacante);
+
+if(controle.bloqueado){
+return finalizarAcao(
+adicionarLog(estado,controle.texto,"efeito"),
+atacante.id
+);
+}
+
 const rolagemAtaque=rolarDado(20);
 const defesa=alvo.armadura;
 const esquiva=rolarDado(100)<=alvo.esquiva;
@@ -188,6 +197,15 @@ const habilidade=atacante?.habilidades.find((item)=>item.id===habilidadeId);
 
 if(!atacante || !alvo || !habilidade || !atacante.vivo || !alvo.vivo)
 return estado;
+
+const controle=resolverControleTurno(atacante);
+
+if(controle.bloqueado){
+return finalizarAcao(
+adicionarLog(estado,controle.texto,"efeito"),
+atacante.id
+);
+}
 
 if(atacante.manaAtual<habilidade.custoMana){
 return adicionarLog(
@@ -251,6 +269,17 @@ return finalizarAcao(
 adicionarLog(estado,`${buscarCombatente(estado,combatenteId)?.nome} aguardou o momento certo.`,"sistema"),
 combatenteId
 );
+
+}
+
+export function combatenteEstaControlado(
+combatente:Combatente
+){
+
+return combatente.efeitos.some((efeito)=>{
+const tipo=normalizarTipoEfeito(efeito.tipo);
+return tipo==="paralisia" || tipo==="medo";
+});
 
 }
 
@@ -325,7 +354,7 @@ id:`inimigo-${monstro.id}-${index}`,
 origemId:Number(monstro.id),
 lado:"inimigo",
 nome:monstro.nome || "Criatura",
-imagem:monstro.imagem || "/imagens/monstros/padrao.png",
+imagem:monstro.imagem || "/imagens/monstros/goblin.png",
 nivel,
 vidaAtual:vida,
 vidaMaxima:vida,
@@ -519,6 +548,14 @@ if(tipo==="cura"){
 novoEstado=alterarVida(novoEstado,combatente.id,Math.max(1,efeito.valor));
 novoEstado=adicionarLog(novoEstado,`${combatente.nome} recuperou ${efeito.valor} de vida.`,"efeito");
 }
+
+if(tipo==="paralisia"){
+novoEstado=adicionarLog(novoEstado,`${combatente.nome} está paralisado e pode perder a ação.`,"efeito");
+}
+
+if(tipo==="medo"){
+novoEstado=adicionarLog(novoEstado,`${combatente.nome} hesita sob efeito de medo.`,"efeito");
+}
 });
 
 novoEstado=atualizarCombatente(novoEstado,combatenteId,(atual)=>({
@@ -682,6 +719,35 @@ return [alvo];
 return estado.combatentes
 .filter((combatente)=>combatente.lado===alvo.lado && combatente.vivo)
 .slice(0,area);
+
+}
+
+function resolverControleTurno(
+combatente:Combatente
+){
+
+const paralisia=combatente.efeitos.find((efeito)=>normalizarTipoEfeito(efeito.tipo)==="paralisia");
+
+if(paralisia){
+return{
+bloqueado:true,
+texto:`${combatente.nome} perdeu a ação por paralisia.`
+};
+}
+
+const medo=combatente.efeitos.find((efeito)=>normalizarTipoEfeito(efeito.tipo)==="medo");
+
+if(medo && rolarDado(100)<=50){
+return{
+bloqueado:true,
+texto:`${combatente.nome} foi dominado pelo medo e não conseguiu agir.`
+};
+}
+
+return{
+bloqueado:false,
+texto:""
+};
 
 }
 
