@@ -1,5 +1,7 @@
 "use client";
+
 import Image from "next/image";
+
 import habilidadesMonstros
 from "../../data/sistema/habilidadesMonstros.json";
 
@@ -7,7 +9,7 @@ type Props={
 
 monstro:any;
 
-}
+};
 
 export default function FichaMonstro({
 
@@ -17,14 +19,28 @@ monstro
 
 const habilidades=
 
+Array.isArray(
+monstro.habilidades
+)
+
+?
+
 habilidadesMonstros.filter(
 (h)=>
+
+typeof monstro.habilidades[0]==="number"
+
+&&
 
 monstro.habilidades.includes(
 h.id
 )
 
-);
+)
+
+:
+
+monstro.habilidades || [];
 
 
 const nomes={
@@ -48,25 +64,18 @@ return(
 👹 {monstro.nome}
 
 </h1>
+
 <Image
-
 src={
-
 monstro.imagem ||
-
 "/imagens/monstros/padrao.png"
-
 }
-
 alt={monstro.nome}
-
 width={350}
-
 height={350}
-
 className="imagemFichaMonstro"
-
 />
+
 
 <div className="informacoesBasicas">
 
@@ -89,7 +98,7 @@ className="imagemFichaMonstro"
 
 <p>
 
-{monstro.nivel}
+{monstro.nivel || 1}
 
 </p>
 
@@ -102,7 +111,7 @@ className="imagemFichaMonstro"
 
 <p>
 
-{monstro.vida}
+{monstro.vida || 0}
 
 </p>
 
@@ -115,7 +124,7 @@ className="imagemFichaMonstro"
 
 <p>
 
-{monstro.defesa}
+{monstro.defesa || monstro.armadura || 0}
 
 </p>
 
@@ -128,7 +137,7 @@ className="imagemFichaMonstro"
 
 <p>
 
-{monstro.deslocamento}
+{monstro.deslocamento || 0}
 
 </p>
 
@@ -141,7 +150,7 @@ className="imagemFichaMonstro"
 
 <p>
 
-{monstro.experiencia}
+{monstro.experiencia || 0}
 
 </p>
 
@@ -156,14 +165,15 @@ className="imagemFichaMonstro"
 
 </h2>
 
-
 <div className="atributosGrid">
 
 {
 
 Object.entries(
-monstro.atributos
-).map(
+monstro.atributos || {}
+)
+
+.map(
 
 ([nome,valor])=>(
 
@@ -175,9 +185,11 @@ className="atributoCard"
 <h3>
 
 {
+
 nomes[
 nome as keyof typeof nomes
 ]
+
 }
 
 </h3>
@@ -205,16 +217,19 @@ nome as keyof typeof nomes
 
 </h2>
 
-
 <div className="inventarioGrid">
 
 {
 
+habilidades.length>0
+
+?
+
 habilidades.map(
-(item)=>(
+(item:any,index:number)=>(
 
 <div
-key={item.id}
+key={item.id || index}
 className="itemCard"
 >
 
@@ -223,6 +238,21 @@ className="itemCard"
 {item.nome}
 
 </h3>
+
+{
+
+item.dano && (
+
+<p>
+
+💥 Dano:
+{item.dano}
+
+</p>
+
+)
+
+}
 
 <p>
 
@@ -236,9 +266,125 @@ className="itemCard"
 
 )
 
+:
+
+<p>
+
+Nenhuma habilidade cadastrada
+
+</p>
+
 }
 
 </div>
+
+
+{
+
+monstro.efeitos?.length>0 && (
+
+<>
+
+<h2>
+
+☠️ Efeitos
+
+</h2>
+
+<div className="inventarioGrid">
+
+{
+
+monstro.efeitos.map(
+(item:any,index:number)=>(
+
+<div
+key={index}
+className="itemCard"
+>
+
+<h3>
+
+{item.tipo}
+
+</h3>
+
+<p>
+
+Valor:
+{item.valor}
+
+</p>
+
+</div>
+
+)
+
+)
+
+}
+
+</div>
+
+</>
+
+)
+
+}
+
+
+{
+
+monstro.loot?.length>0 && (
+
+<>
+
+<h2>
+
+🎁 Loot
+
+</h2>
+
+<div className="inventarioGrid">
+
+{
+
+monstro.loot.map(
+(item:any,index:number)=>(
+
+<div
+key={index}
+className="itemCard"
+>
+
+<h3>
+
+{item.nome}
+
+</h3>
+
+<p>
+
+Chance:
+{item.chance}%
+
+</p>
+
+</div>
+
+)
+
+)
+
+}
+
+</div>
+
+</>
+
+)
+
+}
 
 </div>
 

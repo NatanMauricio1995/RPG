@@ -168,3 +168,42 @@ transition:.3s;
 transform:translateY(-3px);
 box-shadow:0 0 15px rgba(200,155,60,.4);
 }
+
+.fichaMonstro{
+display:flex;
+flex-direction:column;
+gap:20px;
+}
+
+.statusMonstro{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.cardHabilidade{
+padding:15px;
+border:1px solid var(--ouro-escuro);
+border-radius:10px;
+margin-bottom:10px;
+background:rgba(255,255,255,.03);
+}
+
+.linhaEfeito,
+.linhaLoot{
+margin-bottom:8px;
+padding:10px;
+border-left:3px solid var(--ouro);
+}
+
+.rodapeCarta{
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+gap:10px;
+margin-top:15px;
+}
+
+.rodapeCarta button{
+min-width:95px;
+}

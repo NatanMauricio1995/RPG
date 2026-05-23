@@ -7,13 +7,72 @@ type Props={
 
 monstro:any;
 
-}
+};
 
 export default function CardMonstro({
 
 monstro
 
 }:Props){
+
+
+function excluirMonstro(){
+
+const monstros=
+
+JSON.parse(
+
+localStorage.getItem(
+"monstrosPersonalizados"
+)
+
+||"[]"
+
+);
+
+const atualizados=
+
+monstros.filter(
+(m:any)=>
+
+m.id!==monstro.id
+);
+
+localStorage.setItem(
+
+"monstrosPersonalizados",
+
+JSON.stringify(
+atualizados
+)
+
+);
+
+window.location.reload();
+
+}
+
+
+function confirmarExclusao(){
+
+const confirmar=
+
+window.confirm(
+
+`Deseja excluir ${monstro.nome}?`
+
+);
+
+if(
+confirmar
+){
+
+excluirMonstro();
+
+}
+
+}
+
 
 return(
 
@@ -39,19 +98,13 @@ return(
 <div className="imagemCarta">
 
 <Image
-
 src={
-monstro.imagem
+monstro.imagem ||
+"/imagens/monstros/padrao.png"
 }
-
-alt={
-monstro.nome
-}
-
+alt={monstro.nome}
 fill
-
 className="imagemMonstro"
-
 />
 
 </div>
@@ -75,14 +128,14 @@ className="imagemMonstro"
 <p>
 
 🛡️ Defesa:
-{monstro.defesa}
+{monstro.defesa || monstro.armadura || 0}
 
 </p>
 
 <p>
 
 ✨ Experiência:
-{monstro.experiencia}
+{monstro.experiencia || 0}
 
 </p>
 
@@ -102,6 +155,28 @@ href={`/bestiario/${monstro.id}`}
 </button>
 
 </Link>
+
+
+<Link
+href={`/bestiario/editar/${monstro.id}`}
+>
+
+<button>
+
+✏️ Editar
+
+</button>
+
+</Link>
+
+
+<button
+onClick={confirmarExclusao}
+>
+
+🗑 Excluir
+
+</button>
 
 </div>
 

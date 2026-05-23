@@ -13,7 +13,11 @@ export default function ListaMonstros(){
 
 const [pesquisa,setPesquisa]=useState("");
 const [tipo,setTipo]=useState("");
-const [monstrosPersonalizados,setMonstrosPersonalizados]=useState<any[]>([]);
+
+const[
+monstrosPersonalizados,
+setMonstrosPersonalizados
+]=useState<any[]>([]);
 
 
 useEffect(()=>{
@@ -37,31 +41,17 @@ monstrosSalvos
 },[]);
 
 
-const todosMonstros=[
+const monstrosPadrao=
 
-...monstrosData,
-
-...monstrosPersonalizados
-
-];
-
-
-const monstros=
-
-todosMonstros
-
-.map((monstro:any)=>{
-
-if(monstro.tipo){
-
-return monstro;
-
-}
+monstrosData.map(
+(monstro:any)=>{
 
 const tipoEncontrado=
 
 tiposMonstros.find(
-(t)=>t.id===monstro.tipoId
+(t)=>
+
+t.id===monstro.tipoId
 );
 
 return{
@@ -69,13 +59,43 @@ return{
 ...monstro,
 
 tipo:
-tipoEncontrado?.nome || ""
+tipoEncontrado?.nome || "",
+
+padrao:true
 
 };
 
-})
+}
 
-.filter((monstro:any)=>{
+);
+
+
+const monstrosCustomizados=
+
+monstrosPersonalizados.map(
+(monstro:any)=>({
+
+...monstro,
+
+padrao:false
+
+})
+);
+
+
+const todosMonstros=[
+
+...monstrosPadrao,
+
+...monstrosCustomizados
+
+];
+
+
+const monstros=
+
+todosMonstros.filter(
+(monstro:any)=>{
 
 const nomeOk=
 
@@ -101,9 +121,11 @@ return nomeOk && tipoOk;
 const tiposUnicos=[
 
 ...new Set(
-monstros.map(
+
+todosMonstros.map(
 (m:any)=>m.tipo
 )
+
 )
 
 ];

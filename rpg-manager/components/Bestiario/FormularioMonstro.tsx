@@ -1,14 +1,33 @@
 "use client";
 
-import {useState} from "react";
-import {useRouter} from "next/navigation";
+import {useState,useEffect} from "react";
+import {useRouter,useParams} from "next/navigation";
 import Image from "next/image";
 
-export default function FormularioMonstro(){
+type Props={
+
+modoEdicao?:boolean;
+
+};
+
+export default function FormularioMonstro({
+
+modoEdicao=false
+
+}:Props){
 
 const router=useRouter();
 
-const[monstro,setMonstro]=useState({
+const params=
+useParams();
+
+const id=
+Number(
+params?.id
+);
+
+
+const modeloMonstro={
 
 id:Date.now(),
 
@@ -23,36 +42,35 @@ armadura:0,
 imagem:"/imagens/monstros/padrao.png",
 
 atributos:{
-
 forca:0,
 destreza:0,
 constituicao:0,
 inteligencia:0,
 sabedoria:0,
 carisma:0
-
 },
 
-habilidades:[
-
-{
+habilidades:[{
 nome:"",
 descricao:"",
 dano:""
-}
+}],
 
-],
-
-efeitos:[
-
-{
-tipo:"veneno",
+efeitos:[{
+tipo:"Veneno",
 valor:0
-}
+}],
 
-]
+loot:[{
+nome:"",
+chance:0
+}]
 
-});
+};
+
+
+const[monstro,setMonstro]=
+useState(modeloMonstro);
 
 
 const nomesAtributos={
@@ -67,16 +85,93 @@ carisma:"Carisma"
 };
 
 
-function alterarCampo(evento:any){
+useEffect(()=>{
 
-setMonstro(anterior=>({
+if(
+!modoEdicao
+)return;
+
+const monstros=
+
+JSON.parse(
+
+localStorage.getItem(
+"monstrosPersonalizados"
+)
+
+||"[]"
+
+);
+
+const encontrado=
+
+monstros.find(
+(m:any)=>
+
+m.id===id
+);
+
+if(
+!encontrado
+)return;
+
+
+setMonstro({
+
+...modeloMonstro,
+
+...encontrado,
+
+atributos:{
+
+...modeloMonstro.atributos,
+
+...encontrado.atributos
+
+},
+
+habilidades:
+
+encontrado.habilidades ||
+
+modeloMonstro.habilidades,
+
+efeitos:
+
+encontrado.efeitos ||
+
+modeloMonstro.efeitos,
+
+loot:
+
+encontrado.loot ||
+
+modeloMonstro.loot
+
+});
+
+},[
+modoEdicao,
+id
+]);
+
+
+function alterarCampo(
+evento:any
+){
+
+setMonstro(
+anterior=>({
 
 ...anterior,
 
 [evento.target.name]:
+
 evento.target.value
 
-}));
+})
+
+);
 
 }
 
@@ -86,7 +181,8 @@ atributo:string,
 valor:number
 ){
 
-setMonstro(anterior=>({
+setMonstro(
+anterior=>({
 
 ...anterior,
 
@@ -99,7 +195,108 @@ valor
 
 }
 
-}));
+})
+
+);
+
+}
+
+
+function alterarLista(
+lista:string,
+index:number,
+campo:string,
+valor:any
+){
+
+setMonstro(
+anterior=>{
+
+const novaLista=[
+
+...(anterior[
+lista as keyof typeof anterior
+] as any[])
+
+];
+
+novaLista[index]={
+
+...novaLista[index],
+
+[campo]:
+valor
+
+};
+
+return{
+
+...anterior,
+
+[lista]:
+novaLista
+
+};
+
+}
+
+);
+
+}
+
+
+function adicionar(
+lista:string,
+objeto:any
+){
+
+setMonstro(
+anterior=>({
+
+...anterior,
+
+[lista]:[
+
+...(anterior[
+lista as keyof typeof anterior
+] as any[]),
+
+objeto
+
+]
+
+})
+
+);
+
+}
+
+
+function remover(
+lista:string,
+index:number
+){
+
+setMonstro(
+anterior=>({
+
+...anterior,
+
+[lista]:
+
+(anterior[
+lista as keyof typeof anterior
+] as any[])
+
+.filter(
+(_:any,i:number)=>
+
+i!==index
+)
+
+})
+
+);
 
 }
 
@@ -111,69 +308,31 @@ evento:any
 const arquivo=
 evento.target.files?.[0];
 
-if(!arquivo)return;
+if(!arquivo)
+return;
 
 const leitor=
 new FileReader();
 
 leitor.onload=()=>{
 
-setMonstro(anterior=>({
+setMonstro(
+anterior=>({
 
 ...anterior,
 
 imagem:
 leitor.result
 
-}));
+})
+
+);
 
 };
 
 leitor.readAsDataURL(
 arquivo
 );
-
-}
-
-
-function adicionarHabilidade(){
-
-setMonstro(anterior=>({
-
-...anterior,
-
-habilidades:[
-
-...anterior.habilidades,
-
-{
-nome:"",
-descricao:"",
-dano:""
-}
-
-]
-
-}));
-
-}
-
-
-function removerHabilidade(
-index:number
-){
-
-setMonstro(anterior=>({
-
-...anterior,
-
-habilidades:
-
-anterior.habilidades.filter(
-(_:any,i:number)=>i!==index
-)
-
-}));
 
 }
 
@@ -192,6 +351,34 @@ localStorage.getItem(
 
 );
 
+if(
+modoEdicao
+){
+
+const atualizados=
+
+monstros.map(
+(m:any)=>
+
+m.id===id
+
+? monstro
+
+: m
+);
+
+localStorage.setItem(
+
+"monstrosPersonalizados",
+
+JSON.stringify(
+atualizados
+)
+
+);
+
+}else{
+
 localStorage.setItem(
 
 "monstrosPersonalizados",
@@ -199,11 +386,14 @@ localStorage.setItem(
 JSON.stringify([
 
 ...monstros,
+
 monstro
 
 ])
 
 );
+
+}
 
 router.push(
 "/bestiario"
@@ -218,9 +408,22 @@ return(
 
 <h2 className="formularioTitulo">
 
-✦ Criar Monstro ✦
+{
+
+modoEdicao
+
+?
+
+"✦ Editar Monstro ✦"
+
+:
+
+"✦ Criar Monstro ✦"
+
+}
 
 </h2>
+
 
 <label>Nome</label>
 
@@ -229,6 +432,7 @@ name="nome"
 value={monstro.nome}
 onChange={alterarCampo}
 />
+
 
 <label>Tipo</label>
 
@@ -247,6 +451,7 @@ onChange={alterarCampo}
 
 </select>
 
+
 <label>Nível</label>
 
 <input
@@ -255,6 +460,7 @@ name="nivel"
 value={monstro.nivel}
 onChange={alterarCampo}
 />
+
 
 <label>Vida</label>
 
@@ -265,6 +471,7 @@ value={monstro.vida}
 onChange={alterarCampo}
 />
 
+
 <label>Mana</label>
 
 <input
@@ -273,6 +480,7 @@ name="mana"
 value={monstro.mana}
 onChange={alterarCampo}
 />
+
 
 <label>Armadura</label>
 
@@ -283,6 +491,7 @@ value={monstro.armadura}
 onChange={alterarCampo}
 />
 
+
 <label>Imagem</label>
 
 <input
@@ -290,6 +499,19 @@ type="file"
 accept="image/*"
 onChange={carregarImagem}
 />
+
+
+<div className="previewImagem">
+
+<Image
+src={monstro.imagem}
+alt="Preview Monstro"
+width={200}
+height={200}
+/>
+
+</div>
+
 
 <label>Atributos</label>
 
@@ -299,7 +521,9 @@ onChange={carregarImagem}
 
 Object.keys(
 monstro.atributos
-).map(
+)
+
+.map(
 (atributo)=>(
 
 <div key={atributo}>
@@ -307,11 +531,9 @@ monstro.atributos
 <label>
 
 {
-
 nomesAtributos[
 atributo as keyof typeof nomesAtributos
 ]
-
 }
 
 </label>
@@ -327,7 +549,9 @@ onChange={(e)=>
 
 alterarAtributo(
 atributo,
-Number(e.target.value)
+Number(
+e.target.value
+)
 )
 
 }
@@ -343,34 +567,25 @@ Number(e.target.value)
 
 </div>
 
-<label>Habilidades</label>
-
-<button
-type="button"
-onClick={adicionarHabilidade}
->
-
-➕ Adicionar habilidade
-
-</button>
-
-<div className="previewImagem">
-
-<Image
-src={monstro.imagem}
-alt="Monstro"
-width={200}
-height={200}
-/>
-
-</div>
 
 <button
 className="botaoSalvar"
 onClick={salvar}
 >
 
-💾 Salvar Monstro
+{
+
+modoEdicao
+
+?
+
+"💾 Salvar Alterações"
+
+:
+
+"💾 Salvar Monstro"
+
+}
 
 </button>
 
