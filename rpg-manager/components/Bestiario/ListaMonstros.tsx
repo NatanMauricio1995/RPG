@@ -1,41 +1,67 @@
 "use client";
 
-import {useState} from "react";
+import {useEffect,useState} from "react";
+import Link from "next/link";
 
-import monstrosData
-from "../../data/sistema/monstros.json";
+import monstrosData from "../../data/sistema/monstros.json";
+import tiposMonstros from "../../data/sistema/tiposMonstros.json";
 
-import tiposMonstros
-from "../../data/sistema/tiposMonstros.json";
-
-import CardMonstro
-from "./CardMonstro";
-
-import FiltrosMonstros
-from "./FiltrosMonstros";
+import CardMonstro from "./CardMonstro";
+import FiltrosMonstros from "./FiltrosMonstros";
 
 export default function ListaMonstros(){
 
-const [pesquisa,setPesquisa]=
-useState("");
+const [pesquisa,setPesquisa]=useState("");
+const [tipo,setTipo]=useState("");
+const [monstrosPersonalizados,setMonstrosPersonalizados]=useState<any[]>([]);
 
-const [tipo,setTipo]=
-useState("");
+
+useEffect(()=>{
+
+const monstrosSalvos=
+
+JSON.parse(
+
+localStorage.getItem(
+"monstrosPersonalizados"
+)
+
+||"[]"
+
+);
+
+setMonstrosPersonalizados(
+monstrosSalvos
+);
+
+},[]);
+
+
+const todosMonstros=[
+
+...monstrosData,
+
+...monstrosPersonalizados
+
+];
 
 
 const monstros=
 
-monstrosData
+todosMonstros
 
-.map(
-(monstro)=>{
+.map((monstro:any)=>{
+
+if(monstro.tipo){
+
+return monstro;
+
+}
 
 const tipoEncontrado=
 
 tiposMonstros.find(
-(t)=>
-t.id===
-monstro.tipoId
+(t)=>t.id===monstro.tipoId
 );
 
 return{
@@ -47,63 +73,37 @@ tipoEncontrado?.nome || ""
 
 };
 
-}
+})
 
-)
-
-.filter(
-(monstro)=>{
+.filter((monstro:any)=>{
 
 const nomeOk=
 
 monstro.nome
-
 .toLowerCase()
-
 .includes(
-
-pesquisa
-.toLowerCase()
-
+pesquisa.toLowerCase()
 );
-
 
 const tipoOk=
 
 monstro.tipo
-
 .toLowerCase()
-
 .includes(
-
-tipo
-.toLowerCase()
-
+tipo.toLowerCase()
 );
 
+return nomeOk && tipoOk;
 
-return(
-
-nomeOk &&
-tipoOk
-
-);
-
-}
-
-);
+});
 
 
-const tiposUnicos=
-
-[
+const tiposUnicos=[
 
 ...new Set(
-
 monstros.map(
-m=>m.tipo
+(m:any)=>m.tipo
 )
-
 )
 
 ];
@@ -113,23 +113,37 @@ return(
 
 <div>
 
+<div className="topoBestiario">
+
 <h1>
 
 👹 Bestiário
 
 </h1>
 
+<Link
+href="/bestiario/inserir"
+>
+
+<button
+className="botaoNovo"
+>
+
+➕ Nova Besta
+
+</button>
+
+</Link>
+
+</div>
+
 
 <FiltrosMonstros
-
 pesquisa={pesquisa}
 setPesquisa={setPesquisa}
-
 tipo={tipo}
 setTipo={setTipo}
-
 tipos={tiposUnicos}
-
 />
 
 
@@ -138,18 +152,11 @@ tipos={tiposUnicos}
 {
 
 monstros.map(
-(monstro)=>(
+(monstro:any,index:number)=>(
 
 <CardMonstro
-
-key={
-monstro.id
-}
-
-monstro={
-monstro
-}
-
+key={`${monstro.id}-${index}`}
+monstro={monstro}
 />
 
 )
