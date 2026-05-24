@@ -834,32 +834,19 @@ criarLog(estado.log.length+1,estado.turno,texto,tipo),
 }
 
 function criarLog(
-id:number,
-turno:number,
-texto:string,
-tipo:EntradaLog["tipo"]
+  id:number,
+  turno:number,
+  texto:string,
+  tipo:EntradaLog["tipo"]
 ):EntradaLog{
 
-return{
-id,
-turno,
-texto,
-tipo
-};
+  return{
+    id,
+    turno,
+    texto,
+    tipo
+  };
 
-}
-on criarLog(
-id:number,
-turno:number,
-texto:string,
-tipo:EntradaLog["tipo"]
-):EntradaLog{
 
-return{
-id,
-turno,
-texto,
-tipo
-};
 
 }
