@@ -254,7 +254,7 @@ className={`${combatente.id===estado.combatenteAtivoId ? "turnoAtual" : ""} ${!c
 onClick={()=>selecionarAtor(combatente.id)}
 disabled={!combatente.vivo || estado.status!=="em_andamento"}
 >
-{combatente.nome}{combatente.lado==="inimigo" ? ` x${combatente.quantidade}` : ""}
+{combatente.nome}
 </button>
 ))}
 </div>
@@ -300,7 +300,7 @@ onChange={(evento)=>setAlvoSelecionado(evento.target.value)}
 key={combatente.id}
 value={combatente.id}
 >
-{combatente.nome}{combatente.lado==="inimigo" ? ` x${combatente.quantidade}` : ""}
+{combatente.nome}
 </option>
 ))}
 </select>

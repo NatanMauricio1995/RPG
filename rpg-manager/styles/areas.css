@@ -1,0 +1,108 @@
+.pagina-areas {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.filtros-areas input {
+  width: 100%;
+  padding: 12px;
+  background: var(--pedra-clara);
+  border: 1px solid var(--ouro-escuro);
+  border-radius: 8px;
+  color: var(--texto);
+  font-family: "Cinzel", serif;
+}
+
+.lista-areas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.card-area {
+  background: rgba(30, 26, 18, 0.9);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s;
+}
+
+.card-area:hover {
+  transform: translateY(-4px);
+  border-color: var(--ouro);
+}
+
+.imagem-card-area {
+  height: 180px;
+  position: relative;
+  background: #000;
+}
+
+.imagem-card-area img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+}
+
+.topo-card-area {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.badge-tipo {
+  background: var(--pedra-clara);
+  color: var(--ouro-claro);
+  border: 1px solid var(--ouro-escuro);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: "Cinzel", serif;
+}
+
+.corpo-card-area {
+  padding: 16px 20px;
+  flex: 1;
+  color: var(--texto-dimmed);
+  line-height: 1.6;
+}
+
+.acoes-card-area {
+  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid var(--pedra-borda);
+}
+
+.acoes-card-area button {
+  flex: 1;
+  padding: 8px;
+  background: transparent;
+  border: 1px solid var(--pedra-borda);
+  border-radius: 6px;
+  color: var(--texto);
+  cursor: pointer;
+  font-family: "Cinzel", serif;
+  font-size: 12px;
+}
+
+.acoes-card-area button:hover {
+  border-color: var(--ouro-escuro);
+  color: var(--ouro-claro);
+}
+
+.formulario-area {
+  background: var(--pedra-media);
+  border: 1px solid var(--ouro-escuro);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

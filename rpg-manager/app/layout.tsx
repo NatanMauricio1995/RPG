@@ -5,11 +5,13 @@ import "../styles/modalNivel.css";
 import "../styles/vida.css";
 import "../styles/componentes.css";
 import "../styles/personagens.css";
-import "./globals.css";
+import "../styles/globals.css";
 import "../styles/bestiario.css";
 import "../styles/itens.css";
 import "../styles/combate.css";
 import "../styles/npcs.css";
+import "../styles/missoes.css";
+import "../styles/areas.css";
 import {InventarioProvider} 
 from "../contexts/InventarioContext";
 

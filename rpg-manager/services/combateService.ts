@@ -326,7 +326,7 @@ equipamentos
 
 function criarCombatenteMonstro(
 monstro:any,
-index:number
+index:number | string
 ):Combatente{
 
 const atributos={
@@ -340,19 +340,18 @@ carisma:Number(monstro.atributos?.carisma || 10)
 
 const nivel=Number(monstro.nivel || 1);
 const vida=Number(monstro.vida || 10);
-const quantidade=Math.max(1,Number(monstro.quantidade || 1));
 const mana=Number(monstro.mana || 0);
 const defesa=Number(monstro.defesa || monstro.armadura || 10+calcularModificador(atributos.destreza));
 
 return{
-id:`inimigo-${monstro.id}-${index}`,
+id:`inimigo-${monstro.id}-${index}-${Math.random().toString(36).substr(2, 9)}`,
 origemId:Number(monstro.id),
 lado:"inimigo",
 nome:monstro.nome || "Criatura",
 imagem:monstro.imagem || "/imagens/monstros/goblin.png",
 nivel,
-vidaAtual:vida*quantidade,
-vidaMaxima:vida*quantidade,
+vidaAtual:vida,
+vidaMaxima:vida,
 vidaUnitaria:vida,
 manaAtual:mana,
 manaMaxima:mana,
@@ -368,7 +367,7 @@ habilidades:criarHabilidadesMonstro(monstro),
 cooldowns:{},
 vivo:true,
 escudo:0,
-quantidade
+quantidade:1
 };
 
 }
@@ -531,20 +530,38 @@ const combatente=buscarCombatente(estado,combatenteId);
 if(!combatente || combatente.lado!=="inimigo")
 return estado;
 
-const quantidade=Math.max(1,combatente.quantidade+delta);
+if(delta>0){
+const novo=criarCombatenteMonstro(
+{
+id:combatente.origemId,
+nome:combatente.nome,
+imagem:combatente.imagem,
+nivel:combatente.nivel,
+vida:combatente.vidaUnitaria,
+mana:combatente.manaMaxima,
+armadura:combatente.armadura,
+dano:combatente.danoBase,
+atributos:combatente.atributos,
+habilidades:combatente.habilidades
+},
+`extra-${Date.now()}`
+);
 
-if(quantidade===combatente.quantidade)
-return estado;
+const index=estado.combatentes.findIndex((item)=>item.id===combatenteId);
+const novosCombatentes=[...estado.combatentes];
+novosCombatentes.splice(index+1,0,novo);
 
-const diferenca=quantidade-combatente.quantidade;
-
-return atualizarCombatente(estado,combatenteId,(atual)=>({
-...atual,
-quantidade,
-vidaMaxima:atual.vidaUnitaria*quantidade,
-vidaAtual:Math.max(1,Math.min(atual.vidaUnitaria*quantidade,atual.vidaAtual+(diferenca*atual.vidaUnitaria))),
-vivo:true
-}));
+return adicionarLog(
+{
+...estado,
+combatentes:novosCombatentes
+},
+`Um novo ${combatente.nome} entrou na batalha!`,
+"sistema"
+);
+}else{
+return removerCombatente(estado,combatenteId);
+}
 
 }
 
@@ -817,6 +834,21 @@ criarLog(estado.log.length+1,estado.turno,texto,tipo),
 }
 
 function criarLog(
+id:number,
+turno:number,
+texto:string,
+tipo:EntradaLog["tipo"]
+):EntradaLog{
+
+return{
+id,
+turno,
+texto,
+tipo
+};
+
+}
+on criarLog(
 id:number,
 turno:number,
 texto:string,

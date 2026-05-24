@@ -44,14 +44,14 @@ height={86}
 <button
 type="button"
 onClick={()=>onAlterarQuantidade?.(combatente.id,-1)}
-disabled={combatente.quantidade<=1}
+title="Remover este monstro"
 >
 -
 </button>
-<strong>{combatente.quantidade}</strong>
 <button
 type="button"
 onClick={()=>onAlterarQuantidade?.(combatente.id,1)}
+title="Adicionar outro igual"
 >
 +
 </button>

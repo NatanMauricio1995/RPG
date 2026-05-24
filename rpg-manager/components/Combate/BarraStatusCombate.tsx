@@ -25,7 +25,7 @@ return(
 <div className="barraTrilho">
 <div
 className={`barraPreenchimento ${classe}`}
-style={{width:`${largura}%`}}
+style={{"--progresso": `${largura}%`} as React.CSSProperties}
 />
 </div>
 </div>
