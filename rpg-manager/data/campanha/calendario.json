@@ -1,0 +1,73 @@
+{
+"anoAtual":1247,
+
+"mesAtual":1,
+
+"diaAtual":1,
+
+"hora":8,
+
+"minuto":0,
+
+"meses":[
+
+{"id":1,"nome":"Lua do Despertar","estacao":"Primavera","dias":30},
+{"id":2,"nome":"Sol Ascendente","estacao":"Primavera","dias":30},
+{"id":3,"nome":"Ventos Eternos","estacao":"Primavera","dias":30},
+
+{"id":4,"nome":"Flores Eternas","estacao":"Verão","dias":30},
+{"id":5,"nome":"Céu Ardente","estacao":"Verão","dias":30},
+{"id":6,"nome":"Chamas Douradas","estacao":"Verão","dias":30},
+
+{"id":7,"nome":"Folhas Vermelhas","estacao":"Outono","dias":30},
+{"id":8,"nome":"Brumas Antigas","estacao":"Outono","dias":30},
+{"id":9,"nome":"Sombras Longas","estacao":"Outono","dias":30},
+
+{"id":10,"nome":"Neve Silenciosa","estacao":"Inverno","dias":30},
+{"id":11,"nome":"Gelo Profundo","estacao":"Inverno","dias":30},
+{"id":12,"nome":"Lua Final","estacao":"Inverno","dias":30}
+
+],
+
+"diasSemana":[
+
+"Dom",
+"Seg",
+"Ter",
+"Qua",
+"Qui",
+"Sex",
+"Sab"
+
+],
+
+"fasesLua":[
+
+"Nova",
+"Crescente",
+"Cheia",
+"Minguante"
+
+],
+
+"climas":[
+
+"Sol",
+"Chuva",
+"Nublado",
+"Névoa",
+"Vento",
+"Tempestade"
+
+],
+
+"diasFestivos":[
+
+"Festival das Estrelas",
+"Dia dos Heróis",
+"Celebração dos Espíritos",
+"Noite das Chamas",
+"Renovação do Mundo"
+
+]
+}

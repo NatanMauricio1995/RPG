@@ -1,0 +1,19 @@
+[
+{
+"id":101,
+
+"nome":"Armadura de Ferro",
+
+"imagem":"/imagens/itens/armadura_ferro.png",
+
+"slot":"armadura",
+
+"defesa":4,
+
+"peso":10,
+
+"valor":50,
+
+"raridade":"Comum"
+}
+]

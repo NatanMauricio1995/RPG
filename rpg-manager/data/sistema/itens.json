@@ -1,0 +1,133 @@
+[
+  {
+    "id":1,
+
+    "nome":"Espada Longa",
+
+    "imagem":"/imagens/itens/espada_longa.png",
+
+    "tipo":"Equipamento",
+
+    "subtipo":"Arma",
+
+    "raridade":"Comum",
+
+    "valor":15,
+
+    "peso":3,
+
+    "dano":"1d8",
+
+    "bonus":{
+      "forca":2
+    }
+  },
+
+  {
+    "id":2,
+
+    "nome":"Cajado Arcano",
+
+    "imagem":"/imagens/itens/cajado_arcano.png",
+
+    "tipo":"Equipamento",
+
+    "subtipo":"Arma Mágica",
+
+    "raridade":"Raro",
+
+    "valor":80,
+
+    "peso":2,
+
+    "dano":"1d10",
+
+    "bonus":{
+      "inteligencia":3
+    }
+  },
+
+  {
+    "id":3,
+
+    "nome":"Armadura de Ferro",
+
+    "imagem":"/imagens/itens/armadura_ferro.png",
+
+    "tipo":"Equipamento",
+
+    "subtipo":"Armadura",
+
+    "raridade":"Comum",
+
+    "valor":50,
+
+    "peso":10,
+
+    "defesa":4,
+
+    "bonus":{
+      "constituicao":2
+    }
+  },
+
+  {
+    "id":4,
+
+    "nome":"Anel da Sabedoria",
+
+    "imagem":"/imagens/itens/anel_sabedoria.png",
+
+    "tipo":"Equipamento",
+
+    "subtipo":"Acessório",
+
+    "raridade":"Raro",
+
+    "valor":120,
+
+    "peso":1,
+
+    "bonus":{
+      "sabedoria":3
+    }
+  },
+
+  {
+    "id":5,
+
+    "nome":"Poção de Cura",
+
+    "imagem":"/imagens/itens/pocao_cura.png",
+
+    "tipo":"Consumível",
+
+    "subtipo":"Poção",
+
+    "raridade":"Comum",
+
+    "valor":20,
+
+    "peso":1,
+
+    "efeito":"Recupera 20 pontos de vida"
+  },
+
+  {
+    "id":6,
+
+    "nome":"Chave Antiga",
+
+    "imagem":"/imagens/itens/chave_antiga.png",
+
+    "tipo":"Diversos",
+
+    "subtipo":"Missão",
+
+    "raridade":"Único",
+
+    "valor":0,
+
+    "peso":1
+  }
+]

@@ -1,0 +1,517 @@
+/* ============================================
+   ITENS — Cartas e Lista
+   ============================================ */
+
+.topoItens {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.botaoNovo {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--ouro-escuro), #6b520f);
+  color: #1a1408;
+  border: 1px solid var(--ouro);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  transition: all 0.25s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.botaoNovo:hover {
+  background: linear-gradient(135deg, var(--ouro), var(--ouro-escuro));
+  box-shadow: 0 4px 15px var(--sombra-ouro);
+  transform: translateY(-1px);
+}
+
+.listaItensGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 30px;
+  margin-top: 25px;
+}
+
+/* Carta de Item — visual pergaminho/arcano */
+.cartaItem {
+  width: 100%;
+  max-width: 380px;
+  margin: auto;
+  background: linear-gradient(160deg, #18160e 0%, #201c10 50%, #1a1612 100%);
+  border: 3px solid var(--ouro-escuro);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.4s;
+  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+  position: relative;
+}
+
+.cartaItem::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Detalhe de canto decorativo */
+.cartaItem::after {
+  content: '';
+  position: absolute;
+  top: 6px; left: 6px; right: 6px; bottom: 6px;
+  border: 1px solid rgba(200, 155, 60, 0.12);
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cartaItem:hover {
+  transform: translateY(-10px) scale(1.03);
+  border-color: var(--ouro);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 30px var(--sombra-ouro);
+}
+
+.topoCartaItem {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #1a1408, #2a200a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 2px solid var(--ouro-escuro);
+  z-index: 2;
+  position: relative;
+}
+
+.topoCartaItem h2 {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  color: var(--ouro-claro);
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 10px var(--sombra-ouro);
+}
+
+.imagemCartaItem {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  padding: 10px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #100e08, #1a1612);
+  z-index: 2;
+}
+
+.imagemItem {
+  object-fit: contain;
+  border-radius: 8px;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7));
+  transition: filter 0.4s;
+}
+
+.cartaItem:hover .imagemItem {
+  filter: drop-shadow(0 4px 20px var(--sombra-ouro));
+}
+
+.corpoCartaItem {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--pedra-borda);
+  z-index: 2;
+  position: relative;
+}
+
+.corpoCartaItem p {
+  font-family: 'IM Fell English', serif;
+  color: var(--texto);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.rodapeCartaItem {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-top: 2px solid var(--ouro-escuro);
+  background: linear-gradient(0deg, #1a1408, transparent);
+  z-index: 2;
+  position: relative;
+}
+
+.rodapeCartaItem button {
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--ouro-escuro), #5a4210);
+  color: #1a1408;
+  border: 1px solid var(--ouro);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition: all 0.25s;
+}
+
+.rodapeCartaItem button:hover {
+  background: linear-gradient(135deg, var(--ouro), var(--ouro-escuro));
+  box-shadow: 0 0 12px var(--sombra-ouro);
+  transform: translateY(-1px);
+}
+
+/* ── FICHA DE ITEM ── */
+.imagemFichaItem {
+  width: 350px;
+  height: 350px;
+  object-fit: contain;
+  background: var(--pedra);
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid var(--ouro);
+  display: block;
+  margin: 25px auto;
+  box-shadow: 0 0 30px var(--sombra-ouro), inset 0 0 30px rgba(0,0,0,0.5);
+  transition: box-shadow 0.4s;
+}
+
+.imagemFichaItem:hover {
+  box-shadow: 0 0 50px var(--sombra-ouro), 0 0 80px rgba(200, 155, 60, 0.15);
+}
+
+/* ===== FORMULÁRIO RPG ===== */
+
+.formulario{
+
+max-width:800px;
+
+margin:30px auto;
+
+padding:25px;
+
+display:flex;
+flex-direction:column;
+gap:18px;
+
+background:linear-gradient(
+160deg,
+#1e1a10,
+#252018
+);
+
+border:2px solid #8a6820;
+
+border-radius:14px;
+
+box-shadow:
+0 0 30px rgba(0,0,0,.6),
+0 0 20px rgba(200,155,60,.25);
+
+position:relative;
+
+overflow:hidden;
+
+}
+
+.formulario::before{
+
+content:"";
+
+display:block;
+
+width:70%;
+height:1px;
+
+margin:0 auto 10px;
+
+background:
+
+linear-gradient(
+90deg,
+transparent,
+#c89b3c,
+transparent
+);
+
+}
+
+.formularioTitulo{
+
+font-family:"Cinzel",serif;
+
+font-size:24px;
+
+text-align:center;
+
+letter-spacing:.1em;
+
+color:#e8c76a;
+
+text-shadow:
+0 0 10px rgba(
+200,
+155,
+60,
+0.5
+);
+
+}
+
+.formulario label{
+
+font-family:"Cinzel",serif;
+
+font-size:12px;
+
+letter-spacing:.1em;
+
+text-transform:uppercase;
+
+color:#a09070;
+
+margin-bottom:-8px;
+
+}
+
+.formulario input,
+.formulario textarea,
+.formulario select{
+
+width:100%;
+
+padding:12px;
+
+background:#2e2820;
+
+border:1px solid #3d3528;
+
+border-radius:8px;
+
+color:#e8dcc8;
+
+font-family:"IM Fell English",serif;
+
+font-size:16px;
+
+outline:none;
+
+transition:.3s;
+
+}
+
+.formulario textarea{
+
+min-height:120px;
+
+resize:vertical;
+
+}
+
+.formulario input:focus,
+.formulario textarea:focus,
+.formulario select:focus{
+
+border-color:#c89b3c;
+
+box-shadow:
+
+0 0 12px rgba(
+200,
+155,
+60,
+0.3
+);
+
+}
+
+.previewImagem{
+
+display:flex;
+justify-content:center;
+
+margin-top:10px;
+
+}
+
+.previewImagem img{
+
+width:170px;
+height:170px;
+
+object-fit:cover;
+
+border-radius:12px;
+
+border:2px solid #8a6820;
+
+background:#1a1612;
+
+padding:6px;
+
+}
+
+.botaoSalvar{
+
+padding:12px;
+
+border:none;
+
+border-radius:8px;
+
+cursor:pointer;
+
+font-family:"Cinzel",serif;
+
+font-size:14px;
+
+font-weight:bold;
+
+letter-spacing:.08em;
+
+background:
+
+linear-gradient(
+135deg,
+#8a6820,
+#c89b3c
+);
+
+color:#1a1612;
+
+transition:.3s;
+
+}
+
+.botaoSalvar:hover{
+
+transform:translateY(-2px);
+
+box-shadow:
+
+0 0 15px rgba(
+200,
+155,
+60,
+0.4
+);
+
+}
+
+/* ============================================
+   CLASSES / RAÇAS — Seleção
+   ============================================ */
+
+.checkboxGrid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:15px;
+margin:15px 0 25px;
+}
+
+.cardSelecao{
+position:relative;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+padding:12px;
+min-height:160px;
+background:linear-gradient(160deg,#18160e,#1e1a10);
+border:2px solid var(--ouro-escuro);
+border-radius:12px;
+overflow:hidden;
+cursor:pointer;
+transition:.3s;
+box-shadow:0 0 10px rgba(0,0,0,.4);
+text-align:center;
+}
+
+.cardSelecao::before{
+content:"";
+position:absolute;
+inset:4px;
+border:1px solid rgba(200,155,60,.12);
+border-radius:8px;
+pointer-events:none;
+}
+
+.cardSelecao:hover{
+transform:translateY(-4px);
+border-color:var(--ouro);
+box-shadow:0 0 15px var(--sombra-ouro);
+}
+
+.imagemSelecao{
+width:80px;
+height:80px;
+object-fit:contain;
+margin-bottom:8px;
+filter:drop-shadow(0 3px 8px rgba(0,0,0,.5));
+transition:.3s;
+}
+
+.cardSelecao:hover .imagemSelecao{
+transform:scale(1.05);
+}
+
+.cardSelecao label{
+display:flex;
+flex-direction:column;
+align-items:center;
+gap:8px;
+cursor:pointer;
+font:13px "Cinzel",serif;
+color:var(--ouro-claro);
+line-height:1.3;
+}
+
+.cardSelecao input{
+transform:scale(1.2);
+cursor:pointer;
+accent-color:#c89b3c;
+}
+
+.textoAjuda{
+font-size:12px;
+color:#a09070;
+margin-top:-8px;
+font-style:italic;
+line-height:1.4;
+}
+
+.bonusGrid{
+display:grid;
+grid-template-columns:1fr 120px;
+gap:10px;
+margin-bottom:10px;
+}
+
+.efeitoContainer{
+display:flex;
+flex-direction:column;
+gap:8px;
+margin-bottom:15px;
+}
+
+.botaoRemover{
+padding:8px;
+background:#752020;
+border:1px solid #a33;
+border-radius:8px;
+color:white;
+cursor:pointer;
+transition:.3s;
+}
+
+.botaoRemover:hover{
+background:#a33;
+}

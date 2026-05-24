@@ -1,0 +1,476 @@
+.paginaCombate{
+display:flex;
+flex-direction:column;
+gap:24px;
+position:relative;
+z-index:1;
+}
+
+.topoCombate{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+gap:20px;
+border-bottom:1px solid var(--ouro-escuro);
+padding-bottom:18px;
+}
+
+.topoCombate p{
+color:var(--texto-dimmed);
+margin-top:8px;
+max-width:760px;
+line-height:1.5;
+}
+
+.topoCombate button:disabled,
+.acoesDisponiveis button:disabled{
+opacity:.45;
+cursor:not-allowed;
+transform:none;
+box-shadow:none;
+}
+
+.preparacaoCombate{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:20px;
+}
+
+.painelSelecaoCombate{
+background:rgba(46,40,32,.72);
+border:1px solid var(--pedra-borda);
+border-radius:8px;
+padding:16px;
+}
+
+.painelSelecaoCombate h2{
+margin-bottom:14px;
+}
+
+.listaSelecaoCombate{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+gap:12px;
+max-height:360px;
+overflow:auto;
+padding-right:4px;
+}
+
+.listaSelecaoCombate article{
+display:grid;
+grid-template-columns:64px 1fr;
+grid-template-rows:auto auto;
+align-items:center;
+gap:4px 10px;
+min-height:84px;
+padding:10px;
+background:var(--pedra-media);
+border:1px solid var(--pedra-borda);
+border-radius:8px;
+color:var(--texto);
+text-align:left;
+cursor:pointer;
+transition:.2s;
+}
+
+.listaSelecaoCombate article:hover,
+.listaSelecaoCombate article.selecionado{
+border-color:var(--ouro);
+box-shadow:0 0 14px rgba(200,155,60,.18);
+}
+
+.listaSelecaoCombate img{
+grid-row:1 / span 2;
+object-fit:contain;
+border-radius:6px;
+background:#16120f;
+}
+
+.listaSelecaoCombate span{
+font-family:"Cinzel",serif;
+font-size:13px;
+color:var(--ouro-claro);
+}
+
+.listaSelecaoCombate small{
+color:var(--texto-dimmed);
+}
+
+.controleQuantidadeSelecao,
+.controleQuantidadeCombate{
+display:flex;
+align-items:center;
+gap:8px;
+margin-top:6px;
+}
+
+.controleQuantidadeSelecao button,
+.controleQuantidadeCombate button{
+width:28px;
+height:28px;
+padding:0;
+background:var(--pedra-clara);
+color:var(--ouro-claro);
+border:1px solid var(--ouro-escuro);
+border-radius:6px;
+cursor:pointer;
+font-family:"Cinzel",serif;
+font-weight:700;
+}
+
+.controleQuantidadeSelecao button:disabled,
+.controleQuantidadeCombate button:disabled{
+opacity:.45;
+cursor:not-allowed;
+}
+
+.controleQuantidadeSelecao strong,
+.controleQuantidadeCombate strong{
+min-width:22px;
+text-align:center;
+font-family:"Cinzel",serif;
+color:var(--ouro-claro);
+}
+
+.mesaCombate{
+display:flex;
+flex-direction:column;
+gap:18px;
+}
+
+.estadoCombate{
+display:flex;
+justify-content:space-between;
+gap:18px;
+align-items:center;
+background:linear-gradient(135deg,rgba(30,26,18,.95),rgba(46,40,32,.9));
+border:1px solid var(--ouro-escuro);
+border-radius:8px;
+padding:14px;
+}
+
+.placarCombate{
+display:flex;
+flex-direction:column;
+gap:4px;
+min-width:190px;
+}
+
+.placarCombate span{
+font-family:"Cinzel",serif;
+font-size:12px;
+color:var(--texto-dimmed);
+text-transform:uppercase;
+}
+
+.placarCombate strong{
+font-family:"Cinzel",serif;
+font-size:20px;
+color:var(--ouro-claro);
+}
+
+.placarCombate.vitoria strong{
+color:#6ee27c;
+}
+
+.placarCombate.derrota strong{
+color:#e86a5f;
+}
+
+.listaParticipantesCombate{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+justify-content:flex-end;
+}
+
+.listaParticipantesCombate button{
+border:1px solid var(--pedra-borda);
+background:var(--pedra-clara);
+color:var(--texto-dimmed);
+border-radius:999px;
+padding:6px 10px;
+font-family:"Cinzel",serif;
+font-size:11px;
+cursor:pointer;
+}
+
+.listaParticipantesCombate button.turnoAtual{
+border-color:var(--ouro);
+color:var(--ouro-claro);
+box-shadow:0 0 12px rgba(200,155,60,.25);
+}
+
+.listaParticipantesCombate button.abatido{
+opacity:.45;
+text-decoration:line-through;
+}
+
+.gridCombatentes{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:18px;
+}
+
+.grupoCombatentes{
+display:flex;
+flex-direction:column;
+gap:12px;
+}
+
+.cardCombatente{
+display:grid;
+grid-template-columns:86px 1fr;
+gap:14px;
+background:rgba(37,32,24,.88);
+border:1px solid var(--pedra-borda);
+border-radius:8px;
+padding:12px;
+transition:.2s;
+}
+
+.cardCombatente.ativo{
+border-color:var(--ouro);
+box-shadow:0 0 18px rgba(200,155,60,.18);
+}
+
+.cardCombatente.morto{
+filter:grayscale(.8);
+opacity:.55;
+}
+
+.cardCombatente img{
+width:86px;
+height:86px;
+object-fit:contain;
+border-radius:6px;
+background:#15110e;
+}
+
+.dadosCombatente{
+min-width:0;
+}
+
+.linhaNomeCombatente{
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:12px;
+}
+
+.linhaNomeCombatente h3{
+font-size:15px;
+overflow-wrap:anywhere;
+}
+
+.linhaNomeCombatente span,
+.metasCombatente span,
+.efeitosAtivosCombate span{
+font-family:"Cinzel",serif;
+font-size:11px;
+color:var(--texto-dimmed);
+}
+
+.barraCombate{
+margin-top:8px;
+}
+
+.barraTopo{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+color:var(--texto-dimmed);
+margin-bottom:4px;
+}
+
+.barraTrilho{
+height:9px;
+background:#17130f;
+border:1px solid var(--pedra-borda);
+border-radius:999px;
+overflow:hidden;
+}
+
+.barraPreenchimento{
+height:100%;
+width: var(--progresso);
+transition:width .25s;
+}
+
+.barraPreenchimento.vida{
+background:linear-gradient(90deg,#7f1d1d,#d94b3d);
+}
+
+.barraPreenchimento.mana{
+background:linear-gradient(90deg,#184a7d,#54a4e8);
+}
+
+.metasCombatente,
+.efeitosAtivosCombate,
+.acoesCardCombatente{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+margin-top:8px;
+}
+
+.acoesCardCombatente button{
+padding:7px 10px;
+background:var(--pedra-clara);
+border:1px solid var(--pedra-borda);
+border-radius:6px;
+color:var(--texto);
+font-family:"Cinzel",serif;
+font-size:11px;
+cursor:pointer;
+}
+
+.acoesCardCombatente button:hover{
+border-color:var(--ouro-escuro);
+color:var(--ouro);
+}
+
+.efeitosAtivosCombate span{
+color:#87d97f;
+border:1px solid rgba(135,217,127,.35);
+border-radius:999px;
+padding:3px 7px;
+}
+
+.painelAcoesCombate{
+display:grid;
+grid-template-columns:minmax(220px,1fr) minmax(180px,240px) minmax(300px,2fr);
+gap:16px;
+align-items:end;
+background:rgba(30,26,18,.92);
+border:1px solid var(--ouro-escuro);
+border-radius:8px;
+padding:16px;
+}
+
+.painelAcoesCombate small,
+.painelAcoesCombate label{
+font-family:"Cinzel",serif;
+font-size:11px;
+letter-spacing:.08em;
+color:var(--texto-dimmed);
+text-transform:uppercase;
+}
+
+.painelAcoesCombate p{
+margin-top:6px;
+color:var(--texto-dimmed);
+}
+
+.painelAcoesCombate .alertaControleCombate{
+color:#e8b45f;
+}
+
+.avisoSelecaoCombate{
+grid-column:1 / -1;
+}
+
+.painelAcoesCombate select{
+display:block;
+width:100%;
+margin-top:6px;
+padding:10px;
+background:var(--pedra-clara);
+color:var(--texto);
+border:1px solid var(--ouro-escuro);
+border-radius:6px;
+}
+
+.acoesDisponiveis{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.acoesDisponiveis button{
+min-height:44px;
+padding:10px 14px;
+background:linear-gradient(135deg,var(--ouro-escuro),#6b520f);
+color:#17130f;
+border:1px solid var(--ouro);
+border-radius:6px;
+font-family:"Cinzel",serif;
+font-weight:700;
+cursor:pointer;
+transition:.2s;
+}
+
+.acoesDisponiveis button:hover{
+transform:translateY(-1px);
+box-shadow:0 0 14px rgba(200,155,60,.25);
+}
+
+.acoesDisponiveis button span{
+display:block;
+font-family:"IM Fell English",serif;
+font-weight:400;
+font-size:11px;
+color:#2b210f;
+}
+
+.logCombate{
+background:rgba(20,16,12,.88);
+border:1px solid var(--pedra-borda);
+border-radius:8px;
+padding:16px;
+max-height:420px;
+overflow:auto;
+}
+
+.logCombate h2{
+margin-bottom:12px;
+}
+
+.entradaLog{
+border-left:3px solid var(--pedra-borda);
+padding:10px 12px;
+background:rgba(255,255,255,.025);
+margin-bottom:8px;
+}
+
+.entradaLog small{
+font-family:"Cinzel",serif;
+font-size:10px;
+color:var(--texto-dimmed);
+text-transform:uppercase;
+}
+
+.entradaLog p{
+margin-top:4px;
+line-height:1.45;
+}
+
+.entradaLog.ataque{
+border-left-color:#c05050;
+}
+
+.entradaLog.habilidade{
+border-left-color:var(--magia);
+}
+
+.entradaLog.efeito{
+border-left-color:var(--veneno);
+}
+
+@media (max-width:1000px){
+.preparacaoCombate,
+.gridCombatentes,
+.painelAcoesCombate{
+grid-template-columns:1fr;
+}
+
+.estadoCombate,
+.topoCombate{
+align-items:stretch;
+flex-direction:column;
+}
+
+.listaParticipantesCombate{
+justify-content:flex-start;
+}
+}

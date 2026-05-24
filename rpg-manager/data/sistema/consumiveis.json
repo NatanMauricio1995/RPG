@@ -1,0 +1,13 @@
+[
+{
+"id":301,
+
+"nome":"Poção de Cura",
+
+"imagem":"/imagens/itens/pocao_cura.png",
+
+"efeito":"Recupera 20 de vida",
+
+"valor":20
+}
+]

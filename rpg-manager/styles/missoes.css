@@ -1,0 +1,139 @@
+.pagina-missoes {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.topo-pagina {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--ouro-escuro);
+  padding-bottom: 18px;
+}
+
+.botao-novo {
+  background: linear-gradient(135deg, var(--ouro-escuro), #6b520f);
+  color: #17130f;
+  border: 1px solid var(--ouro);
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filtros-missoes input {
+  width: 100%;
+  padding: 12px;
+  background: var(--pedra-clara);
+  border: 1px solid var(--ouro-escuro);
+  border-radius: 8px;
+  color: var(--texto);
+  font-family: "Cinzel", serif;
+}
+
+.lista-missoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card-missao {
+  background: rgba(46, 40, 32, 0.72);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.topo-card-missao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-family: "Cinzel", serif;
+}
+
+.status-nao-iniciada { background: #555; color: #fff; }
+.status-andamento { background: var(--ouro-escuro); color: #000; }
+.status-concluida { background: #2e7d32; color: #fff; }
+.status-falhou { background: #c62828; color: #fff; }
+
+.acoes-card-missao {
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.acoes-card-missao button {
+  flex: 1;
+  padding: 8px;
+  background: var(--pedra-clara);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 6px;
+  color: var(--texto);
+  cursor: pointer;
+  font-family: "Cinzel", serif;
+}
+
+.formulario-missao {
+  background: var(--pedra-media);
+  border: 1px solid var(--ouro-escuro);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo label {
+  font-family: "Cinzel", serif;
+  color: var(--ouro-claro);
+}
+
+.campo input, .campo textarea, .campo select {
+  padding: 10px;
+  background: var(--pedra-clara);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 6px;
+  color: var(--texto);
+  font-family: inherit;
+}
+
+.botoes-formulario {
+  display: flex;
+  gap: 12px;
+}
+
+.botoes-formulario button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: "Cinzel", serif;
+}
+
+.botoes-formulario button[type="submit"] {
+  background: var(--ouro-escuro);
+  color: #000;
+  border: 1px solid var(--ouro);
+}
+
+.botoes-formulario button[type="button"] {
+  background: transparent;
+  color: var(--texto);
+  border: 1px solid var(--pedra-borda);
+}
