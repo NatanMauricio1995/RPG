@@ -1,76 +1,103 @@
-.paginaCalendario{
+/* ============================================
+   CALENDÁRIO
+   ============================================ */
 
-max-width:900px;
-
-margin:auto;
-
-padding:20px;
-
+.paginaCalendario {
+  width: 100%;
+  max-width: none;
+  padding: 20px;
+  overflow-x: auto;
 }
 
-
-.gridCalendario{
-
-display:grid;
-
-grid-template-columns:
-repeat(
-7,
-1fr
-);
-
-gap:10px;
-
-margin-top:20px;
-
+.informacaoMes {
+  background: var(--pedra-clara);
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  border: 1px solid var(--ouro-escuro);
+  box-shadow: 0 0 15px rgba(0,0,0,0.3), inset 0 1px 0 rgba(200,155,60,0.1);
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: var(--ouro-claro);
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 10px var(--sombra-ouro);
+  position: relative;
 }
 
-
-.cabecalhoCalendario{
-
-font-weight:bold;
-
-padding:15px;
-
-text-align:center;
-
-background:#333;
-
-border-radius:10px;
-
+.informacaoMes::before,
+.informacaoMes::after {
+  content: '✦';
+  color: var(--ouro-escuro);
+  font-size: 14px;
+  margin: 0 12px;
 }
 
-
-.diaCalendario{
-
-padding:20px;
-
-text-align:center;
-
-background:#1f1f1f;
-
-border-radius:10px;
-
-cursor:pointer;
-
-transition:.3s;
-
+.blocoMes {
+  width: 100%;
+  margin-bottom: 30px;
 }
 
-
-.diaCalendario:hover{
-
-transform:scale(1.05);
-
-background:#2d2d2d;
-
+.gridCalendario {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(80px, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 15px;
 }
 
+.cabecalhoCalendario {
+  font-weight: bold;
+  padding: 12px;
+  text-align: center;
+  background: var(--pedra-borda);
+  border-radius: 6px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ouro);
+  border: 1px solid var(--ouro-escuro);
+}
 
-.diaAtual{
+.diaCalendario {
+  padding: 18px 10px;
+  text-align: center;
+  background: var(--pedra-clara);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: 1px solid var(--pedra-borda);
+  font-family: 'IM Fell English', serif;
+  font-size: 15px;
+  color: var(--texto);
+  position: relative;
+}
 
-background:#1c8d3d;
+.diaCalendario:hover {
+  transform: scale(1.06);
+  background: var(--pedra-media);
+  border-color: var(--ouro-escuro);
+  box-shadow: 0 0 12px rgba(200, 155, 60, 0.2);
+  color: var(--ouro-claro);
+  z-index: 2;
+}
 
-font-weight:bold;
+.diaAtual {
+  background: linear-gradient(135deg, #162816, #0f2010);
+  border-color: #2a6a2a;
+  color: #7de87d;
+  font-weight: bold;
+  box-shadow: 0 0 12px rgba(45, 140, 45, 0.35);
+  font-family: 'Cinzel', serif;
+}
 
+.diaAtual::after {
+  content: '●';
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 6px;
+  color: #5dde5d;
 }
