@@ -8,12 +8,16 @@ type Props={
 titulo:string;
 combatentes:Combatente[];
 atualId:string;
+onFugir:(combatenteId:string)=>void;
+onAlterarQuantidade?:(combatenteId:string,delta:number)=>void;
 };
 
 export default function GrupoCombatentes({
 titulo,
 combatentes,
-atualId
+atualId,
+onFugir,
+onAlterarQuantidade
 }:Props){
 
 return(
@@ -35,6 +39,24 @@ height={86}
 <h3>{combatente.nome}</h3>
 <span>CA {combatente.armadura}</span>
 </div>
+{combatente.lado==="inimigo" &&(
+<div className="controleQuantidadeCombate">
+<button
+type="button"
+onClick={()=>onAlterarQuantidade?.(combatente.id,-1)}
+disabled={combatente.quantidade<=1}
+>
+-
+</button>
+<strong>{combatente.quantidade}</strong>
+<button
+type="button"
+onClick={()=>onAlterarQuantidade?.(combatente.id,1)}
+>
++
+</button>
+</div>
+)}
 <BarraStatusCombate
 classe="vida"
 valor={combatente.vidaAtual}
@@ -51,6 +73,14 @@ rotulo="Mana"
 <span>Crítico {combatente.critico}%</span>
 <span>Esquiva {combatente.esquiva}%</span>
 <span>Escudo {combatente.escudo}</span>
+</div>
+<div className="acoesCardCombatente">
+<button
+type="button"
+onClick={()=>onFugir(combatente.id)}
+>
+Fugir
+</button>
 </div>
 {combatente.efeitos.length>0 &&(
 <div className="efeitosAtivosCombate">

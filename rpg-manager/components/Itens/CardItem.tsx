@@ -4,9 +4,16 @@ import Image from "next/image";
 
 type Props={
 
-item:any;
+item:{
+id:number | string;
+nome:string;
+imagem?:string;
+tipo?:string;
+subtipo?:string;
+raridade?:string;
+};
 
-onExcluir:any;
+onExcluir:(id:number)=>void;
 
 }
 
@@ -94,18 +101,24 @@ href={`/itens/${item.id}`}
 
 </Link>
 
+<Link
+href={`/itens/${item.id}/editar`}
+>
+
 <button>
 
 ✏️ Editar
 
 </button>
 
+</Link>
+
 <button
 
 onClick={()=>
 
 onExcluir(
-item.id
+Number(item.id)
 )
 
 }

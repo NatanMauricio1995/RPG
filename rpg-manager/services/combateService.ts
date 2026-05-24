@@ -47,9 +47,9 @@ efeitos:EfeitoAtivo[];
 habilidades:HabilidadeCombate[];
 cooldowns:Record<string,number>;
 vivo:boolean;
-iniciativa:number;
-rolagemIniciativa:number;
 escudo:number;
+quantidade:number;
+vidaUnitaria:number;
 equipamentos?:any;
 };
 
@@ -63,8 +63,7 @@ tipo:"sistema"|"ataque"|"habilidade"|"efeito"|"morte";
 export type EstadoCombate={
 status:StatusCombate;
 turno:number;
-indiceTurno:number;
-ordem:string[];
+combatenteAtivoId:string;
 combatentes:Combatente[];
 log:EntradaLog[];
 };
@@ -109,17 +108,13 @@ const inimigos=monstros.map((monstro,index)=>
 criarCombatenteMonstro(monstro,index)
 );
 
-const combatentes=[...aliados,...inimigos]
-.map((combatente)=>rolarIniciativa(combatente))
-.sort((a,b)=>b.iniciativa-a.iniciativa);
-
-const ordem=combatentes.map((combatente)=>combatente.id);
+const combatentes=[...aliados,...inimigos];
 
 const log=[
 criarLog(
 1,
 0,
-`Iniciativa calculada: ${combatentes.map((c)=>`${c.nome} ${c.rolagemIniciativa}+${c.velocidade}=${c.iniciativa}`).join(", ")}.`,
+`Combate iniciado. O mestre escolhe manualmente quem age a cada ação.`,
 "sistema"
 )
 ];
@@ -127,8 +122,7 @@ criarLog(
 return verificarResultado({
 status:"em_andamento",
 turno:1,
-indiceTurno:0,
-ordem,
+combatenteAtivoId:"",
 combatentes,
 log
 });
@@ -304,6 +298,7 @@ imagem:personagem.imagem || "/imagens/racas/padrao.png",
 nivel,
 vidaAtual:Math.min(Number(personagem.vidaAtual || status.vidaMaxima),status.vidaMaxima),
 vidaMaxima:status.vidaMaxima,
+vidaUnitaria:status.vidaMaxima,
 manaAtual:status.manaMaxima,
 manaMaxima:status.manaMaxima,
 armadura:status.armadura,
@@ -322,9 +317,8 @@ tipo:normalizarTipoEfeito(efeito.tipo)
 habilidades:habilidadesBase,
 cooldowns:{},
 vivo:true,
-iniciativa:0,
-rolagemIniciativa:0,
 escudo:status.escudo,
+quantidade:1,
 equipamentos
 };
 
@@ -346,6 +340,7 @@ carisma:Number(monstro.atributos?.carisma || 10)
 
 const nivel=Number(monstro.nivel || 1);
 const vida=Number(monstro.vida || 10);
+const quantidade=Math.max(1,Number(monstro.quantidade || 1));
 const mana=Number(monstro.mana || 0);
 const defesa=Number(monstro.defesa || monstro.armadura || 10+calcularModificador(atributos.destreza));
 
@@ -356,8 +351,9 @@ lado:"inimigo",
 nome:monstro.nome || "Criatura",
 imagem:monstro.imagem || "/imagens/monstros/goblin.png",
 nivel,
-vidaAtual:vida,
-vidaMaxima:vida,
+vidaAtual:vida*quantidade,
+vidaMaxima:vida*quantidade,
+vidaUnitaria:vida,
 manaAtual:mana,
 manaMaxima:mana,
 armadura:defesa,
@@ -371,9 +367,8 @@ efeitos:[],
 habilidades:criarHabilidadesMonstro(monstro),
 cooldowns:{},
 vivo:true,
-iniciativa:0,
-rolagemIniciativa:0,
-escudo:0
+escudo:0,
+quantidade
 };
 
 }
@@ -475,100 +470,81 @@ combatenteId:string
 ):EstadoCombate{
 
 let novoEstado=reduzirCooldowns(estado,combatenteId);
-novoEstado=avancarTurno(novoEstado);
+novoEstado={
+...novoEstado,
+turno:novoEstado.turno+1,
+combatenteAtivoId:""
+};
 return verificarResultado(novoEstado);
 
 }
 
-function avancarTurno(
-estado:EstadoCombate
-):EstadoCombate{
-
-if(estado.status!=="em_andamento")
-return estado;
-
-let indice=(estado.indiceTurno+1)%estado.ordem.length;
-let turno=estado.turno;
-
-if(indice===0)
-turno+=1;
-
-let tentativas=0;
-
-while(tentativas<estado.ordem.length){
-const atual=estado.combatentes.find((combatente)=>combatente.id===estado.ordem[indice]);
-
-if(atual?.vivo)
-break;
-
-indice=(indice+1)%estado.ordem.length;
-
-if(indice===0)
-turno+=1;
-
-tentativas+=1;
-}
-
-let novoEstado={
-...estado,
-indiceTurno:indice,
-turno
-};
-
-const atual=novoEstado.combatentes.find((combatente)=>combatente.id===novoEstado.ordem[indice]);
-
-if(atual){
-novoEstado=processarInicioTurno(novoEstado,atual.id);
-}
-
-return novoEstado;
-
-}
-
-function processarInicioTurno(
+export function selecionarCombatenteAtivo(
 estado:EstadoCombate,
 combatenteId:string
 ):EstadoCombate{
 
-let novoEstado=estado;
-const combatente=buscarCombatente(novoEstado,combatenteId);
+const combatente=buscarCombatente(estado,combatenteId);
 
 if(!combatente || !combatente.vivo)
-return novoEstado;
+return estado;
 
-combatente.efeitos.forEach((efeito)=>{
-const tipo=normalizarTipoEfeito(efeito.tipo);
-
-if(tipo==="veneno" || tipo==="sangramento"){
-novoEstado=alterarVida(novoEstado,combatente.id,-Math.max(1,efeito.valor));
-novoEstado=adicionarLog(novoEstado,`${combatente.nome} sofreu ${efeito.valor} de ${tipo}.`,"efeito");
-}
-
-if(tipo==="cura"){
-novoEstado=alterarVida(novoEstado,combatente.id,Math.max(1,efeito.valor));
-novoEstado=adicionarLog(novoEstado,`${combatente.nome} recuperou ${efeito.valor} de vida.`,"efeito");
-}
-
-if(tipo==="paralisia"){
-novoEstado=adicionarLog(novoEstado,`${combatente.nome} está paralisado e pode perder a ação.`,"efeito");
-}
-
-if(tipo==="medo"){
-novoEstado=adicionarLog(novoEstado,`${combatente.nome} hesita sob efeito de medo.`,"efeito");
-}
+return verificarResultado({
+...estado,
+combatenteAtivoId:combatenteId
 });
 
-novoEstado=atualizarCombatente(novoEstado,combatenteId,(atual)=>({
-...atual,
-efeitos:atual.efeitos
-.map((efeito)=>({
-...efeito,
-duracao:efeito.duracao-1
-}))
-.filter((efeito)=>efeito.duracao>0)
-}));
+}
 
-return verificarResultado(novoEstado);
+export function removerCombatente(
+estado:EstadoCombate,
+combatenteId:string
+):EstadoCombate{
+
+const combatente=buscarCombatente(estado,combatenteId);
+
+if(!combatente)
+return estado;
+
+return verificarResultado(
+adicionarLog(
+{
+...estado,
+combatenteAtivoId:estado.combatenteAtivoId===combatenteId ? "" : estado.combatenteAtivoId,
+combatentes:estado.combatentes.filter((item)=>item.id!==combatenteId)
+},
+`${combatente.nome} fugiu do combate.`,
+"sistema"
+)
+);
+
+}
+
+export function alterarQuantidadeMonstro(
+estado:EstadoCombate,
+combatenteId:string,
+delta:number
+):EstadoCombate{
+
+const combatente=buscarCombatente(estado,combatenteId);
+
+if(!combatente || combatente.lado!=="inimigo")
+return estado;
+
+const quantidade=Math.max(1,combatente.quantidade+delta);
+
+if(quantidade===combatente.quantidade)
+return estado;
+
+const diferenca=quantidade-combatente.quantidade;
+
+return atualizarCombatente(estado,combatenteId,(atual)=>({
+...atual,
+quantidade,
+vidaMaxima:atual.vidaUnitaria*quantidade,
+vidaAtual:Math.max(1,Math.min(atual.vidaUnitaria*quantidade,atual.vidaAtual+(diferenca*atual.vidaUnitaria))),
+vivo:true
+}));
 
 }
 
@@ -747,20 +723,6 @@ texto:`${combatente.nome} foi dominado pelo medo e não conseguiu agir.`
 return{
 bloqueado:false,
 texto:""
-};
-
-}
-
-function rolarIniciativa(
-combatente:Combatente
-):Combatente{
-
-const rolagem=rolarDado(20);
-
-return{
-...combatente,
-rolagemIniciativa:rolagem,
-iniciativa:rolagem+combatente.velocidade
 };
 
 }

@@ -3,11 +3,15 @@
 import {useState} from "react";
 import Link from "next/link";
 
-import itensData
-from "../../data/sistema/itens.json";
+import {listarItens}
+from "../../services/itemService";
 
 import CardItem
 from "./CardItem";
+
+type ItemSalvo={
+id:number | string;
+};
 
 export default function ListaItens(){
 
@@ -15,7 +19,7 @@ const[
 itens,
 setItens
 ]=useState(
-itensData
+()=>listarItens()
 );
 
 const[
@@ -28,12 +32,24 @@ function excluirItem(
 id:number
 ){
 
+const itensPersonalizados=
+JSON.parse(
+localStorage.getItem("itensPersonalizados") || "[]"
+);
+
+localStorage.setItem(
+"itensPersonalizados",
+JSON.stringify(
+(itensPersonalizados as ItemSalvo[]).filter((item)=>Number(item.id)!==Number(id))
+)
+);
+
 setItens(
 
 itens.filter(
 (item)=>
 
-item.id!==id
+Number(item.id)!==Number(id)
 
 )
 

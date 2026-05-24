@@ -4,16 +4,24 @@ import {useMemo,useState} from "react";
 import {listarPersonagens} from "../../services/personagemService";
 import {
 EstadoCombate,
+alterarQuantidadeMonstro,
 combatenteEstaControlado,
 executarAtaqueBasico,
 executarHabilidade,
 iniciarCombate,
 listarMonstrosCombate,
-passarTurno
+passarTurno,
+removerCombatente,
+selecionarCombatenteAtivo
 } from "../../services/combateService";
 import PainelSelecaoCombate from "../../components/Combate/PainelSelecaoCombate";
 import GrupoCombatentes from "../../components/Combate/GrupoCombatentes";
 import LogCombate from "../../components/Combate/LogCombate";
+
+type EntidadeSelecionavel={
+id:number | string;
+quantidade?:number;
+};
 
 export default function CombatePage(){
 
@@ -22,12 +30,11 @@ const monstros=useMemo(()=>listarMonstrosCombate(),[]);
 
 const[personagensSelecionados,setPersonagensSelecionados]=useState<number[]>([]);
 const[monstrosSelecionados,setMonstrosSelecionados]=useState<number[]>([]);
+const[quantidadesMonstros,setQuantidadesMonstros]=useState<Record<number,number>>({});
 const[estado,setEstado]=useState<EstadoCombate | null>(null);
 const[alvoSelecionado,setAlvoSelecionado]=useState("");
 
-const combatenteAtual=estado
-? estado.combatentes.find((combatente)=>combatente.id===estado.ordem[estado.indiceTurno])
-: null;
+const combatenteAtual=estado?.combatentes.find((combatente)=>combatente.id===estado.combatenteAtivoId) || null;
 
 const alvosDisponiveis=estado && combatenteAtual
 ? estado.combatentes.filter((combatente)=>combatente.lado!==combatenteAtual.lado && combatente.vivo)
@@ -47,20 +54,34 @@ lista.includes(id)
 
 }
 
+function alterarQuantidadePreparacao(
+id:number,
+delta:number
+){
+
+setQuantidadesMonstros((anteriores)=>({
+...anteriores,
+[id]:Math.max(1,(anteriores[id] || 1)+delta)
+}));
+
+}
+
 function comecarCombate(){
 
-const aliados=personagens.filter((personagem:any)=>personagensSelecionados.includes(Number(personagem.id)));
-const inimigos=monstros.filter((monstro:any)=>monstrosSelecionados.includes(Number(monstro.id)));
+const aliados=(personagens as EntidadeSelecionavel[]).filter((personagem)=>personagensSelecionados.includes(Number(personagem.id)));
+const inimigos=monstros
+.filter((monstro:EntidadeSelecionavel)=>monstrosSelecionados.includes(Number(monstro.id)))
+.map((monstro:EntidadeSelecionavel)=>({
+...monstro,
+quantidade:quantidadesMonstros[Number(monstro.id)] || 1
+}));
 
 if(aliados.length===0 || inimigos.length===0)
 return;
 
 const novoEstado=iniciarCombate(aliados,inimigos);
 setEstado(novoEstado);
-
-const atual=novoEstado.combatentes.find((combatente)=>combatente.id===novoEstado.ordem[novoEstado.indiceTurno]);
-const primeiroAlvo=novoEstado.combatentes.find((combatente)=>combatente.lado!==atual?.lado && combatente.vivo);
-setAlvoSelecionado(primeiroAlvo?.id || "");
+setAlvoSelecionado("");
 
 }
 
@@ -70,13 +91,31 @@ novoEstado:EstadoCombate
 
 setEstado(novoEstado);
 
-const atual=novoEstado.combatentes.find((combatente)=>combatente.id===novoEstado.ordem[novoEstado.indiceTurno]);
+const atual=novoEstado.combatentes.find((combatente)=>combatente.id===novoEstado.combatenteAtivoId);
 const alvoAtual=novoEstado.combatentes.find((combatente)=>combatente.id===alvoSelecionado);
 
-if(!alvoAtual?.vivo || alvoAtual.lado===atual?.lado){
-const novoAlvo=novoEstado.combatentes.find((combatente)=>combatente.lado!==atual?.lado && combatente.vivo);
+if(!atual || !alvoAtual?.vivo || alvoAtual.lado===atual.lado){
+const novoAlvo=atual
+? novoEstado.combatentes.find((combatente)=>combatente.lado!==atual.lado && combatente.vivo)
+: null;
 setAlvoSelecionado(novoAlvo?.id || "");
 }
+
+}
+
+function selecionarAtor(
+combatenteId:string
+){
+
+if(!estado)
+return;
+
+const novoEstado=selecionarCombatenteAtivo(estado,combatenteId);
+const atual=novoEstado.combatentes.find((combatente)=>combatente.id===combatenteId);
+const primeiroAlvo=novoEstado.combatentes.find((combatente)=>combatente.lado!==atual?.lado && combatente.vivo);
+
+setEstado(novoEstado);
+setAlvoSelecionado(primeiroAlvo?.id || "");
 
 }
 
@@ -127,6 +166,37 @@ habilidade
 
 }
 
+function acaoFugir(
+combatenteId:string
+){
+
+if(!estado)
+return;
+
+const combatente=estado.combatentes.find((item)=>item.id===combatenteId);
+
+if(!combatente)
+return;
+
+if(!window.confirm(`Remover ${combatente.nome} do combate atual?`))
+return;
+
+atualizarEstado(removerCombatente(estado,combatenteId));
+
+}
+
+function alterarQuantidadeEmCombate(
+combatenteId:string,
+delta:number
+){
+
+if(!estado)
+return;
+
+atualizarEstado(alterarQuantidadeMonstro(estado,combatenteId,delta));
+
+}
+
 return(
 
 <div className="paginaCombate">
@@ -134,7 +204,7 @@ return(
 <div className="topoCombate">
 <div>
 <h1>Sistema de Combate</h1>
-<p>Batalhas com iniciativa, turnos, dano, defesa, efeitos, habilidades e histórico completo.</p>
+<p>Batalhas controladas manualmente pelo mestre, com dano, defesa, efeitos, habilidades e histórico completo.</p>
 </div>
 
 <button
@@ -160,36 +230,33 @@ alternarSelecao(id,personagensSelecionados,setPersonagensSelecionados)
 titulo="Inimigos"
 itens={monstros}
 selecionados={monstrosSelecionados}
+quantidades={quantidadesMonstros}
 onAlternar={(id)=>
 alternarSelecao(id,monstrosSelecionados,setMonstrosSelecionados)
 }
+onAlterarQuantidade={alterarQuantidadePreparacao}
 />
 </section>
 
-{estado && combatenteAtual &&(
+{estado &&(
 <section className="mesaCombate">
 <div className="estadoCombate">
 <div className={`placarCombate ${estado.status}`}>
-<span>Turno {estado.turno}</span>
+<span>Ações {Math.max(0,estado.turno-1)}</span>
 <strong>{textoStatus(estado.status)}</strong>
 </div>
 
-<div className="ordemTurnos">
-{estado.ordem.map((id)=>{
-const combatente=estado.combatentes.find((item)=>item.id===id);
-
-if(!combatente)
-return null;
-
-return(
-<span
-key={id}
-className={`${combatente.id===combatenteAtual.id ? "turnoAtual" : ""} ${!combatente.vivo ? "abatido" : ""}`}
+<div className="listaParticipantesCombate">
+{estado.combatentes.map((combatente)=>(
+<button
+key={combatente.id}
+className={`${combatente.id===estado.combatenteAtivoId ? "turnoAtual" : ""} ${!combatente.vivo ? "abatido" : ""}`}
+onClick={()=>selecionarAtor(combatente.id)}
+disabled={!combatente.vivo || estado.status!=="em_andamento"}
 >
-{combatente.nome}
-</span>
-);
-})}
+{combatente.nome}{combatente.lado==="inimigo" ? ` x${combatente.quantidade}` : ""}
+</button>
+))}
 </div>
 </div>
 
@@ -197,21 +264,26 @@ className={`${combatente.id===combatenteAtual.id ? "turnoAtual" : ""} ${!combate
 <GrupoCombatentes
 titulo="Grupo"
 combatentes={estado.combatentes.filter((combatente)=>combatente.lado==="aliado")}
-atualId={combatenteAtual.id}
+atualId={estado.combatenteAtivoId}
+onFugir={acaoFugir}
 />
 <GrupoCombatentes
 titulo="Ameaças"
 combatentes={estado.combatentes.filter((combatente)=>combatente.lado==="inimigo")}
-atualId={combatenteAtual.id}
+atualId={estado.combatenteAtivoId}
+onFugir={acaoFugir}
+onAlterarQuantidade={alterarQuantidadeEmCombate}
 />
 </div>
 
 {estado.status==="em_andamento" &&(
 <div className="painelAcoesCombate">
+{combatenteAtual ? (
+<>
 <div>
-<small>Turno atual</small>
+<small>Participante selecionado</small>
 <h2>{combatenteAtual.nome}</h2>
-<p>Iniciativa {combatenteAtual.rolagemIniciativa}+{Math.round(combatenteAtual.velocidade)} = {Math.round(combatenteAtual.iniciativa)}</p>
+<p>O sistema aguardará uma nova seleção do mestre após a ação.</p>
 {combatenteEstaControlado(combatenteAtual) &&(
 <p className="alertaControleCombate">Efeito de controle ativo. A ação pode ser anulada pelo combate.</p>
 )}
@@ -228,7 +300,7 @@ onChange={(evento)=>setAlvoSelecionado(evento.target.value)}
 key={combatente.id}
 value={combatente.id}
 >
-{combatente.nome}
+{combatente.nome}{combatente.lado==="inimigo" ? ` x${combatente.quantidade}` : ""}
 </option>
 ))}
 </select>
@@ -252,10 +324,20 @@ title={`${habilidade.tipo} | mana ${habilidade.custoMana} | recarga ${habilidade
 </button>
 ))}
 <button onClick={()=>atualizarEstado(passarTurno(estado,combatenteAtual.id))}>Passar</button>
+<button onClick={()=>acaoFugir(combatenteAtual.id)}>Fugir</button>
 </div>
 ) : (
 <div className="acoesDisponiveis">
 <button onClick={acaoInimiga}>Executar Ação do Inimigo</button>
+<button onClick={()=>acaoFugir(combatenteAtual.id)}>Fugir</button>
+</div>
+)}
+</>
+) : (
+<div className="avisoSelecaoCombate">
+<small>Aguardando o mestre</small>
+<h2>Selecione quem vai agir</h2>
+<p>Escolha um participante na lista acima para liberar as ações.</p>
 </div>
 )}
 </div>

@@ -56,7 +56,7 @@ overflow:auto;
 padding-right:4px;
 }
 
-.listaSelecaoCombate button{
+.listaSelecaoCombate article{
 display:grid;
 grid-template-columns:64px 1fr;
 grid-template-rows:auto auto;
@@ -73,8 +73,8 @@ cursor:pointer;
 transition:.2s;
 }
 
-.listaSelecaoCombate button:hover,
-.listaSelecaoCombate button.selecionado{
+.listaSelecaoCombate article:hover,
+.listaSelecaoCombate article.selecionado{
 border-color:var(--ouro);
 box-shadow:0 0 14px rgba(200,155,60,.18);
 }
@@ -94,6 +94,42 @@ color:var(--ouro-claro);
 
 .listaSelecaoCombate small{
 color:var(--texto-dimmed);
+}
+
+.controleQuantidadeSelecao,
+.controleQuantidadeCombate{
+display:flex;
+align-items:center;
+gap:8px;
+margin-top:6px;
+}
+
+.controleQuantidadeSelecao button,
+.controleQuantidadeCombate button{
+width:28px;
+height:28px;
+padding:0;
+background:var(--pedra-clara);
+color:var(--ouro-claro);
+border:1px solid var(--ouro-escuro);
+border-radius:6px;
+cursor:pointer;
+font-family:"Cinzel",serif;
+font-weight:700;
+}
+
+.controleQuantidadeSelecao button:disabled,
+.controleQuantidadeCombate button:disabled{
+opacity:.45;
+cursor:not-allowed;
+}
+
+.controleQuantidadeSelecao strong,
+.controleQuantidadeCombate strong{
+min-width:22px;
+text-align:center;
+font-family:"Cinzel",serif;
+color:var(--ouro-claro);
 }
 
 .mesaCombate{
@@ -141,14 +177,14 @@ color:#6ee27c;
 color:#e86a5f;
 }
 
-.ordemTurnos{
+.listaParticipantesCombate{
 display:flex;
 gap:8px;
 flex-wrap:wrap;
 justify-content:flex-end;
 }
 
-.ordemTurnos span{
+.listaParticipantesCombate button{
 border:1px solid var(--pedra-borda);
 background:var(--pedra-clara);
 color:var(--texto-dimmed);
@@ -156,15 +192,16 @@ border-radius:999px;
 padding:6px 10px;
 font-family:"Cinzel",serif;
 font-size:11px;
+cursor:pointer;
 }
 
-.ordemTurnos span.turnoAtual{
+.listaParticipantesCombate button.turnoAtual{
 border-color:var(--ouro);
 color:var(--ouro-claro);
 box-shadow:0 0 12px rgba(200,155,60,.25);
 }
 
-.ordemTurnos span.abatido{
+.listaParticipantesCombate button.abatido{
 opacity:.45;
 text-decoration:line-through;
 }
@@ -268,11 +305,28 @@ background:linear-gradient(90deg,#184a7d,#54a4e8);
 }
 
 .metasCombatente,
-.efeitosAtivosCombate{
+.efeitosAtivosCombate,
+.acoesCardCombatente{
 display:flex;
 flex-wrap:wrap;
 gap:8px;
 margin-top:8px;
+}
+
+.acoesCardCombatente button{
+padding:7px 10px;
+background:var(--pedra-clara);
+border:1px solid var(--pedra-borda);
+border-radius:6px;
+color:var(--texto);
+font-family:"Cinzel",serif;
+font-size:11px;
+cursor:pointer;
+}
+
+.acoesCardCombatente button:hover{
+border-color:var(--ouro-escuro);
+color:var(--ouro);
 }
 
 .efeitosAtivosCombate span{
@@ -309,6 +363,10 @@ color:var(--texto-dimmed);
 
 .painelAcoesCombate .alertaControleCombate{
 color:#e8b45f;
+}
+
+.avisoSelecaoCombate{
+grid-column:1 / -1;
 }
 
 .painelAcoesCombate select{
@@ -411,7 +469,7 @@ align-items:stretch;
 flex-direction:column;
 }
 
-.ordemTurnos{
+.listaParticipantesCombate{
 justify-content:flex-start;
 }
 }

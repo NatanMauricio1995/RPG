@@ -1,17 +1,18 @@
 "use client";
 
-import {useState} from "react";
-import {useRouter} from "next/navigation";
+import {useState,type ChangeEvent} from "react";
+import {useParams,useRouter} from "next/navigation";
 import Image from "next/image";
 
 import classes from "../../data/sistema/classes.json";
 import racas from "../../data/sistema/racas.json";
+import {buscarItem,normalizarItem} from "../../services/itemService";
 
-export default function FormularioItem(){
+type Props={
+modoEdicao?:boolean;
+};
 
-const router=useRouter();
-
-const[item,setItem]=useState({
+const modeloItem={
 
 id:Date.now(),
 nome:"",
@@ -40,6 +41,52 @@ valor:0
 }
 ]
 
+};
+
+type ItemFormulario=typeof modeloItem;
+type CampoLista="classePermitida"|"racaPermitida";
+type EfeitoItem=ItemFormulario["efeitos"][number];
+type OpcaoImagem={
+id:number | string;
+nome:string;
+imagem?:string;
+};
+type ItemSalvo={
+id:number | string;
+};
+
+export default function FormularioItem({
+modoEdicao=false
+}:Props){
+
+const router=useRouter();
+const params=useParams();
+const id=Number(params?.id);
+
+const[item,setItem]=useState<ItemFormulario>(()=>{
+
+if(modoEdicao && id){
+const encontrado=buscarItem(id);
+
+if(encontrado){
+return{
+...modeloItem,
+...normalizarItem(encontrado),
+bonus:{
+...modeloItem.bonus,
+...(encontrado.bonus || {})
+},
+efeitos:Array.isArray(encontrado.efeitos) && encontrado.efeitos.length>0
+? encontrado.efeitos
+: modeloItem.efeitos,
+classePermitida:encontrado.classePermitida || modeloItem.classePermitida,
+racaPermitida:encontrado.racaPermitida || modeloItem.racaPermitida
+};
+}
+}
+
+return modeloItem;
+
 });
 
 
@@ -55,7 +102,9 @@ carisma:"Carisma"
 };
 
 
-function alterarCampo(evento:any){
+function alterarCampo(
+evento:ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+){
 
 setItem(anterior=>({
 ...anterior,
@@ -84,17 +133,13 @@ bonus:{
 
 
 function alternarLista(
-campo:string,
+campo:CampoLista,
 valor:string
 ){
 
 setItem(anterior=>{
 
-const lista=
-
-anterior[
-campo as keyof typeof anterior
-] as string[];
+const lista=anterior[campo];
 
 return{
 
@@ -119,8 +164,8 @@ v=>v!==valor
 
 function alterarEfeito(
 index:number,
-campo:string,
-valor:any
+campo:keyof EfeitoItem,
+valor:string | number
 ){
 
 setItem(anterior=>{
@@ -184,7 +229,7 @@ setItem(anterior=>({
 efeitos:
 
 anterior.efeitos.filter(
-(_:any,i:number)=>i!==index
+(_,i:number)=>i!==index
 )
 
 }));
@@ -193,7 +238,7 @@ anterior.efeitos.filter(
 
 
 function carregarImagem(
-evento:any
+evento:ChangeEvent<HTMLInputElement>
 ){
 
 const arquivo=
@@ -238,13 +283,17 @@ localStorage.getItem(
 
 );
 
+const atualizados=modoEdicao
+? (itensSalvos as ItemSalvo[]).filter((itemSalvo)=>Number(itemSalvo.id)!==Number(item.id))
+: itensSalvos;
+
 localStorage.setItem(
 
 "itensPersonalizados",
 
 JSON.stringify([
 
-...itensSalvos,
+...atualizados,
 item
 
 ])
@@ -256,14 +305,14 @@ router.push("/itens");
 }
 
 
-const imagemClasse=(classe:any)=>
+const imagemClasse=(classe:OpcaoImagem)=>
 
 classe.imagem?.startsWith("/")
 ? classe.imagem
 : "/imagens/classes/padrao.png";
 
 
-const imagemRaca=(raca:any)=>
+const imagemRaca=(raca:OpcaoImagem)=>
 
 raca.imagem?.startsWith("/")
 ? raca.imagem
@@ -276,7 +325,7 @@ return(
 
 <h2 className="formularioTitulo">
 
-✦ Criar Item ✦
+{modoEdicao ? "✦ Editar Item ✦" : "✦ Criar Item ✦"}
 
 </h2>
 
@@ -324,7 +373,7 @@ onChange={alterarCampo}
 {
 
 item.efeitos.map(
-(efeito:any,index:number)=>(
+(efeito,index:number)=>(
 
 <div
 key={index}
@@ -419,8 +468,8 @@ onChange={carregarImagem}
 
 {
 
-classes.map(
-(classe:any)=>(
+(classes as OpcaoImagem[]).map(
+(classe)=>(
 
 <div
 key={classe.id}
@@ -463,8 +512,8 @@ onChange={()=>alternarLista("classePermitida",classe.nome)}
 
 {
 
-racas.map(
-(raca:any)=>(
+(racas as OpcaoImagem[]).map(
+(raca)=>(
 
 <div
 key={raca.id}
@@ -559,7 +608,7 @@ className="botaoSalvar"
 onClick={salvar}
 >
 
-💾 Salvar Item
+{modoEdicao ? "💾 Salvar Alterações" : "💾 Salvar Item"}
 
 </button>
 
