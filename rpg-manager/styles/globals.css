@@ -1,5 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap');
 
+/* ============================================
+   GLOBALS — reset + base (substitui globals.css)
+   ============================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+::selection {
+  background: var(--ouro-escuro);
+  color: var(--pedra);
+}
+
 :root {
   --ouro: #c89b3c;
   --ouro-claro: #e8c76a;
@@ -25,11 +39,6 @@
   box-sizing: border-box;
 }
 
-::selection {
-  background: var(--ouro-escuro);
-  color: var(--pedra);
-}
-
 body {
   background-color: var(--pedra);
   background-image:
@@ -41,6 +50,7 @@ body {
   min-height: 100vh;
 }
 
+/* Scrollbar temática */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--pedra); }
 ::-webkit-scrollbar-thumb {
@@ -69,6 +79,7 @@ body {
   position: relative;
 }
 
+/* Marca d'água decorativa no fundo */
 .principal::before {
   content: '⚔';
   position: fixed;
@@ -81,6 +92,7 @@ body {
   font-family: serif;
 }
 
+/* Utilitários de título */
 h1, h2, h3 {
   font-family: 'Cinzel', serif;
   letter-spacing: 0.05em;

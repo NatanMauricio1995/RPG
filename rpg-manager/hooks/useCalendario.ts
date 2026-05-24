@@ -1,34 +1,15 @@
 "use client";
 
-import{
-
-createContext,
-useContext,
+import {
 useEffect,
 useState
-
 }
-
 from "react";
 
-import calendarioInicial from "../data/campanha/calendario.json";
+import calendarioInicial
+from "../data/campanha/calendario.json";
 
-const CalendarioContext=
-
-createContext<any>(
-null
-);
-
-
-export function CalendarioProvider({
-
-children
-
-}:{
-
-children:React.ReactNode
-
-}){
+export default function useCalendario(){
 
 const[
 dados,
@@ -36,7 +17,6 @@ setDados
 ]=useState(
 calendarioInicial
 );
-
 
 const[
 carregado,
@@ -54,9 +34,7 @@ localStorage.getItem(
 "calendarioRPG"
 );
 
-if(
-salvo
-){
+if(salvo){
 
 setDados(
 JSON.parse(
@@ -75,9 +53,7 @@ true
 
 useEffect(()=>{
 
-if(
-carregado
-){
+if(carregado){
 
 localStorage.setItem(
 
@@ -150,11 +126,8 @@ novoAno
 
 
 function mudarDia(
-
 novoDia:number,
-
 novoMes?:number
-
 ){
 
 setDados({
@@ -173,37 +146,16 @@ dados.mesAtual
 }
 
 
-return(
-
-<CalendarioContext.Provider
-
-value={{
+return{
 
 dados,
 
-carregado,
-
 avancarDia,
 
-mudarDia
+mudarDia,
 
-}}
+carregado
 
->
-
-{children}
-
-</CalendarioContext.Provider>
-
-);
-
-}
-
-
-export function useCalendario(){
-
-return useContext(
-CalendarioContext
-);
+};
 
 }
