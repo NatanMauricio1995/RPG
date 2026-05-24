@@ -100,31 +100,110 @@ personagens:any[],
 monstros:any[]
 ):EstadoCombate{
 
-const aliados=personagens.map((personagem,index)=>
-criarCombatentePersonagem(personagem,index)
+const aliados=
+
+personagens.map(
+(personagem,index)=>
+
+criarCombatentePersonagem(
+personagem,
+index
+)
+
 );
 
-const inimigos=monstros.map((monstro,index)=>
-criarCombatenteMonstro(monstro,index)
+let indiceGlobal=0;
+
+const inimigos=
+
+monstros.flatMap(
+(monstro)=>{
+
+const quantidade=
+
+Number(
+monstro.quantidade || 1
 );
 
-const combatentes=[...aliados,...inimigos];
+return Array.from(
+
+{
+length:quantidade
+},
+
+(_,numero)=>{
+
+const copia={
+
+...monstro,
+
+nome:
+
+quantidade>1
+
+?
+
+`${monstro.nome} ${numero+1}`
+
+:
+
+monstro.nome
+
+};
+
+const combatente=
+
+criarCombatenteMonstro(
+copia,
+indiceGlobal
+);
+
+indiceGlobal++;
+
+return combatente;
+
+}
+
+);
+
+}
+
+);
+
+const combatentes=[
+
+...aliados,
+...inimigos
+
+];
 
 const log=[
+
 criarLog(
+
 1,
 0,
-`Combate iniciado. O mestre escolhe manualmente quem age a cada ação.`,
+
+"Combate iniciado. O mestre escolhe manualmente quem age a cada ação.",
+
 "sistema"
+
 )
+
 ];
 
 return verificarResultado({
+
 status:"em_andamento",
+
 turno:1,
+
 combatenteAtivoId:"",
+
 combatentes,
+
 log
+
 });
 
 }
