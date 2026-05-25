@@ -455,9 +455,81 @@ function criarHabilidadesPersonagem(
 personagem:any
 ):HabilidadeCombate[]{
 
-const nivel=Number(personagem.nivel || 1);
+if(
+personagem.habilidades &&
+Array.isArray(
+personagem.habilidades
+)
+){
+
+return personagem.habilidades.map(
+(habilidade:any)=>({
+
+id:
+String(
+habilidade.id
+),
+
+nome:
+habilidade.nome ||
+
+"Habilidade",
+
+descricao:
+habilidade.descricao ||
+
+"",
+
+custoMana:
+Number(
+habilidade.custoMana || 0
+),
+
+dano:
+habilidade.dano
+? String(
+habilidade.dano
+)
+: "0",
+
+cooldown:
+Number(
+habilidade.cooldown || 0
+),
+
+cooldownRestante:0,
+
+alcance:
+Number(
+habilidade.alcance || 1
+),
+
+tipo:
+habilidade.tipo ||
+"especial",
+
+area:
+Number(
+habilidade.area || 1
+),
+
+efeitos:
+habilidade.efeitos || []
+
+})
+
+);
+
+}
+
+
+const nivel=
+Number(
+personagem.nivel || 1
+);
 
 return[
+
 {
 id:"golpe-poderoso",
 nome:"Golpe Poderoso",
@@ -471,39 +543,23 @@ tipo:"fisico",
 area:1,
 efeitos:[]
 },
+
 {
 id:"centelha-arcana",
 nome:"Centelha Arcana",
-descricao:"Explosão mágica curta com chance de aplicar sangramento arcano.",
+descricao:"Explosão mágica curta.",
 custoMana:4,
-dano:nivel>=5 ? "2d8" : "1d8",
+dano:nivel>=5
+? "2d8"
+: "1d8",
 cooldown:2,
 cooldownRestante:0,
 alcance:6,
 tipo:"magico",
 area:1,
-efeitos:[
-{
-tipo:"sangramento",
-valor:2,
-duracao:2,
-origem:"Centelha Arcana"
-}
-]
-},
-...(habilidadesData as any[]).slice(0,2).map((habilidade:any)=>({
-id:`talento-${habilidade.id}`,
-nome:habilidade.nome,
-descricao:habilidade.descricao || "Talento racial adaptado para combate.",
-custoMana:1,
-dano:"1d4",
-cooldown:1,
-cooldownRestante:0,
-alcance:3,
-tipo:"talento",
-area:1,
 efeitos:[]
-}))
+}
+
 ];
 
 }
