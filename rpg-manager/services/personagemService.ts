@@ -137,38 +137,69 @@ personagem.id===id
 
 }
 
-export function salvarPersonagem(
+import {
+collection,
+addDoc,
+updateDoc,
+doc
+} from "firebase/firestore";
+
+import {db} from "../firebase/config";
+
+
+export async function salvarPersonagem(
 personagem:any
 ){
 
-const personalizados=
-carregarPersonagensPersonalizados();
+try{
 
-const personagemNormalizado=
-normalizarPersonagem(personagem);
+const colecao=
 
-const existe=
-personalizados.some(
-(item:any)=>
-item.id===personagemNormalizado.id
+collection(
+db,
+"personagens"
 );
 
-const atualizados=
-existe
-? personalizados.map(
-(item:any)=>
-item.id===personagemNormalizado.id
-? personagemNormalizado
-: item
-)
-: [
-...personalizados,
-personagemNormalizado
-];
 
-salvarPersonagensPersonalizados(
-atualizados
+if(personagem.id){
+
+const referencia=
+
+doc(
+db,
+"personagens",
+String(personagem.id)
 );
+
+await updateDoc(
+referencia,
+personagem
+);
+
+return personagem.id;
+
+}
+
+
+const documento=
+
+await addDoc(
+colecao,
+personagem
+);
+
+return documento.id;
+
+}catch(erro){
+
+console.error(
+"Erro ao salvar personagem:",
+erro
+);
+
+return null;
+
+}
 
 }
 

@@ -1,31 +1,51 @@
 import {
-createDocument,
-listDocuments,
-updateDocument,
-deleteDocument
+collection,
+addDoc,
+getDocs,
+updateDoc,
+deleteDoc,
+doc
 }
-from "../firebase/firestore";
+from "firebase/firestore";
 
+import {db} from "../firebase/config";
 
-const COLECAO="personagens";
+const colecao=
+
+collection(
+db,
+"personagens"
+);
 
 
 export async function listarPersonagens(){
 
-return await listDocuments(
-COLECAO
+const snapshot=
+
+await getDocs(
+colecao
+);
+
+return snapshot.docs.map(
+(item)=>({
+
+id:item.id,
+
+...item.data()
+
+})
 );
 
 }
 
 
 export async function salvarPersonagem(
-dados:any
+personagem:any
 ){
 
-return await createDocument(
-COLECAO,
-dados
+return await addDoc(
+colecao,
+personagem
 );
 
 }
@@ -36,10 +56,16 @@ id:string,
 dados:any
 ){
 
-return await updateDocument(
-COLECAO,
-id,
+return await updateDoc(
+
+doc(
+db,
+"personagens",
+id
+),
+
 dados
+
 );
 
 }
@@ -49,9 +75,14 @@ export async function excluirPersonagem(
 id:string
 ){
 
-return await deleteDocument(
-COLECAO,
+return await deleteDoc(
+
+doc(
+db,
+"personagens",
 id
+)
+
 );
 
 }

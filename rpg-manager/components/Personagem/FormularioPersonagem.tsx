@@ -3,7 +3,7 @@
 import {useState} from "react";
 import {useParams,useRouter} from "next/navigation";
 import Image from "next/image";
-
+import {enviarImagem} from "../../services/uploadImagem";
 import classes from "../../data/sistema/classes.json";
 import racas from "../../data/sistema/racas.json";
 import {
@@ -125,7 +125,7 @@ item=>!Number.isNaN(item)
 
 }
 
-function carregarImagem(
+async function carregarImagem(
 evento:any
 ){
 
@@ -134,32 +134,42 @@ evento.target.files?.[0];
 
 if(
 !arquivo
-)return;
+)
+return;
 
-const leitor=
-new FileReader();
+try{
 
-leitor.onload=()=>{
+const url=
+
+await enviarImagem(
+arquivo,
+"personagens"
+);
 
 setPersonagem(
 anterior=>({
+
 ...anterior,
-imagem:
-String(leitor.result)
+
+imagem:url
+
 })
 );
 
-};
+}catch(erro){
 
-leitor.readAsDataURL(
-arquivo
+console.error(
+"Erro ao enviar imagem:",
+erro
 );
 
 }
 
-function salvar(){
+}
 
-salvarPersonagem(
+async function salvar(){
+
+await salvarPersonagem(
 personagem
 );
 
