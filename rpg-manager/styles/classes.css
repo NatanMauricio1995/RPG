@@ -7,3 +7,35 @@ margin-bottom:10px;
 .nivelHabilidades h4{
 margin-bottom:8px;
 }
+
+.listaHabilidadesClasse{
+display:grid;
+grid-template-columns:
+repeat(
+auto-fill,
+minmax(
+200px,
+1fr
+));
+gap:10px;
+margin-top:10px;
+}
+
+.listaHabilidadesClasse label{
+display:flex;
+align-items:center;
+gap:8px;
+padding:8px;
+border:1px solid var(--pedra-borda);
+background:rgba(37,32,24,.88);
+cursor:pointer;
+}
+
+.listaHabilidadesClasse label:hover{
+border-color:var(--ouro);
+}
+
+.listaHabilidadesClasse input{
+width:16px;
+height:16px;
+}

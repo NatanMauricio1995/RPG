@@ -3,18 +3,29 @@
 import {useState,useEffect} from "react";
 import {useParams,useRouter} from "next/navigation";
 import Image from "next/image";
+
 import {enviarImagem} from "../../services/uploadImagem";
-import {buscarPersonagem, criarModeloPersonagem, normalizarPersonagem, salvarPersonagem} from "../../services/personagemService";
+
+import {
+buscarPersonagem,
+criarModeloPersonagem,
+normalizarPersonagem,
+salvarPersonagem
+} from "../../services/personagemService";
+
 import classesBase from "../../data/sistema/classes.json";
 import racasBase from "../../data/sistema/racas.json";
+
 import {listarClasses} from "../../services/classeServiceFirebase";
 import {listarRacas} from "../../services/racaServiceFirebase";
+import {listarHabilidades} from "../../services/habilidadeServiceFirebase";
 
 type Props={
 modoEdicao?:boolean;
 };
 
-type PersonagemFormulario=ReturnType<typeof criarModeloPersonagem>;
+type PersonagemFormulario=
+ReturnType<typeof criarModeloPersonagem>;
 
 export default function FormularioPersonagem({
 modoEdicao=false
@@ -26,6 +37,26 @@ const params=useParams();
 const id=Number(
 params?.id
 );
+
+const[
+classes,
+setClasses
+]=useState<any[]>([]);
+
+const[
+racas,
+setRacas
+]=useState<any[]>([]);
+
+const[
+habilidadesDisponiveis,
+setHabilidadesDisponiveis
+]=useState<any[]>([]);
+
+const[
+habilidadesClasse,
+setHabilidadesClasse
+]=useState<any[]>([]);
 
 const[
 personagem,
@@ -42,9 +73,13 @@ buscarPersonagem(id);
 
 if(
 encontrado
-)return normalizarPersonagem(
+){
+
+return normalizarPersonagem(
 encontrado
 ) as PersonagemFormulario;
+
+}
 
 }
 
@@ -52,14 +87,100 @@ return criarModeloPersonagem();
 
 });
 
+useEffect(()=>{
+
+async function carregarDados(){
+
+const classesFirebase=
+await listarClasses();
+
+const racasFirebase=
+await listarRacas();
+
+const habilidadesFirebase=
+await listarHabilidades();
+
+setClasses([
+...classesBase,
+...classesFirebase
+]);
+
+setRacas([
+...racasBase,
+...racasFirebase
+]);
+
+setHabilidadesDisponiveis(
+habilidadesFirebase
+);
+
+}
+
+carregarDados();
+
+},[]);
+
 const nomesAtributos={
+
 forca:"Força",
 destreza:"Destreza",
 constituicao:"Constituição",
 inteligencia:"Inteligência",
 sabedoria:"Sabedoria",
 carisma:"Carisma"
+
 };
+
+async function atualizarHabilidadesClasse(
+classeId:number|string,
+nivel:number
+){
+
+const classe=
+
+classes.find(
+(item:any)=>
+
+String(item.id)===
+String(classeId)
+);
+
+if(
+!classe
+)
+return;
+
+const ids=
+
+classe.habilidadesPorNivel
+
+.filter(
+(item:any)=>
+
+item.nivel<=nivel
+)
+
+.flatMap(
+(item:any)=>
+
+item.habilidades
+);
+
+const desbloqueadas=
+
+habilidadesDisponiveis.filter(
+(item:any)=>
+
+ids.includes(
+item.id
+)
+);
+
+setHabilidadesClasse(
+desbloqueadas
+);
+
+}
 
 function alterarCampo(
 evento:any
@@ -69,17 +190,49 @@ const campo=
 evento.target.name;
 
 const valor=
+
 evento.target.type==="number"
-? Number(evento.target.value)
-: evento.target.value;
+
+?
+
+Number(
+evento.target.value
+)
+
+:
+
+evento.target.value;
 
 setPersonagem(
 anterior=>({
+
 ...anterior,
+
 [campo]:
 valor
+
 })
 );
+
+if(
+campo==="classeId"
+||
+campo==="nivel"
+){
+
+atualizarHabilidadesClasse(
+
+campo==="classeId"
+? valor
+: personagem.classeId,
+
+campo==="nivel"
+? valor
+: personagem.nivel
+
+);
+
+}
 
 }
 
@@ -90,12 +243,18 @@ valor:number
 
 setPersonagem(
 anterior=>({
+
 ...anterior,
+
 atributosBase:{
+
 ...anterior.atributosBase,
+
 [atributo]:
 valor
+
 }
+
 })
 );
 
@@ -107,16 +266,24 @@ valor:string
 
 setPersonagem(
 anterior=>({
+
 ...anterior,
+
 inventario:
+
 valor
 .split(",")
 .map(
-item=>Number(item.trim())
+item=>
+Number(
+item.trim()
+)
 )
 .filter(
-item=>!Number.isNaN(item)
+item=>
+!Number.isNaN(item)
 )
+
 })
 );
 
@@ -156,7 +323,6 @@ imagem:url
 }catch(erro){
 
 console.error(
-"Erro ao enviar imagem:",
 erro
 );
 
@@ -166,8 +332,30 @@ erro
 
 async function salvar(){
 
+const personagemCompleto={
+
+...personagem,
+
+habilidades:
+
+habilidadesClasse.map(
+(item:any)=>({
+
+id:item.id,
+nome:item.nome,
+tipo:item.tipo,
+dano:item.dano,
+cura:item.cura,
+custoMana:item.custoMana,
+cooldown:item.cooldown,
+efeito:item.efeito
+
+}))
+
+};
+
 await salvarPersonagem(
-personagem
+personagemCompleto
 );
 
 router.push(
@@ -193,28 +381,24 @@ modoEdicao
 <div className="formularioPersonagemGrid">
 
 <div>
-
 <label>Nome</label>
 <input
 name="nome"
 value={personagem.nome}
 onChange={alterarCampo}
 />
-
 </div>
 
 <div>
-
 <label>Raça</label>
 <select
 name="racaId"
 value={personagem.racaId}
 onChange={alterarCampo}
 >
-
 {
-(racas as any[]).map(
-(raca)=>(
+racas.map(
+(raca:any)=>(
 
 <option
 key={raca.id}
@@ -228,23 +412,19 @@ value={raca.id}
 )
 )
 }
-
 </select>
-
 </div>
 
 <div>
-
 <label>Classe</label>
 <select
 name="classeId"
 value={personagem.classeId}
 onChange={alterarCampo}
 >
-
 {
-(classes as any[]).map(
-(classe)=>(
+classes.map(
+(classe:any)=>(
 
 <option
 key={classe.id}
@@ -258,13 +438,10 @@ value={classe.id}
 )
 )
 }
-
 </select>
-
 </div>
 
 <div>
-
 <label>Nível</label>
 <input
 type="number"
@@ -273,64 +450,52 @@ min={1}
 value={personagem.nivel}
 onChange={alterarCampo}
 />
-
 </div>
 
 <div>
-
 <label>XP Atual</label>
 <input
 type="number"
 name="xpAtual"
-min={0}
 value={personagem.xpAtual}
 onChange={alterarCampo}
 />
-
 </div>
 
 <div>
-
 <label>XP Necessário</label>
 <input
 type="number"
 name="xpNecessario"
-min={0}
 value={personagem.xpNecessario}
 onChange={alterarCampo}
 />
-
 </div>
 
 <div>
-
 <label>Vida Atual</label>
 <input
 type="number"
 name="vidaAtual"
-min={0}
 value={personagem.vidaAtual}
 onChange={alterarCampo}
 />
-
 </div>
 
 <div>
-
 <label>Ouro</label>
 <input
 type="number"
 name="ouro"
-min={0}
 value={personagem.ouro}
 onChange={alterarCampo}
 />
-
 </div>
 
 </div>
 
-<label>Inventário por IDs, separados por vírgula</label>
+<label>Inventário</label>
+
 <input
 value={personagem.inventario.join(", ")}
 onChange={(evento)=>
@@ -341,6 +506,7 @@ evento.target.value
 />
 
 <label>Imagem</label>
+
 <input
 type="file"
 accept="image/*"
@@ -352,9 +518,9 @@ onChange={carregarImagem}
 <Image
 src={
 personagem.imagem ||
-"/imagens/racas/padrao.png"
+"/imagens/personagens/padrao.png"
 }
-alt="Preview do personagem"
+alt="Preview"
 width={220}
 height={220}
 />
@@ -374,13 +540,11 @@ personagem.atributosBase
 <div key={atributo}>
 
 <label>
-
 {
 nomesAtributos[
 atributo as keyof typeof nomesAtributos
 ]
 }
-
 </label>
 
 <input
@@ -398,6 +562,24 @@ Number(evento.target.value)
 }
 />
 
+</div>
+
+)
+)
+}
+
+</div>
+
+<label>Habilidades desbloqueadas</label>
+
+<div className="listaHabilidadesClasse">
+
+{
+habilidadesClasse.map(
+(item:any)=>(
+
+<div key={item.id}>
+🪄 {item.nome}
 </div>
 
 )

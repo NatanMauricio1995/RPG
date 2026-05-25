@@ -3,7 +3,7 @@
 import {useState,useEffect} from "react";
 import {useRouter,useParams} from "next/navigation";
 import Image from "next/image";
-
+import {listarHabilidades} from "../../services/habilidadeServiceFirebase";
 import {salvarClasse, editarClasse, listarClasses} from "../../services/classeServiceFirebase";
 
 type Props={
@@ -14,19 +14,13 @@ export default function FormularioClasse({
 modoEdicao=false
 }:Props){
 
-const router=
-useRouter();
+const router=useRouter();
 
-const params=
-useParams();
+const params=useParams();
 
-const id=
-params?.id;
+const id=params?.id;
 
-const[
-classe,
-setClasse
-]=useState({
+const[classe,setClasse]=useState({
 
 id:Date.now(),
 
@@ -40,20 +34,22 @@ proficiencias:[] as string[],
 imagem:
 "/imagens/classes/padrao.png",
 
-habilidadesPorNivel:[
-
-{
-nivel:1,
-habilidades:[]
-}
-
-]
-
-});
-
+habilidadesPorNivel:[{nivel:1,habilidades:[]}]});
+const[
+habilidades,
+setHabilidades
+]=useState<any[]>([]);
 useEffect(()=>{
 
 async function carregar(){
+
+const habilidadesFirebase=
+
+await listarHabilidades();
+
+setHabilidades(
+habilidadesFirebase
+);
 
 if(
 !modoEdicao ||
@@ -168,10 +164,9 @@ habilidades:[]
 
 }
 
-
-function alterarHabilidadesNivel(
+function alternarHabilidadeNivel(
 indice:number,
-valor:string
+habilidadeId:string
 ){
 
 const atualizadas=[
@@ -180,33 +175,39 @@ const atualizadas=[
 
 ];
 
-atualizadas[indice]={
+const lista=
 
-...atualizadas[indice],
+atualizadas[indice]
+.habilidades;
 
-habilidades:
 
-valor
-
-.split(",")
-
-.map(
-(item)=>
-
-Number(
-item.trim()
+if(
+lista.includes(
+habilidadeId
 )
-)
+){
 
-.filter(
-item=>
+atualizadas[indice]
+.habilidades=
 
-!Number.isNaN(
-item
-)
-)
+lista.filter(
+(id:string)=>
 
-};
+id!==habilidadeId
+);
+
+}else{
+
+atualizadas[indice]
+.habilidades=[
+
+...lista,
+
+habilidadeId
+
+];
+
+}
 
 setClasse({
 
@@ -218,6 +219,7 @@ atualizadas
 });
 
 }
+
 
 function carregarImagem(
 evento:any
@@ -441,29 +443,56 @@ Nível
 
 </h4>
 
+<div
+className="listaHabilidadesClasse"
+>
+
+{
+
+habilidades.map(
+(habilidade:any)=>(
+
+<label
+key={habilidade.id}
+>
+
 <input
+type="checkbox"
 
-placeholder="
-IDs separados por vírgula
-"
+checked={
 
-value={
-item.habilidades.join(", ")
+item.habilidades.includes(
+habilidade.id
+)
+
 }
 
-onChange={(evento)=>
+onChange={()=>
 
-alterarHabilidadesNivel(
+alternarHabilidadeNivel(
 
 index,
 
-evento.target.value
+habilidade.id
+
+)
+
+}
+/>
+
+{habilidade.nome}
+
+</label>
+
+)
 
 )
 
 }
 
-/>
+</div>
+
+
 
 </div>
 
