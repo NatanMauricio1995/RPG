@@ -1,17 +1,14 @@
 "use client";
 
-import {useState} from "react";
+import {useState,useEffect} from "react";
 import {useParams,useRouter} from "next/navigation";
 import Image from "next/image";
 import {enviarImagem} from "../../services/uploadImagem";
-import classes from "../../data/sistema/classes.json";
-import racas from "../../data/sistema/racas.json";
-import {
-buscarPersonagem,
-criarModeloPersonagem,
-normalizarPersonagem,
-salvarPersonagem
-} from "../../services/personagemService";
+import {buscarPersonagem, criarModeloPersonagem, normalizarPersonagem, salvarPersonagem} from "../../services/personagemService";
+import classesBase from "../../data/sistema/classes.json";
+import racasBase from "../../data/sistema/racas.json";
+import {listarClasses} from "../../services/classeServiceFirebase";
+import {listarRacas} from "../../services/racaServiceFirebase";
 
 type Props={
 modoEdicao?:boolean;

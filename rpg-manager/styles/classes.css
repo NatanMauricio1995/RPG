@@ -1,0 +1,9 @@
+.nivelHabilidades{
+padding:12px;
+border:1px solid var(--pedra-borda);
+margin-bottom:10px;
+}
+
+.nivelHabilidades h4{
+margin-bottom:8px;
+}
