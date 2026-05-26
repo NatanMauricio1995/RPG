@@ -1,0 +1,228 @@
+"use client";
+
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
+import { db } from "../firebase/config";
+import personagensData from "../data/campanha/personagens.json";
+import classes from "../data/sistema/classes.json";
+import racas from "../data/sistema/racas.json";
+import niveis from "../data/sistema/niveis.json";
+import { calcularVida, calcularAtributosFinais } from "./calculoService";
+import { buscarItem } from "./itemService";
+import { listarHabilidades } from "./habilidadeServiceFirebase";
+import type {
+  Personagem,
+  PersonagemCompleto,
+  Equipados,
+  Atributos,
+  Classe,
+  Raca,
+  Nivel,
+  Habilidade,
+} from "../types/domain";
+
+export const ATRIBUTOS_PADRAO: Atributos = {
+  forca: 10,
+  destreza: 10,
+  constituicao: 10,
+  inteligencia: 10,
+  sabedoria: 10,
+  carisma: 10,
+};
+
+export const EQUIPADOS_PADRAO: Equipados = {
+  arma: null,
+  armaSecundaria: null,
+  escudo: null,
+  armadura: null,
+  capacete: null,
+  luvas: null,
+  botas: null,
+  anel1: null,
+  anel2: null,
+  colar: null,
+  acessorio: null,
+  bolsa: null,
+};
+
+export function criarModeloPersonagem(): Personagem {
+  return {
+    id: Date.now(),
+    nome: "",
+    imagem: "/imagens/racas/padrao.png",
+    racaId: (racas[0] as any)?.id || 1,
+    classeId: (classes[0] as any)?.id || 1,
+    nivel: 1,
+    xpAtual: 0,
+    xpNecessario: 100,
+    vidaAtual: 10,
+    manaAtual: 10,
+    ouro: 0,
+    inventario: [],
+    equipados: { ...EQUIPADOS_PADRAO },
+    atributosBase: { ...ATRIBUTOS_PADRAO },
+  };
+}
+
+export function normalizarPersonagem(personagem: any): Personagem {
+  const p = {
+    ...criarModeloPersonagem(),
+    ...personagem,
+    inventario: Array.isArray(personagem?.inventario) ? personagem.inventario : [],
+    equipados: {
+      ...EQUIPADOS_PADRAO,
+      ...(personagem?.equipados || {}),
+    },
+    atributosBase: {
+      ...ATRIBUTOS_PADRAO,
+      ...(personagem?.atributosBase || {}),
+    },
+  };
+
+  // Garante que o inventário está no formato correto
+  p.inventario = p.inventario.map((item: any) => {
+    if (typeof item === "string" || typeof item === "number") {
+      return { itemId: String(item), quantidade: 1, equipado: false };
+    }
+    return {
+      itemId: String(item.itemId),
+      quantidade: Number(item.quantidade || 1),
+      equipado: Boolean(item.equipado),
+    };
+  });
+
+  return p;
+}
+
+const colecao = collection(db, "personagens");
+
+export async function listarPersonagens(): Promise<Personagem[]> {
+  try {
+    const snapshot = await getDocs(colecao);
+    const firebasePersonagens = snapshot.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+    })) as Personagem[];
+
+    // Combinar com os dados estáticos para manter compatibilidade
+    const estaticos = (personagensData as any[]).map(normalizarPersonagem);
+
+    const todos = [...estaticos, ...firebasePersonagens];
+    const porId = new Map<string | number, Personagem>();
+    todos.forEach((p) => porId.set(p.id, normalizarPersonagem(p)));
+
+    return Array.from(porId.values());
+  } catch (erro) {
+    console.error("Erro ao listar personagens:", erro);
+    return (personagensData as any[]).map(normalizarPersonagem);
+  }
+}
+
+export async function buscarPersonagem(id: string | number): Promise<Personagem | null> {
+  try {
+    if (typeof id === "string" && isNaN(Number(id))) {
+      const docRef = doc(db, "personagens", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return normalizarPersonagem({ ...docSnap.data(), id: docSnap.id });
+      }
+    }
+
+    const todos = await listarPersonagens();
+    return todos.find((p) => String(p.id) === String(id)) || null;
+  } catch (erro) {
+    console.error("Erro ao buscar personagem:", erro);
+    return null;
+  }
+}
+
+export async function salvarPersonagem(personagem: any) {
+  try {
+    if (personagem.id && typeof personagem.id === "string" && isNaN(Number(personagem.id))) {
+      const docRef = doc(db, "personagens", personagem.id);
+      await updateDoc(docRef, personagem);
+      return personagem.id;
+    } else {
+      const { id, ...dados } = personagem;
+      const docRef = await addDoc(colecao, dados);
+      return docRef.id;
+    }
+  } catch (erro) {
+    console.error("Erro ao salvar personagem:", erro);
+    return null;
+  }
+}
+
+export async function excluirPersonagem(id: string) {
+  try {
+    await deleteDoc(doc(db, "personagens", id));
+    return true;
+  } catch (erro) {
+    console.error("Erro ao excluir personagem:", erro);
+    return false;
+  }
+}
+
+export async function completarPersonagem(personagem: Personagem): Promise<PersonagemCompleto> {
+  const p = normalizarPersonagem(personagem);
+
+  const classe = (classes as any[]).find((c) => c.id === Number(p.classeId) || c.id === p.classeId) as Classe;
+  const raca = (racas as any[]).find((r) => r.id === Number(p.racaId) || r.id === p.racaId) as Raca;
+  const dadosNivel = (niveis as any[]).find((n) => n.nivel === p.nivel) as Nivel;
+
+  const itensEquipados = p.inventario
+    .filter((inv) => inv.equipado)
+    .map((inv) => buscarItem(inv.itemId))
+    .filter(Boolean);
+
+  const { atributos, vidaMaxima, manaMaxima, armadura, velocidade, critico, ataque, bonus } = calcularAtributosFinais(
+    p,
+    raca,
+    classe,
+    niveis as any[],
+    itensEquipados
+  );
+
+  // Carregar Habilidades
+  const todasHabilidades = await listarHabilidades();
+  
+  // Habilidades da Classe
+  const habsClasseIds = classe?.habilidades || [];
+  const habsClasse = todasHabilidades.filter(h => habsClasseIds.includes(h.id));
+
+  // Habilidades do Personagem
+  const habsPersonagemIds = p.habilidadesIds || [];
+  const habsPersonagem = todasHabilidades.filter(h => habsPersonagemIds.includes(h.id));
+
+  // Habilidades por Nível (se houver regra futura)
+  
+  const habilidadesUnicas = new Map<string, Habilidade>();
+  [...habsClasse, ...habsPersonagem].forEach(h => habilidadesUnicas.set(h.id, h as any));
+
+  return {
+    ...p,
+    classe: classe?.nome || "Sem Classe",
+    raca: raca?.nome || "Sem Raça",
+    classeDados: classe,
+    racaDados: raca,
+    dadosNivel,
+    atributos,
+    vidaMaxima,
+    manaMaxima,
+    armadura,
+    velocidade,
+    critico,
+    ataque,
+    bonus,
+    habilidades: Array.from(habilidadesUnicas.values()) as any[],
+  };
+}

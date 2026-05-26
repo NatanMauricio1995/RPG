@@ -359,28 +359,28 @@ return tipo==="paralisia" || tipo==="medo";
 import { completarPersonagem } from "./personagemService";
 
 function criarCombatentePersonagem(personagem: any, index: number): Combatente {
-  const comp = completarPersonagem(personagem);
+  const comp = personagem; // Já vem completo de iniciarCombate
   const nivel = comp.nivel || 1;
   const equipamentos = comp.equipados;
   const arma = buscarItem(equipamentos.arma);
 
   return {
     id: `aliado-${comp.id}-${index}`,
-    origemId: Number(comp.id),
+    origemId: comp.id,
     lado: "aliado",
     nome: comp.nome || "Personagem",
     imagem: comp.imagem || "/imagens/racas/padrao.png",
     nivel,
-    vidaAtual: Math.min(Number(comp.vidaAtual || comp.vidaMaxima), comp.vidaMaxima),
+    vidaAtual: comp.vidaAtual || comp.vidaMaxima,
     vidaMaxima: comp.vidaMaxima,
     vidaUnitaria: comp.vidaMaxima,
     manaAtual: comp.manaAtual || comp.manaMaxima,
     manaMaxima: comp.manaMaxima,
     armadura: comp.armadura,
-    ataque: comp.ataque + calcularBonusProficiencia(nivel),
+    ataque: comp.ataque,
     danoBase: arma?.dano || "1d6",
     critico: comp.critico,
-    esquiva: Math.max(0, calcularModificador(comp.atributos.destreza) * 4),
+    esquiva: comp.esquiva || 0,
     velocidade: comp.velocidade,
     atributos: comp.atributos,
     efeitos: (comp.efeitosAtivos || [])
@@ -389,7 +389,10 @@ function criarCombatentePersonagem(personagem: any, index: number): Combatente {
         ...efeito,
         tipo: normalizarTipoEfeito(efeito.tipo),
       })),
-    habilidades: criarHabilidadesPersonagem(comp),
+    habilidades: comp.habilidades.map((h: any) => ({
+      ...h,
+      cooldownRestante: 0,
+    })),
     cooldowns: {},
     vivo: true,
     escudo: comp.bonus?.escudo || 0,
@@ -397,6 +400,7 @@ function criarCombatentePersonagem(personagem: any, index: number): Combatente {
     equipamentos,
   };
 }
+
 
 function criarCombatenteMonstro(
 monstro:any,
@@ -962,6 +966,36 @@ return estado.combatentes.find((combatente)=>combatente.id===combatenteId);
 function adicionarLog(
 estado:EstadoCombate,
 texto:string,
+tipo:EntradaLog["tipo"]
+):EstadoCombate{
+
+return{
+...estado,
+log:[
+criarLog(estado.log.length+1,estado.turno,texto,tipo),
+...estado.log
+]
+};
+
+}
+
+function criarLog(
+  id:number,
+  turno:number,
+  texto:string,
+  tipo:EntradaLog["tipo"]
+):EntradaLog{
+
+  return{
+    id,
+    turno,
+    texto,
+    tipo
+  };
+
+
+
+}
 tipo:EntradaLog["tipo"]
 ):EstadoCombate{
 

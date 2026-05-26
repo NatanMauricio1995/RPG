@@ -10,10 +10,6 @@ export function calcularVida(vidaBase: number, constituicao: number, nivel: numb
   return vidaBase + calcularModificador(constituicao) * nivel;
 }
 
-export function calcularMana(manaBase: number, inteligencia: number, nivel: number) {
-  return (manaBase || 10) + calcularModificador(inteligencia) * nivel;
-}
-
 export function calcularBonusProficiencia(nivel: number) {
   if (nivel <= 4) return 2;
   if (nivel <= 8) return 3;
@@ -59,7 +55,7 @@ export function calcularAtributosFinais(
     });
   }
 
-  // 3. Bônus de Nível
+  // 3. Bônus de Nível (acumulado)
   const nivelAtual = personagem.nivel || 1;
   if (niveisDados) {
     niveisDados.forEach((n) => {
@@ -105,16 +101,20 @@ export function calcularAtributosFinais(
   };
 
   const vidaMaxima = calcularVida(classeDados?.vidaBase || 10, atributosFinais.constituicao, nivelAtual) + bonus.vida;
-  const manaMaxima = calcularMana(classeDados?.manaBase || 10, atributosFinais.inteligencia, nivelAtual) + bonus.mana;
+  
+  // Mana Base + (Modificador de Int * Nível) + Bônus
+  const manaMaxima = (classeDados?.manaBase || 10) + (Math.max(0, calcularModificador(atributosFinais.inteligencia)) * nivelAtual) + bonus.mana;
 
   return {
     atributos: atributosFinais,
     vidaMaxima,
     manaMaxima,
     armadura: 10 + calcularModificador(atributosFinais.destreza) + bonus.armadura,
-    velocidade: calcularModificador(atributosFinais.destreza) + bonus.velocidade,
+    velocidade: 5 + calcularModificador(atributosFinais.destreza) + bonus.velocidade,
     critico: 5 + bonus.critico,
-    ataque: bonus.ataque,
+    ataque: calcularBonusProficiencia(nivelAtual) + bonus.ataque,
     bonus,
   };
 }
+
+export { calcularVida, calcularModificador, calcularBonusProficiencia };

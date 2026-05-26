@@ -89,19 +89,109 @@ export function normalizarItem(item: Partial<Item>): Item {
 
 function slotPorSubtipo(subtipo: string): SlotEquipamento {
   switch (subtipo) {
+    case "Espada":
+    case "Machado":
+    case "Adaga":
+    case "Cajado":
+    case "Arco":
     case "Arma":
-    case "Arma Mágica":
       return "arma";
+    case "Escudo":
+      return "escudo";
     case "Armadura":
+    case "Peitoral":
       return "armadura";
+    case "Capacete":
+    case "Elmo":
+      return "capacete";
+    case "Luvas":
+    case "Manoplas":
+      return "luvas";
+    case "Botas":
+    case "Sapato":
+      return "botas";
+    case "Anel":
+      return "anel1";
+    case "Colar":
+    case "Amuleto":
+      return "colar";
     case "Acessório":
       return "acessorio";
-    case "Munição":
-      return "municao";
+    case "Bolsa":
+    case "Mochila":
+      return "bolsa";
     default:
       return "";
   }
 }
+
+export function equiparItem(personagem: any, itemId: string): any {
+  const item = buscarItem(itemId);
+  if (!item || item.tipo !== "Equipamento") return personagem;
+
+  const novoInventario = [...(personagem.inventario || [])];
+  const itemNoInv = novoInventario.find((i) => i.itemId === itemId);
+
+  if (!itemNoInv) return personagem;
+
+  const slot = item.slot || slotPorSubtipo(item.subtipo);
+  if (!slot) return personagem;
+
+  // Desequipar o que estiver no slot (e slots conflitantes como anéis)
+  let slotReal: string = slot;
+  if (slot === "anel1") {
+    // Tenta o anel 1, se ocupado, tenta o 2
+    if (personagem.equipados.anel1 && !personagem.equipados.anel2) {
+      slotReal = "anel2";
+    }
+  }
+
+  const itemAnteriorId = (personagem.equipados as any)[slotReal];
+
+  const novoEquipados = {
+    ...personagem.equipados,
+    [slotReal]: itemId,
+  };
+
+  // Atualizar flags no inventário
+  const inventarioFinal = novoInventario.map((i) => {
+    if (i.itemId === itemId) return { ...i, equipado: true };
+    if (i.itemId === itemAnteriorId) return { ...i, equipado: false };
+    return i;
+  });
+
+  return {
+    ...personagem,
+    inventario: inventarioFinal,
+    equipados: novoEquipados,
+  };
+}
+
+export function desequiparItem(personagem: any, itemId: string): any {
+  const novoEquipados = { ...personagem.equipados };
+  let encontrou = false;
+
+  Object.keys(novoEquipados).forEach((slot) => {
+    if ((novoEquipados as any)[slot] === itemId) {
+      (novoEquipados as any)[slot] = null;
+      encontrou = true;
+    }
+  });
+
+  if (!encontrou) return personagem;
+
+  const novoInventario = (personagem.inventario || []).map((i: any) => {
+    if (i.itemId === itemId) return { ...i, equipado: false };
+    return i;
+  });
+
+  return {
+    ...personagem,
+    inventario: novoInventario,
+    equipados: novoEquipados,
+  };
+}
+
 
 function subtipoPorSlot(slot: SlotEquipamento): string {
   switch (slot) {

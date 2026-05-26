@@ -1,57 +1,20 @@
-import {
-createDocument,
-listDocuments,
-updateDocument,
-deleteDocument
-}
-from "../firebase/firestore";
+import { collection, addDoc, getDocs, getDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { db } from "../firebase/config";
+import type { Area } from "../types/domain";
 
+const COLECAO = "areas";
+const colecaoRef = collection(db, COLECAO);
 
-const COLECAO="areas";
-
-
-export async function listarAreas(){
-
-return await listDocuments(
-COLECAO
-);
-
+export async function listarAreas(): Promise<Area[]> {
+  const snapshot = await getDocs(colecaoRef);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Area[];
 }
 
-
-export async function salvarArea(
-dados:any
-){
-
-return await createDocument(
-COLECAO,
-dados
-);
-
-}
-
-
-export async function editarArea(
-id:string,
-dados:any
-){
-
-return await updateDocument(
-COLECAO,
-id,
-dados
-);
-
-}
-
-
-export async function excluirArea(
-id:string
-){
-
-return await deleteDocument(
-COLECAO,
-id
-);
-
+export async function salvarArea(dados: Partial<Area>) {
+  if (dados.id) {
+    await updateDoc(doc(db, COLECAO, dados.id), dados);
+    return dados.id;
+  }
+  const docRef = await addDoc(colecaoRef, dados);
+  return docRef.id;
 }

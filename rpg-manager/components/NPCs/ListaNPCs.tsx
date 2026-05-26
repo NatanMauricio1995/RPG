@@ -1,80 +1,39 @@
 "use client";
 
-import {useEffect,useState} from "react";
+import { useState, useEffect } from "react";
+import { listarNPCs } from "../../services/npcServiceFirebase";
+import type { NPC } from "../../types/domain";
+import Image from "next/image";
 import Link from "next/link";
-import CardNPC from "./CardNPC";
-import {NPC,listarNPCs} from "../../services/npcService";
 
-export default function ListaNPCs(){
+export default function ListaNPCs() {
+  const [npcs, setNpcs] = useState<NPC[]>([]);
+  const [carregando, setCarregando] = useState(true);
 
-const[npcs,setNPCs]=useState<NPC[]>([]);
-const[pesquisa,setPesquisa]=useState("");
-const[alinhamento,setAlinhamento]=useState("");
+  useEffect(() => {
+    listarNPCs().then(dados => {
+      setNpcs(dados);
+      setCarregando(false);
+    });
+  }, []);
 
-function recarregar(){
-setNPCs(listarNPCs());
-}
+  if (carregando) return <div className="carregando">Convocando habitantes...</div>;
 
-useEffect(()=>{
-recarregar();
-},[]);
-
-const filtrados=npcs.filter((npc)=>{
-const texto=`${npc.nome} ${npc.profissao} ${npc.personalidade}`.toLowerCase();
-const pesquisaOk=texto.includes(pesquisa.toLowerCase());
-const alinhamentoOk=!alinhamento || npc.alinhamento===alinhamento;
-
-return pesquisaOk && alinhamentoOk;
-});
-
-const alinhamentos=[
-...new Set(npcs.map((npc)=>npc.alinhamento).filter(Boolean))
-];
-
-return(
-<div className="paginaNPCs">
-<div className="topoNPCs">
-<div>
-<h1>NPCs</h1>
-<p>Personagens vivos do mundo, com diálogos, inventário e relacionamento com o grupo.</p>
-</div>
-<Link href="/npcs/inserir">
-<button className="botaoNovo">Novo NPC</button>
-</Link>
-</div>
-
-<div className="filtrosNPCs">
-<input
-placeholder="Buscar por nome, profissão ou personalidade"
-value={pesquisa}
-onChange={(evento)=>setPesquisa(evento.target.value)}
-/>
-<select
-value={alinhamento}
-onChange={(evento)=>setAlinhamento(evento.target.value)}
->
-<option value="">Todos os alinhamentos</option>
-{alinhamentos.map((item)=>(
-<option
-key={item}
-value={item}
->
-{item}
-</option>
-))}
-</select>
-</div>
-
-<div className="listaNPCsGrid">
-{filtrados.map((npc)=>(
-<CardNPC
-key={npc.id}
-npc={npc}
-onExcluir={recarregar}
-/>
-))}
-</div>
-</div>
-);
-
+  return (
+    <div className="habilidadesGrid">
+      {npcs.map(npc => (
+        <div key={npc.id} className="cardHabilidade">
+          <Image src={npc.imagem || "/imagens/npcs/padrao.png"} alt={npc.nome} width={300} height={200} className="imagemHabilidade" />
+          <div className="conteudoHabilidade">
+            <div className="tipoHabilidade">{npc.faccao} | {npc.funcao}</div>
+            <h3 className="nomeHabilidade">{npc.nome}</h3>
+            <p className="descricaoHabilidade">{npc.descricao}</p>
+          </div>
+          <div className="acoesHabilidade">
+             <Link href={`/npcs/${npc.id}`} className="botaoHabilidade botaoEditarHabilidade">Ver Detalhes</Link>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }

@@ -99,21 +99,28 @@
 
 .itemImagemContainer {
   width: 100%;
-  height: 150px;
-  background: var(--pedra);
+  height: 180px;
+  background: radial-gradient(circle, #2a251b 0%, #1a160d 100%);
   border-radius: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--ouro-escuro);
+  position: relative;
 }
 
 .imagemItemInventario {
   object-fit: contain;
-  width: 80%;
-  height: 80%;
+  width: 90%;
+  height: 90%;
+  transition: transform 0.3s;
 }
+
+.itemCard:hover .imagemItemInventario {
+  transform: scale(1.1);
+}
+
 
 .itemInfo {
   flex: 1;

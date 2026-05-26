@@ -25,6 +25,12 @@ Classes
 </li>
 
 <li>
+<a href="/habilidades">
+Habilidades
+</a>
+</li>
+
+<li>
 <a href="/bestiario">
 Bestiário
 </a>

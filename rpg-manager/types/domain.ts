@@ -14,7 +14,7 @@ export type Atributos = {
 };
 
 export type BonusEquipados = Record<string, number>;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+
 // ==================================
 // PERSONAGEM
 // ==================================
@@ -34,12 +34,18 @@ export type Equipados = {
   bolsa: string | null;
 };
 
+export type InventarioItem = {
+  itemId: string;
+  quantidade: number;
+  equipado: boolean;
+};
+
 export type Personagem = {
-  id: number;
+  id: string | number;
   nome: string;
   imagem: string;
-  racaId: number;
-  classeId: number;
+  racaId: number | string;
+  classeId: number | string;
   nivel: number;
   xpAtual: number;
   xpNecessario: number;
@@ -52,12 +58,7 @@ export type Personagem = {
   equipados: Equipados;
   atributosBase: Atributos;
   efeitosAtivos?: EfeitoAtivo[];
-};
-
-export type InventarioItem = {
-  itemId: string;
-  quantidade: number;
-  equipado: boolean;
+  habilidadesIds?: string[]; // IDs das habilidades adquiridas
 };
 
 export type PersonagemCompleto = Personagem & {
@@ -67,6 +68,14 @@ export type PersonagemCompleto = Personagem & {
   racaDados: Raca;
   dadosNivel: Nivel;
   atributos: Atributos;
+  vidaMaxima: number;
+  manaMaxima: number;
+  armadura: number;
+  velocidade: number;
+  critico: number;
+  ataque: number;
+  bonus: any;
+  habilidades: Habilidade[];
 };
 
 // ==================================
@@ -74,17 +83,21 @@ export type PersonagemCompleto = Personagem & {
 // ==================================
 
 export type Classe = {
-  id: number;
+  id: number | string;
   nome: string;
+  descricao?: string;
+  imagem?: string;
   vidaBase: number;
   manaBase?: number;
-  habilidades?: string[];
+  habilidades?: string[]; // IDs de habilidades padrão da classe
   bonus?: Partial<Atributos>;
 };
 
 export type Raca = {
-  id: number;
+  id: number | string;
   nome: string;
+  descricao?: string;
+  imagem?: string;
   bonus?: Partial<Atributos>;
 };
 
@@ -101,6 +114,29 @@ export type Nivel = {
     vida?: number;
     mana?: number;
   };
+};
+
+// ==================================
+// HABILIDADES
+// ==================================
+
+export type Habilidade = {
+  id: string;
+  nome: string;
+  descricao: string;
+  imagem?: string;
+  tipo: "Físico" | "Mágico" | "Especial" | "Passiva";
+  categoria: "Ataque" | "Defesa" | "Suporte" | "Utilitário";
+  dano?: string;
+  cura?: string;
+  custoMana: number;
+  cooldown: number;
+  alcance: number;
+  area: number;
+  efeitos: EfeitoAtivo[];
+  nivelMin: number;
+  castTime: string;
+  passiva: boolean;
 };
 
 // ==================================
@@ -145,11 +181,9 @@ export type Item = {
   bonus?: BonusEquipados;
   attrsMods?: Partial<Atributos>;
   durabilidade?: number;
-  // Propriedades de equipamento
   defesa?: number;
   ataque?: number;
   dano?: string;
-  // Propriedades de consumível
   cura?: number;
   mana?: number;
 };
@@ -159,9 +193,9 @@ export type Item = {
 // ==================================
 
 export type Monstro = {
-  id: number;
+  id: number | string;
   nome: string;
-  tipoId: number;
+  tipoId: number | string;
   tipo?: string;
   nivel: number;
   vida: number;
@@ -171,7 +205,7 @@ export type Monstro = {
   experiencia?: number;
   drop?: {
     ouro?: number;
-    itens?: number[];
+    itens?: string[];
   };
   habilidades?: string[];
   descricao?: string;
@@ -182,14 +216,25 @@ export type Monstro = {
 // NPC
 // ==================================
 
+export type Faccao = "Aliado" | "Neutro" | "Inimigo" | "Mercador";
+
+export type Dialogo = {
+  id: string;
+  texto: string;
+  opcoes?: { texto: string; proximoId?: string; missaoId?: string }[];
+};
+
 export type NPC = {
-  id: number;
+  id: string;
   nome: string;
+  imagem?: string;
+  descricao: string;
+  faccao: Faccao;
   funcao: string;
   localizacao?: string;
-  dialogo?: string;
-  imagem?: string;
-  missaoId?: number;
+  loja?: string[]; // IDs de itens que vende
+  dialogos?: Dialogo[];
+  missoes?: string[]; // IDs de missões que oferece
 };
 
 // ==================================
@@ -206,23 +251,13 @@ export type EfeitoAtivo = {
   origem?: string;
 };
 
-export type HabilidadeCombate = {
-  id: string;
-  nome: string;
-  descricao: string;
-  custoMana: number;
-  dano: string;
-  cooldown: number;
+export type HabilidadeCombate = Habilidade & {
   cooldownRestante: number;
-  alcance: number;
-  tipo: string;
-  area: number;
-  efeitos: EfeitoAtivo[];
 };
 
 export type Combatente = {
   id: string;
-  origemId: number;
+  origemId: string | number;
   lado: LadoCombate;
   nome: string;
   imagem: string;
@@ -237,7 +272,7 @@ export type Combatente = {
   critico: number;
   esquiva: number;
   velocidade: number;
-  atributos: Record<string, number>;
+  atributos: Atributos;
   efeitos: EfeitoAtivo[];
   habilidades: HabilidadeCombate[];
   cooldowns: Record<string, number>;
@@ -263,6 +298,20 @@ export type EstadoCombate = {
   combatenteAtivoId: string;
   combatentes: Combatente[];
   log: EntradaLog[];
+};
+
+export type HistoricoCombate = {
+  id: string | number;
+  data: string;
+  participantes: { nome: string; lado: string }[];
+  vencedor: string;
+  derrotados: string[];
+  log: EntradaLog[];
+  recompensas?: {
+    xp: number;
+    ouro: number;
+    itens: string[];
+  };
 };
 
 // ==================================
@@ -291,27 +340,37 @@ export type RegistroClima = {
 // MISSÕES / ÁREAS
 // ==================================
 
+export type ObjetivoMissao = {
+  descricao: string;
+  tipo: "matar" | "coletar" | "falar" | "explorar";
+  alvoId?: string;
+  quantidadeTotal?: number;
+  quantidadeAtual: number;
+  concluido: boolean;
+};
+
 export type Missao = {
-  id: number;
+  id: string;
   nome: string;
   descricao: string;
-  dificuldade: "fácil" | "médio" | "difícil" | "lendário";
-  recompensa?: {
+  objetivos: ObjetivoMissao[];
+  recompensas: {
     ouro?: number;
-    experiencia?: number;
-    itens?: number[];
+    xp?: number;
+    itens?: string[];
   };
-  npcs?: number[];
-  area?: string;
-  status?: "disponível" | "ativa" | "concluída" | "falhou";
+  npcId: string;
+  status: "disponível" | "ativa" | "concluída" | "falhou";
+  nivelRecomendado: number;
 };
 
 export type Area = {
-  id: number;
+  id: string;
   nome: string;
   descricao: string;
-  tipo: "cidade" | "masmorra" | "floresta" | "montanha" | "caverna" | "outro";
-  nivelMinimo?: number;
-  encontros?: number[];
-  boss?: number;
+  npcs: string[]; // IDs de NPCs na área
+  monstros: string[]; // IDs de monstros que podem aparecer
+  eventos?: string[];
+  missoes: string[]; // IDs de missões relacionadas
+  mapa?: string; // URL da imagem do mapa
 };

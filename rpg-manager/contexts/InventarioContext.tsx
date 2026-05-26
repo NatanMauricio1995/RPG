@@ -1,86 +1,61 @@
 "use client";
 
-import {
-createContext,
-useContext,
-useState,
-ReactNode
-} from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
+import type { InventarioItem, Equipados } from "../types/domain";
 
-const InventarioContext=
-createContext<any>(
-null
-);
+type InventarioContextType = {
+  inventario: InventarioItem[];
+  setInventario: (inv: InventarioItem[]) => void;
+  equipados: Equipados;
+  setEquipados: (eq: Equipados) => void;
+  carregarInventario: (inv: InventarioItem[], eq: Equipados) => void;
+};
 
-export function InventarioProvider({
-children
-}:{
-children:ReactNode
-}){
+const InventarioContext = createContext<InventarioContextType | null>(null);
 
-const[
-inventario,
-setInventario
-]=useState<any[]>([]);
+export const EQUIPADOS_PADRAO: Equipados = {
+  arma: null,
+  armaSecundaria: null,
+  escudo: null,
+  armadura: null,
+  capacete: null,
+  luvas: null,
+  botas: null,
+  anel1: null,
+  anel2: null,
+  colar: null,
+  acessorio: null,
+  bolsa: null,
+};
 
-const[
-equipados,
-setEquipados
-]=useState({
+export function InventarioProvider({ children }: { children: ReactNode }) {
+  const [inventario, setInventario] = useState<InventarioItem[]>([]);
+  const [equipados, setEquipados] = useState<Equipados>(EQUIPADOS_PADRAO);
 
-cabeca:null,
-arma:null,
-escudo:null,
-armadura:null,
-cintura:null,
-acessorio:null,
-bolsa:null
+  function carregarInventario(novoInventario: InventarioItem[], novosEquipados: Equipados) {
+    setInventario(novoInventario || []);
+    setEquipados(novosEquipados || EQUIPADOS_PADRAO);
+  }
 
-});
-
-function carregarInventario(
-novoInventario:any[],
-novosEquipados:any
-){
-
-setInventario(
-novoInventario
-);
-
-setEquipados(
-novosEquipados
-);
-
+  return (
+    <InventarioContext.Provider
+      value={{
+        inventario,
+        setInventario,
+        equipados,
+        setEquipados,
+        carregarInventario,
+      }}
+    >
+      {children}
+    </InventarioContext.Provider>
+  );
 }
 
-return(
-
-<InventarioContext.Provider
-value={{
-
-inventario,
-setInventario,
-
-equipados,
-setEquipados,
-
-carregarInventario
-
-}}
->
-
-{children}
-
-</InventarioContext.Provider>
-
-);
-
-}
-
-export function useInventario(){
-
-return useContext(
-InventarioContext
-);
-
+export function useInventarioContext() {
+  const context = useContext(InventarioContext);
+  if (!context) {
+    throw new Error("useInventarioContext deve ser usado dentro de um InventarioProvider");
+  }
+  return context;
 }
