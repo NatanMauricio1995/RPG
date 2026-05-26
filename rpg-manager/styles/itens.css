@@ -2,172 +2,263 @@
    ITENS — Cartas e Lista
    ============================================ */
 
-.topoItens {
+.inventarioWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inventarioHeaderInterno {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.botaoNovo {
-  padding: 10px 18px;
-  background: linear-gradient(135deg, var(--ouro-escuro), #6b520f);
-  color: #1a1408;
-  border: 1px solid var(--ouro);
+.tabsInternas {
+  display: flex;
+  gap: 10px;
+  background: var(--pedra-media);
+  padding: 5px;
   border-radius: 8px;
-  cursor: pointer;
+  border: 1px solid var(--pedra-borda);
+}
+
+.tabsInternas button {
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--texto-dimmed);
   font-family: 'Cinzel', serif;
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  transition: all 0.25s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.botaoNovo:hover {
-  background: linear-gradient(135deg, var(--ouro), var(--ouro-escuro));
-  box-shadow: 0 4px 15px var(--sombra-ouro);
-  transform: translateY(-1px);
+.tabsInternas button.active {
+  background: var(--ouro-escuro);
+  color: var(--pedra);
+  font-weight: bold;
 }
 
-.listaItensGrid {
+.filtroInventario {
+  flex: 1;
+  min-width: 250px;
+  padding: 10px 15px;
+  background: var(--pedra-clara);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 8px;
+  color: var(--texto);
+  font-family: 'IM Fell English', serif;
+}
+
+.filtroInventario:focus {
+  outline: none;
+  border-color: var(--ouro);
+  box-shadow: 0 0 10px var(--sombra-ouro);
+}
+
+.inventarioGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 30px;
-  margin-top: 25px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
-/* Carta de Item — visual pergaminho/arcano */
-.cartaItem {
-  width: 100%;
-  max-width: 380px;
-  margin: auto;
-  background: linear-gradient(160deg, #18160e 0%, #201c10 50%, #1a1612 100%);
-  border: 3px solid var(--ouro-escuro);
-  border-radius: 16px;
-  overflow: hidden;
+.itemCard {
+  background: linear-gradient(160deg, #1e1a10, #252018);
+  border: 2px solid var(--pedra-borda);
+  border-radius: 12px;
+  padding: 15px;
   display: flex;
   flex-direction: column;
-  transition: all 0.4s;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+  gap: 12px;
   position: relative;
+  transition: all 0.3s;
 }
 
-.cartaItem::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  box-shadow: inset 0 0 30px rgba(0,0,0,0.5);
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Detalhe de canto decorativo */
-.cartaItem::after {
-  content: '';
-  position: absolute;
-  top: 6px; left: 6px; right: 6px; bottom: 6px;
-  border: 1px solid rgba(200, 155, 60, 0.12);
-  border-radius: 12px;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.cartaItem:hover {
-  transform: translateY(-10px) scale(1.03);
+.itemCard.equipado {
   border-color: var(--ouro);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 30px var(--sombra-ouro);
+  box-shadow: 0 0 15px var(--sombra-ouro);
 }
 
-.topoCartaItem {
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #1a1408, #2a200a);
+.badgeEquipado {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: var(--ouro);
+  color: var(--pedra);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+.itemImagemContainer {
+  width: 100%;
+  height: 150px;
+  background: var(--pedra);
+  border-radius: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
-  border-bottom: 2px solid var(--ouro-escuro);
-  z-index: 2;
-  position: relative;
-}
-
-.topoCartaItem h2 {
-  font-family: 'Cinzel', serif;
-  font-size: 15px;
-  color: var(--ouro-claro);
-  letter-spacing: 0.1em;
-  text-shadow: 0 0 10px var(--sombra-ouro);
-}
-
-.imagemCartaItem {
-  position: relative;
-  width: 100%;
-  height: 250px;
-  padding: 10px;
   overflow: hidden;
-  background: linear-gradient(180deg, #100e08, #1a1612);
-  z-index: 2;
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
-.imagemItem {
+.imagemItemInventario {
   object-fit: contain;
-  border-radius: 8px;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7));
-  transition: filter 0.4s;
+  width: 80%;
+  height: 80%;
 }
 
-.cartaItem:hover .imagemItem {
-  filter: drop-shadow(0 4px 20px var(--sombra-ouro));
-}
-
-.corpoCartaItem {
-  padding: 14px 16px;
+.itemInfo {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+}
+
+.headerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.headerItem h3 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.raridade {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.detalhesRapidos {
+  display: flex;
   gap: 8px;
-  border-top: 1px solid var(--pedra-borda);
-  z-index: 2;
-  position: relative;
+  flex-wrap: wrap;
 }
 
-.corpoCartaItem p {
-  font-family: 'IM Fell English', serif;
+.detalhesRapidos span {
+  font-size: 11px;
+  color: var(--texto-dimmed);
+}
+
+.bonusList {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.bonusItem {
+  background: rgba(53, 212, 79, 0.1);
+  color: var(--veneno);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.itemDescricao {
+  font-size: 13px;
   color: var(--texto);
-  font-size: 14px;
-  line-height: 1.5;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.rodapeCartaItem {
-  padding: 12px 16px;
+.itemAcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.controleQuantidade {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  background: var(--pedra);
+  padding: 5px;
+  border-radius: 6px;
+}
+
+.controleQuantidade button {
+  background: transparent;
+  border: 1px solid var(--pedra-borda);
+  color: var(--ouro-claro);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
   display: flex;
   justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  border-top: 2px solid var(--ouro-escuro);
-  background: linear-gradient(0deg, #1a1408, transparent);
-  z-index: 2;
-  position: relative;
+  align-items: center;
 }
 
-.rodapeCartaItem button {
-  padding: 8px 14px;
-  background: linear-gradient(135deg, var(--ouro-escuro), #5a4210);
-  color: #1a1408;
-  border: 1px solid var(--ouro);
-  border-radius: 8px;
-  cursor: pointer;
+.botoesPrincipais {
+  display: flex;
+  gap: 8px;
+}
+
+.btnAdicionar, .btnEquipar {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
   font-family: 'Cinzel', serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  transition: all 0.25s;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.rodapeCartaItem button:hover {
-  background: linear-gradient(135deg, var(--ouro), var(--ouro-escuro));
-  box-shadow: 0 0 12px var(--sombra-ouro);
-  transform: translateY(-1px);
+.btnAdicionar {
+  background: var(--ouro-escuro);
+  color: var(--pedra);
+  border: 1px solid var(--ouro);
 }
+
+.btnEquipar {
+  background: var(--pedra-clara);
+  color: var(--ouro-claro);
+  border: 1px solid var(--ouro-escuro);
+}
+
+.btnEquipar.ativo {
+  background: var(--sangue);
+  color: white;
+  border-color: var(--sangue-vivo);
+}
+
+.btnRemover {
+  background: rgba(139, 26, 26, 0.2);
+  color: var(--sangue-vivo);
+  border: 1px solid var(--sangue);
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.msgVazia {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: var(--texto-dimmed);
+  font-style: italic;
+}
+
 
 /* ── FICHA DE ITEM ── */
 .imagemFichaItem {

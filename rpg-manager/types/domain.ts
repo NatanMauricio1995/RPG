@@ -20,14 +20,18 @@ export type BonusEquipados = Record<string, number>;
 // ==================================
 
 export type Equipados = {
-  cabeca: string | null;
   arma: string | null;
+  armaSecundaria: string | null;
   escudo: string | null;
   armadura: string | null;
-  cintura: string | null;
+  capacete: string | null;
+  luvas: string | null;
+  botas: string | null;
+  anel1: string | null;
+  anel2: string | null;
+  colar: string | null;
   acessorio: string | null;
   bolsa: string | null;
-  municao?: string | null;
 };
 
 export type Personagem = {
@@ -41,10 +45,13 @@ export type Personagem = {
   xpNecessario: number;
   vidaAtual: number;
   vidaMaxima?: number;
+  manaAtual: number;
+  manaMaxima?: number;
   ouro: number;
   inventario: InventarioItem[];
   equipados: Equipados;
   atributosBase: Atributos;
+  efeitosAtivos?: EfeitoAtivo[];
 };
 
 export type InventarioItem = {
@@ -60,7 +67,6 @@ export type PersonagemCompleto = Personagem & {
   racaDados: Raca;
   dadosNivel: Nivel;
   atributos: Atributos;
-  manaMaxima?: number;
 };
 
 // ==================================
@@ -73,6 +79,7 @@ export type Classe = {
   vidaBase: number;
   manaBase?: number;
   habilidades?: string[];
+  bonus?: Partial<Atributos>;
 };
 
 export type Raca = {
@@ -92,6 +99,7 @@ export type Nivel = {
     sabedoria?: number;
     carisma?: number;
     vida?: number;
+    mana?: number;
   };
 };
 
@@ -100,14 +108,18 @@ export type Nivel = {
 // ==================================
 
 export type SlotEquipamento = 
-  | "cabeca" 
   | "arma" 
+  | "armaSecundaria" 
   | "escudo" 
   | "armadura" 
-  | "cintura" 
+  | "capacete" 
+  | "luvas" 
+  | "botas" 
+  | "anel1" 
+  | "anel2" 
+  | "colar" 
   | "acessorio" 
-  | "bolsa" 
-  | "municao"
+  | "bolsa"
   | "";
 
 export type EfeitoItem = {
@@ -120,17 +132,19 @@ export type Item = {
   id: string;
   nome: string;
   descricao?: string;
+  imagem?: string;
   tipo: "Equipamento" | "Consumível" | "Diversos";
   subtipo: string;
   slot: SlotEquipamento;
-  imagem?: string;
-  preco?: number;
-  peso?: number;
   raridade: "Comum" | "Incomum" | "Raro" | "Épico" | "Lendário" | "Único";
-  nivel?: number;
-  bonus?: BonusEquipados;
+  peso: number;
+  preco: number;
+  nivelMinimo?: number;
+  requisitos?: Partial<Atributos> & { nivel?: number; racaId?: number; classeId?: number };
   efeitos?: EfeitoItem[];
-  requisitos?: Partial<Atributos> & { nivel?: number };
+  bonus?: BonusEquipados;
+  attrsMods?: Partial<Atributos>;
+  durabilidade?: number;
   // Propriedades de equipamento
   defesa?: number;
   ataque?: number;

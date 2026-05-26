@@ -573,12 +573,130 @@ flex-wrap:wrap;
 margin-top:4px;
 }
 
-.statusCombatente span{
-padding:3px 8px;
-background:rgba(255,255,255,.05);
-border:1px solid rgba(255,255,255,.15);
-font-size:10px;
-font-family:"Cinzel",serif;
-color:#87d97f;
-border-radius:0;
+/* ── MODAL RESULTADO ── */
+.modalSobreposicao {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalConteudo.resultadoCombate {
+  background: linear-gradient(160deg, #1e1a10, #252018);
+  border: 2px solid var(--ouro);
+  border-radius: 16px;
+  padding: 30px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 0 50px rgba(0,0,0,0.8), 0 0 30px var(--sombra-ouro);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modalConteudo h2 {
+  font-size: 28px;
+  text-align: center;
+  color: var(--ouro-claro);
+  text-shadow: 0 0 15px var(--sombra-ouro);
+}
+
+.listaDifs {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.itemDif {
+  background: var(--pedra);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.infoCombatente {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Cinzel', serif;
+  color: var(--ouro-claro);
+}
+
+.infoCombatente img {
+  border-radius: 4px;
+  border: 1px solid var(--pedra-borda);
+}
+
+.gridChecks {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.gridChecks label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--texto-dimmed);
+}
+
+.gridChecks input {
+  accent-color: var(--ouro);
+}
+
+.modalAcoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.modalAcoes button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancelar {
+  background: transparent;
+  color: var(--texto-dimmed);
+  border: 1px solid var(--pedra-borda);
+}
+
+.btnParcial {
+  background: var(--pedra-clara);
+  color: var(--ouro-claro);
+  border: 1px solid var(--ouro-escuro);
+}
+
+.btnConfirmar {
+  background: var(--ouro-escuro);
+  color: var(--pedra);
+  border: 1px solid var(--ouro);
+}
+
+.modalAcoes button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.modalAcoes button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

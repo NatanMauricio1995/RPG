@@ -1,96 +1,89 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useInventario } from "../../../contexts/InventarioContext";
-import { listarItens, buscarItem } from "../../../services/itemService";
+import { useState, useMemo } from "react";
+import useInventario from "../../../hooks/useInventario";
+import usePersonagem from "../../../hooks/usePersonagem";
 import ItemCard from "./ItemCard";
-import type { Item, InventarioItem } from "../../../types/domain";
+import type { Item } from "../../../types/domain";
 
 export default function Inventario({ personagemId }: { personagemId: number }) {
-  const { 
-    inventario, 
-    adicionarItem, 
-    removerItem, 
-    alterarQuantidade, 
+  const { personagemAtual, setPersonagemAtual } = usePersonagem(personagemId);
+  const {
+    itensCatalogo,
+    inventario,
+    adicionarAoInventario,
+    removerDoInventario,
+    alterarQuantidade,
     alternarEquipamento,
-    salvarMudancas 
-  } = useInventario();
+  } = useInventario(personagemAtual, (p) => setPersonagemAtual(p));
 
-  const [catalogo, setCatalogo] = useState<Item[]>([]);
+  const [abaInterna, setAbaInterna] = useState<"inventario" | "catalogo">("inventario");
   const [filtro, setFiltro] = useState("");
 
-  useEffect(() => {
-    setCatalogo(listarItens());
-  }, []);
-
-  const catalogoFiltrado = useMemo(() => {
-    return catalogo.filter((i: Item) => 
-      i.nome.toLowerCase().includes(filtro.toLowerCase()) ||
-      i.subtipo.toLowerCase().includes(filtro.toLowerCase())
-    ).slice(0, 12); // Limitar catálogo inicial para performance
-  }, [catalogo, filtro]);
-
-  const meuInventario = useMemo(() => {
-    return inventario.map(inv => {
-      const itemInfo = buscarItem(inv.itemId);
-      if (!itemInfo) return null;
-      return { ...itemInfo, invData: inv };
-    }).filter(i => i !== null) as any[];
-  }, [inventario]);
-
-  const handleSalvar = () => {
-    salvarMudancas(personagemId, inventario);
-  };
+  const itemsFiltrados = useMemo(() => {
+    const lista = abaInterna === "catalogo" ? itensCatalogo : inventario;
+    return lista.filter((item: any) => {
+      const dados = abaInterna === "catalogo" ? item : item.dados;
+      if (!dados) return false;
+      return (
+        dados.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+        dados.subtipo.toLowerCase().includes(filtro.toLowerCase())
+      );
+    });
+  }, [abaInterna, itensCatalogo, inventario, filtro]);
 
   return (
     <div className="inventarioWrapper">
-      <div className="inventarioControlesGlobais">
-        <input 
-          type="text" 
-          placeholder="🔍 Buscar itens no catálogo ou inventário..." 
+      <div className="inventarioHeaderInterno">
+        <div className="tabsInternas">
+          <button
+            className={abaInterna === "inventario" ? "active" : ""}
+            onClick={() => setAbaInterna("inventario")}
+          >
+            🎒 Meu Inventário ({inventario.length})
+          </button>
+          <button
+            className={abaInterna === "catalogo" ? "active" : ""}
+            onClick={() => setAbaInterna("catalogo")}
+          >
+            📜 Catálogo Global
+          </button>
+        </div>
+
+        <input
+          type="text"
+          placeholder={`🔍 Buscar em ${abaInterna === "inventario" ? "meu inventário" : "catálogo"}...`}
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
           className="filtroInventario"
         />
-        <button className="btnSalvarInventario" onClick={handleSalvar}>
-          💾 Salvar Alterações
-        </button>
       </div>
 
-      <section className="inventarioSecao">
-        <h2 className="tituloSecao">🎒 Inventário do Personagem ({inventario.length})</h2>
+      <section className="inventarioConteudo">
         <div className="inventarioGrid">
-          {meuInventario.length === 0 ? (
-            <p className="msgVazia">Inventário vazio. Adicione itens do catálogo abaixo.</p>
+          {itemsFiltrados.length === 0 ? (
+            <p className="msgVazia">
+              {abaInterna === "inventario"
+                ? "Seu inventário está vazio."
+                : "Nenhum item encontrado no catálogo."}
+            </p>
           ) : (
-            meuInventario.map((item: any) => (
-              <ItemCard
-                key={`inv-${item.id}`}
-                item={item}
-                invData={item.invData}
-                contexto="inventario"
-                onRemove={removerItem}
-                onAlterarQuantidade={alterarQuantidade}
-                onEquipar={(itemId) => alternarEquipamento(personagemId, itemId)}
-              />
-            ))
+            itemsFiltrados.map((item: any) => {
+              const id = abaInterna === "catalogo" ? item.id : item.itemId;
+              return (
+                <ItemCard
+                  key={`${abaInterna}-${id}`}
+                  item={abaInterna === "catalogo" ? item : item.dados}
+                  invData={abaInterna === "inventario" ? item : undefined}
+                  contexto={abaInterna}
+                  onAdd={() => adicionarAoInventario(id)}
+                  onRemove={() => removerDoInventario(id)}
+                  onAlterarQuantidade={(id, delta) => alterarQuantidade(id, delta)}
+                  onEquipar={() => alternarEquipamento(id)}
+                />
+              );
+            })
           )}
-        </div>
-      </section>
-
-      <hr className="divisorSecao" />
-
-      <section className="inventarioSecao">
-        <h2 className="tituloSecao">📜 Catálogo de Itens Globais</h2>
-        <div className="inventarioGrid">
-          {catalogoFiltrado.map((item: Item) => (
-            <ItemCard
-              key={`cat-${item.id}`}
-              item={item}
-              contexto="catalogo"
-              onAdd={adicionarItem}
-            />
-          ))}
         </div>
       </section>
     </div>

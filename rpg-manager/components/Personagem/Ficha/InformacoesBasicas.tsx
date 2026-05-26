@@ -70,16 +70,17 @@ setSubindoNivel(true)
 
 
 <div className="infoCard">
+  ❤️ Vida
+  <p>
+    {personagemAtual.vidaAtual}/{personagemAtual.vidaMaxima}
+  </p>
+</div>
 
-❤️ Vida
-
-<p>
-
-{personagemAtual.vidaAtual}/
-{personagemAtual.vidaMaxima}
-
-</p>
-
+<div className="infoCard">
+  🔷 Mana
+  <p>
+    {personagemAtual.manaAtual || 0}/{personagemAtual.manaMaxima || 0}
+  </p>
 </div>
 
 

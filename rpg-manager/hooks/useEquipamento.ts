@@ -1,30 +1,23 @@
-import {calcularBonusEquipados} from "../services/efeitosService";
-import {resolverEquipados} from "../services/itemService";
+import { useMemo } from "react";
+import { resolverEquipados } from "../services/itemService";
 
-export default function useEquipamento(
-equipados:any
-){
+export default function useEquipamento(personagem: any) {
+  const equipamentosResolvidos = useMemo(() => {
+    if (!personagem?.equipados) return {};
+    return resolverEquipados(personagem.equipados);
+  }, [personagem?.equipados]);
 
-const equipamentosResolvidos=
-resolverEquipados(equipados || {});
+  const bonusCalculado = useMemo(() => {
+    return personagem?.bonus || {};
+  }, [personagem?.bonus]);
 
-const bonusCalculado=
-calcularBonusEquipados(equipamentosResolvidos);
+  function getBonus(atributo: string) {
+    return bonusCalculado[atributo] || 0;
+  }
 
-function bonus(
-atributo:string
-){
-
-return bonusCalculado[atributo] || 0;
-
-}
-
-return{
-
-bonus,
-bonusCalculado,
-equipamentosResolvidos
-
-};
-
+  return {
+    getBonus,
+    bonusCalculado,
+    equipamentosResolvidos,
+  };
 }

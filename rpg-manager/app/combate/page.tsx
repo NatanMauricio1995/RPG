@@ -19,6 +19,8 @@ removerCombatente
 import PainelSelecaoCombate from "../../components/Combate/PainelSelecaoCombate";
 import GrupoCombatentes from "../../components/Combate/GrupoCombatentes";
 import LogCombate from "../../components/Combate/LogCombate";
+import ModalResultadoCombate from "../../components/Combate/ModalResultadoCombate";
+import { salvarHistoricoCombate } from "../../services/combateService";
 
 
 type EntidadeSelecionavel={
@@ -70,6 +72,8 @@ const[
 alvoSelecionado,
 setAlvoSelecionado
 ]=useState("");
+
+const [mostrarModalResultado, setMostrarModalResultado] = useState(false);
 
 
 const combatenteAtual=
@@ -275,15 +279,22 @@ alvo?.id || ""
 }
 
 
-function atualizarEstado(
-novoEstado:EstadoCombate
-){
-
-setEstado(
-novoEstado
-);
-
+function atualizarEstado(novoEstado: EstadoCombate) {
+  setEstado(novoEstado);
+  if (novoEstado.status !== "em_andamento") {
+    setMostrarModalResultado(true);
+    salvarHistoricoCombate({
+      status: novoEstado.status,
+      turno: novoEstado.turno,
+      participantes: novoEstado.combatentes.map((c) => ({ nome: c.nome, lado: c.lado })),
+    });
+  }
 }
+
+const handleFecharModal = () => {
+  setMostrarModalResultado(false);
+  setEstado(null);
+};
 
 
 function acaoAtaque(){
@@ -668,14 +679,13 @@ combatenteAtual.id
 
 </div>
 
-<LogCombate
-estado={estado}
-/>
+      <LogCombate estado={estado} />
 
-</section>
-
-)
-
+      {mostrarModalResultado && estado && (
+        <ModalResultadoCombate estado={estado} onClose={handleFecharModal} />
+      )}
+    </section>
+  )
 }
 
 </div>

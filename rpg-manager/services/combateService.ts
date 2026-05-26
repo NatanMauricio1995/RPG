@@ -356,51 +356,46 @@ return tipo==="paralisia" || tipo==="medo";
 
 }
 
-function criarCombatentePersonagem(
-personagem:any,
-index:number
-):Combatente{
+import { completarPersonagem } from "./personagemService";
 
-const status=calcularStatusDerivados(personagem);
-const equipamentos=resolverEquipados(personagem.equipados);
-const arma=buscarItem(equipamentos.arma);
-const nivel=Number(personagem.nivel || 1);
+function criarCombatentePersonagem(personagem: any, index: number): Combatente {
+  const comp = completarPersonagem(personagem);
+  const nivel = comp.nivel || 1;
+  const equipamentos = comp.equipados;
+  const arma = buscarItem(equipamentos.arma);
 
-const habilidadesBase=criarHabilidadesPersonagem(personagem);
-
-return{
-id:`aliado-${personagem.id}-${index}`,
-origemId:Number(personagem.id),
-lado:"aliado",
-nome:personagem.nome || "Personagem",
-imagem:personagem.imagem || "/imagens/racas/padrao.png",
-nivel,
-vidaAtual:Math.min(Number(personagem.vidaAtual || status.vidaMaxima),status.vidaMaxima),
-vidaMaxima:status.vidaMaxima,
-vidaUnitaria:status.vidaMaxima,
-manaAtual:status.manaMaxima,
-manaMaxima:status.manaMaxima,
-armadura:status.armadura,
-ataque:calcularBonusProficiencia(nivel)+calcularModificador(status.atributos.forca),
-danoBase:arma?.dano || "1d6",
-critico:status.critico,
-esquiva:Math.max(0,calcularModificador(status.atributos.destreza)*4),
-velocidade:status.velocidade,
-atributos:status.atributos,
-efeitos:status.efeitosEquipados
-.filter((efeito:any)=>["veneno","sangramento","paralisia","medo"].includes(normalizarTipoEfeito(efeito.tipo)))
-.map((efeito:any)=>({
-...efeito,
-tipo:normalizarTipoEfeito(efeito.tipo)
-})),
-habilidades:habilidadesBase,
-cooldowns:{},
-vivo:true,
-escudo:status.escudo,
-quantidade:1,
-equipamentos
-};
-
+  return {
+    id: `aliado-${comp.id}-${index}`,
+    origemId: Number(comp.id),
+    lado: "aliado",
+    nome: comp.nome || "Personagem",
+    imagem: comp.imagem || "/imagens/racas/padrao.png",
+    nivel,
+    vidaAtual: Math.min(Number(comp.vidaAtual || comp.vidaMaxima), comp.vidaMaxima),
+    vidaMaxima: comp.vidaMaxima,
+    vidaUnitaria: comp.vidaMaxima,
+    manaAtual: comp.manaAtual || comp.manaMaxima,
+    manaMaxima: comp.manaMaxima,
+    armadura: comp.armadura,
+    ataque: comp.ataque + calcularBonusProficiencia(nivel),
+    danoBase: arma?.dano || "1d6",
+    critico: comp.critico,
+    esquiva: Math.max(0, calcularModificador(comp.atributos.destreza) * 4),
+    velocidade: comp.velocidade,
+    atributos: comp.atributos,
+    efeitos: (comp.efeitosAtivos || [])
+      .filter((efeito: any) => ["veneno", "sangramento", "paralisia", "medo"].includes(normalizarTipoEfeito(efeito.tipo)))
+      .map((efeito: any) => ({
+        ...efeito,
+        tipo: normalizarTipoEfeito(efeito.tipo),
+      })),
+    habilidades: criarHabilidadesPersonagem(comp),
+    cooldowns: {},
+    vivo: true,
+    escudo: comp.bonus?.escudo || 0,
+    quantidade: 1,
+    equipamentos,
+  };
 }
 
 function criarCombatenteMonstro(
@@ -598,10 +593,22 @@ origem:habilidade?.nome || monstro.nome
 
 }
 
+export function salvarHistoricoCombate(historico: any) {
+  if (typeof window === "undefined") return;
+  const atuais = JSON.parse(localStorage.getItem("historicoCombate") || "[]");
+  atuais.unshift({
+    ...historico,
+    id: Date.now(),
+    data: new Date().toLocaleDateString(),
+    hora: new Date().toLocaleTimeString(),
+  });
+  localStorage.setItem("historicoCombate", JSON.stringify(atuais.slice(0, 50))); // Manter os últimos 50
+}
+
 function finalizarAcao(
-estado:EstadoCombate,
-combatenteId:string
-):EstadoCombate{
+  estado: EstadoCombate,
+  combatenteId: string
+): EstadoCombate {
 
 let novoEstado=reduzirCooldowns(estado,combatenteId);
 novoEstado={

@@ -48,7 +48,20 @@ export function resolverInventario(inventario: { itemId: string }[]): Item[] {
 }
 
 export function resolverEquipados(equipados: Partial<Record<SlotEquipamento, string | number | null>>): Record<SlotEquipamento, Item | null> {
-  const slots: SlotEquipamento[] = ["cabeca", "arma", "escudo", "armadura", "cintura", "acessorio", "bolsa", "municao"];
+  const slots: SlotEquipamento[] = [
+    "arma",
+    "armaSecundaria",
+    "escudo",
+    "armadura",
+    "capacete",
+    "luvas",
+    "botas",
+    "anel1",
+    "anel2",
+    "colar",
+    "acessorio",
+    "bolsa",
+  ];
   const resultado: Record<SlotEquipamento, Item | null> = {} as Record<SlotEquipamento, Item | null>;
 
   slots.forEach((slot) => {
