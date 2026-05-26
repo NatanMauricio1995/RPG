@@ -2,78 +2,262 @@
    INVENTÁRIO — Grid e Slots de Equipamento
    ============================================ */
 
+.inventarioContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.inventarioHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid var(--pedra-borda);
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+}
+
+.tabs button {
+  background: var(--pedra-clara);
+  border: 1px solid var(--pedra-borda);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: var(--texto-dimmed);
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  transition: all 0.3s;
+}
+
+.tabs button.active {
+  background: var(--ouro-escuro);
+  color: white;
+  border-color: var(--ouro);
+  box-shadow: 0 0 10px rgba(200, 155, 60, 0.3);
+}
+
+.inventarioControles {
+  display: flex;
+  gap: 10px;
+  flex-grow: 1;
+  justify-content: flex-end;
+}
+
+.filtroInventario {
+  background: var(--pedra);
+  border: 1px solid var(--pedra-borda);
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: var(--texto);
+  width: 100%;
+  max-width: 300px;
+}
+
+.btnSalvarInventario {
+  background: #2a5a2a;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btnSalvarInventario:hover {
+  background: #3a7a3a;
+}
+
 .inventarioGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-  margin-top: 20px;
 }
 
 .itemCard {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
   background: var(--pedra-clara);
-  padding: 15px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--pedra-borda);
+  overflow: hidden;
   transition: all 0.3s;
   position: relative;
-  overflow: hidden;
 }
 
-/* Brilho sutil no topo do card */
-.itemCard::before {
-  content: '';
+.itemCard.equipado {
+  border-color: var(--ouro);
+  box-shadow: 0 0 15px rgba(200, 155, 60, 0.2);
+}
+
+.badgeEquipado {
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--ouro-escuro), transparent);
-  opacity: 0;
-  transition: opacity 0.3s;
+  top: 10px;
+  right: 10px;
+  background: var(--ouro);
+  color: black;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 4px;
+  z-index: 2;
+  text-transform: uppercase;
 }
 
-.itemCard:hover {
-  transform: scale(1.04);
-  border-color: var(--ouro-escuro);
-  box-shadow: 0 0 15px rgba(200, 155, 60, 0.15);
-}
-
-.itemCard:hover::before { opacity: 1; }
-
-.itemCard p {
-  font-family: 'Cinzel', serif;
-  font-size: 12px;
-  color: var(--texto-dimmed);
-  letter-spacing: 0.05em;
-}
-
-.itemCard strong {
-  font-family: 'IM Fell English', serif;
-  color: var(--ouro-claro);
-  font-size: 15px;
+.itemImagemContainer {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 1px solid var(--pedra-borda);
 }
 
 .imagemItemInventario {
-  width: 100%;
-  max-width: 120px;
-  aspect-ratio: 1/1;
-  object-fit: contain;
-  background: var(--pedra);
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid var(--pedra-borda);
-  display: block;
-  margin: 0 auto 5px auto;
-  transition: all 0.3s;
+  max-width: 100px;
+  height: auto;
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
 }
 
-.itemCard:hover .imagemItemInventario {
-  border-color: var(--ouro-escuro);
-  box-shadow: 0 0 12px rgba(200, 155, 60, 0.2);
+.itemInfo {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
+
+.itemInfo h3 {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+}
+
+.raridade {
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  text-transform: uppercase;
+}
+
+.detalhesRapidos {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--texto-dimmed);
+}
+
+.bonusList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.bonusItem {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #4fc3f7;
+  border: 1px solid rgba(79, 195, 247, 0.3);
+}
+
+.itemDescricao {
+  font-size: 0.85rem;
+  color: var(--texto-dimmed);
+  line-height: 1.4;
+  margin: 5px 0;
+}
+
+.itemAcoes {
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.btnAdicionar, .btnRemover, .btnEquipar {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 0.8rem;
+  transition: all 0.3s;
+  border: 1px solid transparent;
+}
+
+.btnAdicionar {
+  background: var(--ouro-escuro);
+  color: white;
+}
+
+.btnAdicionar:hover {
+  background: var(--ouro);
+}
+
+.controleQuantidade {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  border-radius: 6px;
+}
+
+.controleQuantidade button {
+  background: var(--pedra-clara);
+  border: 1px solid var(--pedra-borda);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.botoesPrincipais {
+  display: flex;
+  gap: 8px;
+}
+
+.btnEquipar {
+  background: #34495e;
+  color: white;
+}
+
+.btnEquipar.ativo {
+  background: #f39c12;
+  color: black;
+}
+
+.btnRemover {
+  background: #c0392b;
+  color: white;
+}
+
+.btnRemover:hover {
+  background: #e74c3c;
+}
+
+.msgVazia {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: var(--texto-dimmed);
+  font-family: 'Cinzel', serif;
+}
+
 
 /* ── SILHUETA DO CORPO / SLOTS ── */
 .containerCorpo {

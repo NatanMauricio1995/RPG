@@ -89,6 +89,88 @@
   text-shadow: 0 0 10px var(--sombra-ouro);
 }
 
+.fichaPersonagemContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding-bottom: 50px;
+}
+
+.fichaHeader {
+  background: var(--pedra-media);
+  border: 1px solid var(--pedra-borda);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.acoesTopo {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.headerInfo {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 25px;
+}
+
+.imagemMiniatura {
+  border: 2px solid var(--ouro-escuro);
+  border-radius: 10px;
+  background: var(--pedra);
+}
+
+.textosHeader h1 {
+  font-family: 'Cinzel Decorative', serif;
+  color: var(--ouro);
+  margin-bottom: 5px;
+}
+
+.textosHeader p {
+  color: var(--texto-dimmed);
+  font-family: 'Cinzel', serif;
+  font-size: 0.9rem;
+}
+
+.fichaTabs {
+  display: flex;
+  gap: 5px;
+  border-top: 1px solid var(--pedra-borda);
+  padding-top: 20px;
+}
+
+.fichaTabs button {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 10px 20px;
+  color: var(--texto-dimmed);
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.fichaTabs button:hover {
+  color: var(--ouro-claro);
+}
+
+.fichaTabs button.active {
+  color: var(--ouro);
+  border-bottom-color: var(--ouro);
+}
+
+.animarEntrada {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 /* ── ATRIBUTOS ── */
 .atributosGrid {
   display: grid;
@@ -107,48 +189,30 @@
   position: relative;
 }
 
-.atributoCard::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 50%;
-  transform: translateX(-50%);
-  width: 40%;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--ouro-escuro), transparent);
-}
-
-.atributoCard:hover {
-  border-color: var(--ouro-escuro);
-  background: var(--pedra-clara);
-  box-shadow: 0 0 20px rgba(200, 155, 60, 0.1);
-}
-
-.atributoCard > span:first-child {
+.atributoCard h3 {
   font-family: 'Cinzel', serif;
   font-size: 11px;
   letter-spacing: 0.15em;
   color: var(--texto-dimmed);
   text-transform: uppercase;
-  display: block;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.atributoCard .valor-atributo {
+.valorBase, .finalTotal {
   font-family: 'Cinzel Decorative', serif;
-  font-size: 32px;
+  font-size: 20px;
   color: var(--ouro-claro);
-  line-height: 1;
-  text-shadow: 0 0 15px var(--sombra-ouro);
 }
 
-.bonus {
+.bonusCalculado {
   color: var(--veneno);
   font-weight: bold;
-  margin-left: 8px;
-  margin-right: 8px;
-  font-family: 'Cinzel', serif;
-  font-size: 14px;
 }
+
+.bonusSign {
+  color: var(--texto-dimmed);
+}
+
 
 /* ── IMAGEM DA FICHA ── */
 .imagemFichaPersonagem {

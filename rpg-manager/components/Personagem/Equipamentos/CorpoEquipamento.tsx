@@ -1,174 +1,90 @@
 "use client";
 
 import Image from "next/image";
+import { useInventario } from "../../../contexts/InventarioContext";
+import { buscarItem } from "../../../services/itemService";
+import { useParams } from "next/navigation";
 
-type Props={
-equipados:any;
-setEquipados:any;
-inventario:any[];
-setInventario:any;
-};
+export default function CorpoEquipamento() {
+  const { inventario, alternarEquipamento } = useInventario();
+  const params = useParams();
+  const personagemId = Number(params.id);
 
-export default function CorpoEquipamento({
-equipados,
-setEquipados,
-inventario,
-setInventario
-}:Props){
+  function permitirDrop(evento: any) {
+    evento.preventDefault();
+  }
 
-function permitirDrop(evento:any){
-evento.preventDefault();
-}
+  function soltarItem(evento: any, slot: string) {
+    evento.preventDefault();
+    const itemId = Number(evento.dataTransfer.getData("id"));
+    
+    const itemInfo = buscarItem(itemId);
+    if (!itemInfo) return;
 
-function soltarItem(
-evento:any,
-slot:string
-){
+    // Se o slot for compatível, equipamos
+    if (itemInfo.slot === slot || (slot === "arma" && itemInfo.subtipo === "Arma")) {
+      alternarEquipamento(personagemId, itemId);
+    } else {
+      alert(`Este item não pode ser equipado no slot: ${slot}`);
+    }
+  }
 
-evento.preventDefault();
+  const slots = [
+    { nome: "cabeca", classe: "slotCabeca" },
+    { nome: "arma", classe: "slotArma" },
+    { nome: "escudo", classe: "slotEscudo" },
+    { nome: "armadura", classe: "slotArmadura" },
+    { nome: "cintura", classe: "slotCintura" },
+    { nome: "acessorio", classe: "slotAcessorio" },
+    { nome: "bolsa", classe: "slotBolsa" },
+  ];
 
-const itemId=
-evento.dataTransfer.getData("id");
+  // Resolver itens equipados do inventário
+  const equipados: Record<string, any> = {};
+  inventario.forEach((invItem) => {
+    if (invItem.equipado) {
+      const itemInfo = buscarItem(invItem.itemId);
+      if (itemInfo && itemInfo.slot) {
+        equipados[itemInfo.slot] = itemInfo;
+      }
+    }
+  });
 
-const item=
+  return (
+    <div className="containerCorpo">
+      <Image
+        src="/imagens/interface/corpo.png"
+        alt="Corpo do personagem"
+        width={850}
+        height={850}
+        className="imagemCorpo"
+      />
 
-inventario.find(
-(i:any)=>
-i.id===Number(itemId)
-);
-
-if(!item)return;
-
-setEquipados((anterior:any)=>({
-
-...anterior,
-
-[slot]:item
-
-}));
-
-setInventario((anterior:any)=>
-
-anterior.filter(
-(i:any)=>i.id!==item.id
-)
-
-);
-
-}
-
-const slots=[
-
-{
-nome:"cabeca",
-classe:"slotCabeca"
-},
-
-{
-nome:"arma",
-classe:"slotArma"
-},
-
-{
-nome:"escudo",
-classe:"slotEscudo"
-},
-
-{
-nome:"armadura",
-classe:"slotArmadura"
-},
-
-{
-nome:"cintura",
-classe:"slotCintura"
-},
-
-{
-nome:"acessorio",
-classe:"slotAcessorio"
-},
-
-{
-nome:"bolsa",
-classe:"slotBolsa"
-}
-
-];
-
-return(
-
-<div className="containerCorpo">
-
-<Image
-src="/imagens/interface/corpo.png"
-alt="Corpo do personagem"
-width={850}
-height={850}
-className="imagemCorpo"
-/>
-
-{
-
-slots.map((slot)=>(
-
-<div
-key={slot.nome}
-className={`slotEquipamento ${slot.classe}`}
-onDragOver={permitirDrop}
-onDrop={(evento)=>
-soltarItem(
-evento,
-slot.nome
-)
-}
->
-
-{
-
-equipados[slot.nome]
-
-?
-
-<Image
-src={
-equipados[slot.nome]?.imagem?.trim()
-
-?
-
-equipados[slot.nome].imagem
-
-:
-
-"/imagens/itens/padrao.png"
-}
-alt={
-equipados[slot.nome]?.nome ||
-"Item equipado"
-}
-width={90}
-height={90}
-className="imagemSlot"
-/>
-
-:
-
-<div className="slotVazio">
-
-+
-
-</div>
-
-}
-
-</div>
-
-))
-
-}
-
-</div>
-
-);
-
+      {slots.map((slot) => (
+        <div
+          key={slot.nome}
+          className={`slotEquipamento ${slot.classe}`}
+          onDragOver={permitirDrop}
+          onDrop={(evento) => soltarItem(evento, slot.nome)}
+          onClick={() => {
+            if (equipados[slot.nome]) {
+              alternarEquipamento(personagemId, equipados[slot.nome].id);
+            }
+          }}
+        >
+          {equipados[slot.nome] ? (
+            <Image
+              src={equipados[slot.nome]?.imagem || "/imagens/itens/padrao.png"}
+              alt={equipados[slot.nome]?.nome || "Item equipado"}
+              width={90}
+              height={90}
+              className="imagemSlot"
+            />
+          ) : (
+            <div className="slotVazio">+</div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
