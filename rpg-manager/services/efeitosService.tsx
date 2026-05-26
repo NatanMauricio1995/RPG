@@ -54,27 +54,53 @@ export function calcularBonusEquipados(equipados: Partial<Equipados> | any): Bon
 }
 
 export function calcularStatusDerivados(personagem: any) {
+  // Garantir que temos um personagem normalizado e completo
   const atributos = calcularAtributosFinais(personagem);
-  const bonus = calcularBonusEquipados(personagem.equipados || {});
   const nivel = Number(personagem.nivel ?? 1);
 
-  const vidaBase = Number(personagem.vidaMaxima ?? personagem.vidaAtual ?? 10);
-  const manaBase = Number(
-    personagem.manaMaxima ??
-    personagem.mana ??
-    10 + Math.max(0, calcularModificador(atributos.inteligencia)) * nivel
-  );
+  // Bônus vindos do inventário (equipados)
+  const bonus: BonusEquipados = {
+    forca: 0, destreza: 0, constituicao: 0, inteligencia: 0, sabedoria: 0, carisma: 0,
+    vida: 0, mana: 0, critico: 0, armadura: 0, velocidade: 0, escudo: 0, ataque: 0, defesa: 0
+  };
+
+  const inv = (personagem.inventario || []) as any[];
+  inv.forEach(invItem => {
+    if (invItem.equipado) {
+      const item = buscarItem(invItem.itemId);
+      if (!item) return;
+
+      if (item.bonus) {
+        Object.entries(item.bonus).forEach(([attr, val]) => {
+          const key = normalizarTipoEfeito(attr);
+          if (key in bonus) (bonus as any)[key] += Number(val || 0);
+        });
+      }
+
+      if (item.efeitos) {
+        item.efeitos.forEach((efeito: any) => {
+          const key = normalizarTipoEfeito(efeito.tipo);
+          if (key in bonus) (bonus as any)[key] += Number(efeito.valor || 0);
+        });
+      }
+
+      if (item.defesa) bonus.armadura += Number(item.defesa);
+    }
+  });
+
+  const vidaBase = Number(personagem.vidaMaxima ?? 10);
+  const manaBase = Number(personagem.manaMaxima ?? 10);
 
   return {
     atributos,
     bonus,
     vidaMaxima: Math.max(1, vidaBase + Number(bonus.vida || 0)),
     manaMaxima: Math.max(0, manaBase + Number(bonus.mana || 0)),
-    armadura: 10 + calcularModificador(atributos.destreza) + Number(bonus.armadura || 0),
-    velocidade: calcularModificador(atributos.destreza) + Number(bonus.velocidade || 0),
+    armadura: 10 + Math.floor((atributos.destreza - 10) / 2) + Number(bonus.armadura || 0),
+    velocidade: Math.floor((atributos.destreza - 10) / 2) + 5 + Number(bonus.velocidade || 0),
     critico: 5 + Number(bonus.critico || 0),
     escudo: Number(bonus.escudo || 0),
-    efeitosEquipados: [] // Fallback para compatibilidade
+    efeitosEquipados: []
   };
 }
 

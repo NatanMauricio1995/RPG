@@ -14,20 +14,20 @@ export type Atributos = {
 };
 
 export type BonusEquipados = Record<string, number>;
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
 // ==================================
 // PERSONAGEM
 // ==================================
 
 export type Equipados = {
-  cabeca: number | null;
-  arma: number | null;
-  escudo: number | null;
-  armadura: number | null;
-  cintura: number | null;
-  acessorio: number | null;
-  bolsa: number | null;
-  municao?: number | null;
+  cabeca: string | null;
+  arma: string | null;
+  escudo: string | null;
+  armadura: string | null;
+  cintura: string | null;
+  acessorio: string | null;
+  bolsa: string | null;
+  municao?: string | null;
 };
 
 export type Personagem = {
@@ -48,7 +48,7 @@ export type Personagem = {
 };
 
 export type InventarioItem = {
-  itemId: number;
+  itemId: string;
   quantidade: number;
   equipado: boolean;
 };
@@ -117,7 +117,7 @@ export type EfeitoItem = {
 };
 
 export type Item = {
-  id: number;
+  id: string;
   nome: string;
   descricao?: string;
   tipo: "Equipamento" | "Consumível" | "Diversos";

@@ -36,6 +36,7 @@ export const EQUIPADOS_PADRAO: Equipados = {
   cintura: null,
   acessorio: null,
   bolsa: null,
+  municao: null,
 };
 
 export function criarModeloPersonagem(): Personagem {
@@ -78,13 +79,28 @@ export function normalizarPersonagem(personagem: Partial<Personagem>): Personage
     },
   };
 
+  // Normalizar IDs de equipamentos para string
+  if (p.equipados) {
+    Object.keys(p.equipados).forEach((key) => {
+      const k = key as keyof Equipados;
+      if (p.equipados[k] !== null && p.equipados[k] !== undefined) {
+        p.equipados[k] = String(p.equipados[k]);
+      }
+    });
+  }
+
   // Migração de inventário antigo (number[]) para novo (InventarioItem[])
   if (personagem?.inventario && Array.isArray(personagem.inventario)) {
     p.inventario = personagem.inventario.map((item: any) => {
-      if (typeof item === "number") {
-        return { itemId: item, quantidade: 1, equipado: false };
+      if (typeof item === "number" || typeof item === "string") {
+        return { itemId: String(item), quantidade: 1, equipado: false };
       }
-      return item;
+      return {
+        ...item,
+        itemId: String(item.itemId),
+        quantidade: Number(item.quantidade || 1),
+        equipado: Boolean(item.equipado),
+      };
     });
   } else {
     p.inventario = [];
@@ -116,13 +132,13 @@ export function buscarPersonagem(id: number | string): Personagem | undefined {
 // ... (salvarPersonagem, atualizarPersonagem unchanged)
 
 /**
- * Calcula os atributos finais somando base + raça + classe + equipamentos + efeitos
+ * Calcula os atributos finais somando base + raça + bônus de nível + equipamentos + efeitos
  */
 export function calcularAtributosFinais(personagem: Personagem): Atributos {
   if (!personagem) return { ...ATRIBUTOS_PADRAO };
 
   const raca = (racas as Raca[]).find((item) => item.id === personagem.racaId);
-  const dadosNivel = (niveis as Nivel[]).find((item) => item.nivel === personagem.nivel);
+  const dadosNivel = (niveis as Nivel[]).find((item) => item.nivel <= personagem.nivel); // Soma bônus até o nível atual? Geralmente é o bônus do nível específico ou acumulado.
 
   // Começa com atributos base
   const atributos: Atributos = { 
@@ -139,23 +155,24 @@ export function calcularAtributosFinais(personagem: Personagem): Atributos {
     });
   }
 
-  // Soma bônus de nível (classe)
-  if (dadosNivel?.bonus) {
-    Object.entries(dadosNivel.bonus).forEach(([attr, bonus]) => {
+  // Soma bônus de nível (Pega o bônus acumulado do nível atual)
+  const bonusNivel = (niveis as Nivel[]).find((n) => n.nivel === personagem.nivel)?.bonus;
+  if (bonusNivel) {
+    Object.entries(bonusNivel).forEach(([attr, bonus]) => {
       if (attr in atributos && attr !== "vida") {
         atributos[attr as keyof Atributos] += Number(bonus || 0);
       }
     });
   }
 
-  // Soma bônus e efeitos de equipamentos
+  // Soma bônus e efeitos de equipamentos do inventário
   const inv = personagem.inventario || [];
   inv.forEach((invItem) => {
     if (invItem.equipado) {
       const item = buscarItem(invItem.itemId);
       if (!item) return;
 
-      // Bonus fixos
+      // Bonus fixos (Ex: +2 Força)
       if (item.bonus) {
         Object.entries(item.bonus).forEach(([attr, bonus]) => {
           if (attr in atributos) {
@@ -164,7 +181,7 @@ export function calcularAtributosFinais(personagem: Personagem): Atributos {
         });
       }
 
-      // Efeitos temporários/constantes do item que afetam atributos
+      // Efeitos que afetam atributos (Ex: efeito tipo "forca" valor 2)
       if (item.efeitos) {
         item.efeitos.forEach((efeito) => {
           const tipo = efeito.tipo.toLowerCase();
@@ -199,11 +216,23 @@ export function completarPersonagem(personagem: Personagem): PersonagemCompleto 
 
   const atributos = calcularAtributosFinais(personagemBase);
 
-  const vidaMaxima = calcularVida(
-    classe?.vidaBase ?? 8,
-    atributos.constituicao,
-    personagemBase.nivel
-  ) + (dadosNivel?.bonus?.vida ?? 0);
+  // Status Derivados
+  const vidaBase = classe?.vidaBase ?? 10;
+  const vidaMaxima = calcularVida(vidaBase, atributos.constituicao, personagemBase.nivel) + (dadosNivel?.bonus?.vida ?? 0);
+  
+  // Cálculo de Armadura: 10 + Modificador de Destreza + Bônus de Itens
+  let bonusArmadura = 0;
+  personagemBase.inventario.forEach(invItem => {
+    if (invItem.equipado) {
+      const item = buscarItem(invItem.itemId);
+      if (item?.defesa) bonusArmadura += item.defesa;
+      if (item?.bonus?.armadura) bonusArmadura += item.bonus.armadura;
+    }
+  });
+
+  const armadura = 10 + Math.floor((atributos.destreza - 10) / 2) + bonusArmadura;
+  const velocidade = Math.floor((atributos.destreza - 10) / 2) + 5; // Base 5 + mod des
+  const manaMaxima = (classe?.manaBase ?? 10) + Math.max(0, Math.floor((atributos.inteligencia - 10) / 2)) * personagemBase.nivel;
 
   return {
     ...personagemBase,
@@ -214,5 +243,11 @@ export function completarPersonagem(personagem: Personagem): PersonagemCompleto 
     dadosNivel: dadosNivel as Nivel,
     atributos,
     vidaMaxima,
+    manaMaxima,
+    // Adicionando propriedades extras que a UI espera
+    ...({
+      armadura,
+      velocidade,
+    } as any)
   };
 }

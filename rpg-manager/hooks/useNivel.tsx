@@ -79,73 +79,35 @@ anterior=>anterior+1
 
 
 function confirmarNivel(){
+  const novosAtributosBase = {
+    forca: (personagemAtual.atributosBase?.forca || 10) + atributosTemp.forca,
+    destreza: (personagemAtual.atributosBase?.destreza || 10) + atributosTemp.destreza,
+    constituicao: (personagemAtual.atributosBase?.constituicao || 10) + atributosTemp.constituicao,
+    inteligencia: (personagemAtual.atributosBase?.inteligencia || 10) + atributosTemp.inteligencia,
+    sabedoria: (personagemAtual.atributosBase?.sabedoria || 10) + atributosTemp.sabedoria,
+    carisma: (personagemAtual.atributosBase?.carisma || 10) + atributosTemp.carisma
+  };
 
-const novosAtributos={
+  setPersonagemAtual({
+    ...personagemAtual,
+    nivel: (personagemAtual.nivel || 1) + 1,
+    atributosBase: novosAtributosBase,
+    // Deixamos o completarPersonagem no setPersonagemAtual (ou no hook usePersonagem) 
+    // lidar com o cálculo da nova vida máxima e mana.
+    // Mas para garantir atualização visual imediata se necessário:
+    vidaAtual: (personagemAtual.vidaMaxima || 10) + 10 // Cura ao subir de nível
+  });
 
-forca:
-personagemAtual.atributos.forca+
-atributosTemp.forca,
-
-destreza:
-personagemAtual.atributos.destreza+
-atributosTemp.destreza,
-
-constituicao:
-personagemAtual.atributos.constituicao+
-atributosTemp.constituicao,
-
-inteligencia:
-personagemAtual.atributos.inteligencia+
-atributosTemp.inteligencia,
-
-sabedoria:
-personagemAtual.atributos.sabedoria+
-atributosTemp.sabedoria,
-
-carisma:
-personagemAtual.atributos.carisma+
-atributosTemp.carisma
-
-};
-
-const vidaGanha=6;
-
-setPersonagemAtual({
-
-...personagemAtual,
-
-nivel:
-personagemAtual.nivel+1,
-
-vidaMaxima:
-personagemAtual.vidaMaxima+
-vidaGanha,
-
-vidaAtual:
-personagemAtual.vidaMaxima+
-vidaGanha,
-
-atributos:
-novosAtributos
-
-});
-
-
-setSubindoNivel(false);
-
-setPontosRestantes(4);
-
-setAtributosTemp({
-
-forca:0,
-destreza:0,
-constituicao:0,
-inteligencia:0,
-sabedoria:0,
-carisma:0
-
-});
-
+  setSubindoNivel(false);
+  setPontosRestantes(4);
+  setAtributosTemp({
+    forca: 0,
+    destreza: 0,
+    constituicao: 0,
+    inteligencia: 0,
+    sabedoria: 0,
+    carisma: 0
+  });
 }
 
 return{

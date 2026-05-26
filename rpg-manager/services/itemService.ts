@@ -13,40 +13,41 @@ const ITENS_STORAGE_KEY = STORAGE_KEYS.ITENS;
 export function listarItens(): Item[] {
   const personalizados = getStorageItem<Item[]>(ITENS_STORAGE_KEY, []);
 
-  const todos: Item[] = [
-    ...(itensData as Item[]),
-    ...(armasData as Item[]),
-    ...(armadurasData as Item[]),
-    ...(acessoriosData as Item[]),
-    ...(consumiveisData as Item[]),
+  const todos: any[] = [
+    ...(itensData as any[]),
+    ...(armasData as any[]),
+    ...(armadurasData as any[]),
+    ...(acessoriosData as any[]),
+    ...(consumiveisData as any[]),
     ...personalizados,
   ];
 
-  const porId = new Map<number, Item>();
+  const porId = new Map<string, Item>();
 
   todos.forEach((item) => {
-    porId.set(Number(item.id), normalizarItem(item));
+    const itemNormalizado = normalizarItem(item);
+    porId.set(itemNormalizado.id, itemNormalizado);
   });
 
   return Array.from(porId.values());
 }
 
-export function buscarItem(referencia: number | Partial<Item> | null): Item | null {
+export function buscarItem(referencia: string | number | Partial<Item> | null): Item | null {
   if (!referencia) return null;
 
   if (typeof referencia === "object") return normalizarItem(referencia);
 
-  const id = Number(referencia);
-  return listarItens().find((item) => Number(item.id) === id) ?? null;
+  const id = String(referencia);
+  return listarItens().find((item) => String(item.id) === id) ?? null;
 }
 
-export function resolverInventario(inventario: { itemId: number }[]): Item[] {
+export function resolverInventario(inventario: { itemId: string }[]): Item[] {
   return (inventario ?? [])
     .map((invItem) => buscarItem(invItem.itemId))
     .filter((item): item is Item => item !== null);
 }
 
-export function resolverEquipados(equipados: Partial<Record<SlotEquipamento, number | null>>): Record<SlotEquipamento, Item | null> {
+export function resolverEquipados(equipados: Partial<Record<SlotEquipamento, string | number | null>>): Record<SlotEquipamento, Item | null> {
   const slots: SlotEquipamento[] = ["cabeca", "arma", "escudo", "armadura", "cintura", "acessorio", "bolsa", "municao"];
   const resultado: Record<SlotEquipamento, Item | null> = {} as Record<SlotEquipamento, Item | null>;
 
@@ -62,7 +63,7 @@ export function normalizarItem(item: Partial<Item>): Item {
 
   return {
     ...item,
-    id: Number(item.id),
+    id: String(item.id),
     slot,
     tipo: item.tipo ?? (slot ? "Equipamento" : "Diversos"),
     subtipo: item.subtipo ?? subtipoPorSlot(slot),

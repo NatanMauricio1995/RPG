@@ -1,85 +1,99 @@
 /* ============================================
-   INVENTÁRIO — Grid e Slots de Equipamento
+   INVENTÁRIO — Novo Layout de Duas Seções
    ============================================ */
 
-.inventarioContainer {
+.inventarioWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 10px;
+}
+
+.inventarioControlesGlobais {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid var(--pedra-borda);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.filtroInventario {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--pedra-borda);
+  padding: 12px 20px;
+  border-radius: 30px;
+  color: var(--texto);
+  width: 100%;
+  max-width: 400px;
+  font-family: 'Cinzel', serif;
+  transition: all 0.3s;
+}
+
+.filtroInventario:focus {
+  outline: none;
+  border-color: var(--ouro);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(200, 155, 60, 0.2);
+}
+
+.btnSalvarInventario {
+  background: linear-gradient(135deg, #2a5a2a, #1a3a1a);
+  color: white;
+  border: 1px solid #3a7a3a;
+  padding: 12px 24px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: 'Cinzel', serif;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btnSalvarInventario:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  filter: brightness(1.2);
+}
+
+.inventarioSecao {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.inventarioHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 15px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 15px;
-  border-radius: 12px;
-  border: 1px solid var(--pedra-borda);
-}
-
-.tabs {
-  display: flex;
-  gap: 10px;
-}
-
-.tabs button {
-  background: var(--pedra-clara);
-  border: 1px solid var(--pedra-borda);
-  padding: 8px 16px;
-  border-radius: 8px;
-  color: var(--texto-dimmed);
-  cursor: pointer;
+.tituloSecao {
   font-family: 'Cinzel', serif;
-  transition: all 0.3s;
+  color: var(--ouro);
+  font-size: 1.5rem;
+  border-bottom: 2px solid var(--pedra-borda);
+  padding-bottom: 10px;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.tabs button.active {
-  background: var(--ouro-escuro);
-  color: white;
-  border-color: var(--ouro);
-  box-shadow: 0 0 10px rgba(200, 155, 60, 0.3);
-}
-
-.inventarioControles {
-  display: flex;
-  gap: 10px;
-  flex-grow: 1;
-  justify-content: flex-end;
-}
-
-.filtroInventario {
-  background: var(--pedra);
-  border: 1px solid var(--pedra-borda);
-  padding: 8px 12px;
-  border-radius: 8px;
-  color: var(--texto);
-  width: 100%;
-  max-width: 300px;
-}
-
-.btnSalvarInventario {
-  background: #2a5a2a;
-  color: white;
+.divisorSecao {
   border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.btnSalvarInventario:hover {
-  background: #3a7a3a;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--pedra-borda), transparent);
+  margin: 10px 0;
 }
 
 .inventarioGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
 }
 
+/* ── CARDS DE ITENS PADRONIZADOS ── */
 .itemCard {
   display: flex;
   flex-direction: column;
@@ -87,114 +101,159 @@
   border-radius: 12px;
   border: 1px solid var(--pedra-borda);
   overflow: hidden;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  height: 100%;
+}
+
+.itemCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  border-color: rgba(200, 155, 60, 0.4);
 }
 
 .itemCard.equipado {
   border-color: var(--ouro);
-  box-shadow: 0 0 15px rgba(200, 155, 60, 0.2);
+  background: linear-gradient(180deg, var(--pedra-clara), rgba(200, 155, 60, 0.05));
+  box-shadow: 0 0 20px rgba(200, 155, 60, 0.15);
 }
 
 .badgeEquipado {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   background: var(--ouro);
   color: black;
   font-size: 10px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 4px;
-  z-index: 2;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 20px;
+  z-index: 5;
   text-transform: uppercase;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .itemImagemContainer {
-  background: rgba(0, 0, 0, 0.3);
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+  height: 180px;
   display: flex;
   justify-content: center;
   align-items: center;
   border-bottom: 1px solid var(--pedra-borda);
+  padding: 20px;
+  position: relative;
 }
 
 .imagemItemInventario {
-  max-width: 100px;
-  height: auto;
-  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain !important; /* Evita deformação */
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.6));
+  transition: transform 0.3s;
+}
+
+.itemCard:hover .imagemItemInventario {
+  transform: scale(1.1);
 }
 
 .itemInfo {
-  padding: 15px;
+  padding: 18px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
+}
+
+.headerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
 }
 
 .itemInfo h3 {
   margin: 0;
   font-family: 'Cinzel', serif;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  flex-grow: 1;
 }
 
 .raridade {
-  font-size: 0.7rem;
-  font-weight: bold;
-  padding: 2px 6px;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 3px 8px;
   border-radius: 4px;
-  align-self: flex-start;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .detalhesRapidos {
   display: flex;
-  gap: 10px;
-  font-size: 0.8rem;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagSubtipo, .tagNivel, .tagPeso {
+  font-size: 0.75rem;
   color: var(--texto-dimmed);
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .bonusList {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 5px;
+  gap: 6px;
 }
 
 .bonusItem {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 2px 6px;
+  background: rgba(79, 195, 247, 0.1);
+  padding: 3px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
-  color: #4fc3f7;
-  border: 1px solid rgba(79, 195, 247, 0.3);
+  color: #81d4fa;
+  border: 1px solid rgba(79, 195, 247, 0.2);
+  font-weight: bold;
 }
 
 .itemDescricao {
   font-size: 0.85rem;
   color: var(--texto-dimmed);
-  line-height: 1.4;
+  line-height: 1.5;
   margin: 5px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limita a 3 linhas */
+  -webkit-box-orient: vertical;
+  overflow: hidden; /* Trata overflow com reticências */
+  text-overflow: ellipsis;
 }
 
 .itemAcoes {
-  padding: 15px;
-  background: rgba(0, 0, 0, 0.1);
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-top: auto; /* Empurra para o final do card */
 }
 
 .btnAdicionar, .btnRemover, .btnEquipar {
   width: 100%;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 10px;
+  border-radius: 8px;
   cursor: pointer;
   font-family: 'Cinzel', serif;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: bold;
   transition: all 0.3s;
   border: 1px solid transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .btnAdicionar {
@@ -204,59 +263,90 @@
 
 .btnAdicionar:hover {
   background: var(--ouro);
+  color: black;
 }
 
 .controleQuantidade {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 15px;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 5px;
-  border-radius: 6px;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  border-radius: 8px;
+  border: 1px solid var(--pedra-borda);
 }
 
 .controleQuantidade button {
   background: var(--pedra-clara);
   border: 1px solid var(--pedra-borda);
   color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.controleQuantidade button:hover {
+  background: var(--pedra-borda);
+  color: var(--ouro);
+}
+
+.quantidade {
+  font-weight: bold;
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
 }
 
 .botoesPrincipais {
   display: flex;
-  gap: 8px;
+  gap: 10px;
 }
 
 .btnEquipar {
-  background: #34495e;
+  flex-grow: 1;
+  background: #2c3e50;
   color: white;
+  border: 1px solid #34495e;
 }
 
 .btnEquipar.ativo {
-  background: #f39c12;
+  background: var(--ouro);
   color: black;
+  border-color: #f1c40f;
 }
 
 .btnRemover {
-  background: #c0392b;
+  width: 45px;
+  background: #7f231c;
   color: white;
+  border: 1px solid #962d22;
 }
 
 .btnRemover:hover {
-  background: #e74c3c;
+  background: #c0392b;
 }
 
-.msgVazia {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 40px;
-  color: var(--texto-dimmed);
-  font-family: 'Cinzel', serif;
+/* ── RESPONSIVIDADE ── */
+@media (max-width: 768px) {
+  .inventarioControlesGlobais {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filtroInventario {
+    max-width: none;
+  }
+
+  .inventarioGrid {
+    grid-template-columns: 1fr;
+  }
 }
+
 
 
 /* ── SILHUETA DO CORPO / SLOTS ── */

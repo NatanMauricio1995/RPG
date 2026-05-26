@@ -17,81 +17,82 @@ export default function Inventario({ personagemId }: { personagemId: number }) {
   } = useInventario();
 
   const [catalogo, setCatalogo] = useState<Item[]>([]);
-  const [abaAtiva, setAbaAtiva] = useState<"inventario" | "catalogo">("inventario");
   const [filtro, setFiltro] = useState("");
 
   useEffect(() => {
     setCatalogo(listarItens());
   }, []);
 
-  const itensFiltrados = useMemo(() => {
-    const lista = abaAtiva === "catalogo" ? catalogo : inventario.map(inv => {
-      const itemInfo = buscarItem(inv.itemId);
-      return { ...itemInfo, invData: inv } as any;
-    }).filter(i => i !== null);
-
-    if (!filtro) return lista;
-    
-    return lista.filter((i: any) => 
+  const catalogoFiltrado = useMemo(() => {
+    return catalogo.filter((i: Item) => 
       i.nome.toLowerCase().includes(filtro.toLowerCase()) ||
       i.subtipo.toLowerCase().includes(filtro.toLowerCase())
-    );
-  }, [abaAtiva, catalogo, inventario, filtro]);
+    ).slice(0, 12); // Limitar catálogo inicial para performance
+  }, [catalogo, filtro]);
+
+  const meuInventario = useMemo(() => {
+    return inventario.map(inv => {
+      const itemInfo = buscarItem(inv.itemId);
+      if (!itemInfo) return null;
+      return { ...itemInfo, invData: inv };
+    }).filter(i => i !== null) as any[];
+  }, [inventario]);
 
   const handleSalvar = () => {
     salvarMudancas(personagemId, inventario);
   };
 
   return (
-    <div className="inventarioContainer">
-      <div className="inventarioHeader">
-        <div className="tabs">
-          <button 
-            className={abaAtiva === "inventario" ? "active" : ""} 
-            onClick={() => setAbaAtiva("inventario")}
-          >
-            🎒 Meu Inventário ({inventario.length})
-          </button>
-          <button 
-            className={abaAtiva === "catalogo" ? "active" : ""} 
-            onClick={() => setAbaAtiva("catalogo")}
-          >
-            📜 Catálogo de Itens
-          </button>
-        </div>
-
-        <div className="inventarioControles">
-          <input 
-            type="text" 
-            placeholder="Filtrar itens..." 
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="filtroInventario"
-          />
-          <button className="btnSalvarInventario" onClick={handleSalvar}>
-            💾 Salvar Alterações
-          </button>
-        </div>
+    <div className="inventarioWrapper">
+      <div className="inventarioControlesGlobais">
+        <input 
+          type="text" 
+          placeholder="🔍 Buscar itens no catálogo ou inventário..." 
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          className="filtroInventario"
+        />
+        <button className="btnSalvarInventario" onClick={handleSalvar}>
+          💾 Salvar Alterações
+        </button>
       </div>
 
-      <div className="inventarioGrid">
-        {itensFiltrados.length === 0 ? (
-          <p className="msgVazia">Nenhum item encontrado.</p>
-        ) : (
-          itensFiltrados.map((item: any) => (
+      <section className="inventarioSecao">
+        <h2 className="tituloSecao">🎒 Inventário do Personagem ({inventario.length})</h2>
+        <div className="inventarioGrid">
+          {meuInventario.length === 0 ? (
+            <p className="msgVazia">Inventário vazio. Adicione itens do catálogo abaixo.</p>
+          ) : (
+            meuInventario.map((item: any) => (
+              <ItemCard
+                key={`inv-${item.id}`}
+                item={item}
+                invData={item.invData}
+                contexto="inventario"
+                onRemove={removerItem}
+                onAlterarQuantidade={alterarQuantidade}
+                onEquipar={(itemId) => alternarEquipamento(personagemId, itemId)}
+              />
+            ))
+          )}
+        </div>
+      </section>
+
+      <hr className="divisorSecao" />
+
+      <section className="inventarioSecao">
+        <h2 className="tituloSecao">📜 Catálogo de Itens Globais</h2>
+        <div className="inventarioGrid">
+          {catalogoFiltrado.map((item: Item) => (
             <ItemCard
-              key={item.id}
+              key={`cat-${item.id}`}
               item={item}
-              invData={abaAtiva === "inventario" ? item.invData : undefined}
-              contexto={abaAtiva === "catalogo" ? "catalogo" : "inventario"}
+              contexto="catalogo"
               onAdd={adicionarItem}
-              onRemove={removerItem}
-              onAlterarQuantidade={alterarQuantidade}
-              onEquipar={(itemId) => alternarEquipamento(personagemId, itemId)}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
