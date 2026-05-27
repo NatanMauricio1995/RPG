@@ -1,10 +1,25 @@
 import {
-  collection, doc,
-  addDoc, getDocs, getDoc, updateDoc, deleteDoc,
-  query, where, serverTimestamp, orderBy, limit,
+  collection,
+  doc,
+  addDoc,
+  getDocs,
+  getDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  serverTimestamp,
+  orderBy,
+  limit,
+  startAfter,
+  QueryConstraint,
+  QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "./config";
 
+/**
+ * Cria um novo documento em uma coleção.
+ */
 export const createDocument = async (collectionName: string, data: any) => {
   const docRef = await addDoc(collection(db, collectionName), {
     ...data,
@@ -14,25 +29,69 @@ export const createDocument = async (collectionName: string, data: any) => {
   return docRef.id;
 };
 
-export const listDocuments = async (collectionName: string, queries: any[] = []) => {
-  const q = query(collection(db, collectionName), ...queries);
+/**
+ * Lista documentos de uma coleção com filtros opcionais.
+ */
+export const listDocuments = async (
+  collectionName: string,
+  constraints: QueryConstraint[] = []
+) => {
+  const q = query(collection(db, collectionName), ...constraints);
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+};
+
+/**
+ * Utilitário para consultas paginadas conforme solicitado.
+ */
+export async function queryPaginada<T>(
+  colecao: string,
+  filtros: QueryConstraint[],
+  limite: number,
+  cursor?: QueryDocumentSnapshot
+): Promise<{ dados: T[]; proximoCursor: QueryDocumentSnapshot | null }> {
+  const constraints: QueryConstraint[] = [...filtros, limit(limite)];
+
+  if (cursor) {
+    constraints.push(startAfter(cursor));
+  }
+
+  const q = query(collection(db, colecao), ...constraints);
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-};
 
-export const getDocument = async (collectionName: string, id: string) => {
-  const docRef = doc(db, collectionName, id);
-  const snap   = await getDoc(docRef);
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-};
+  const dados = snapshot.docs.map((d) => ({
+    id: d.id,
+    ...d.data(),
+  })) as T[];
 
-export const updateDocument = async (collectionName: string, id: string, data: any) => {
+  const proximoCursor = snapshot.docs.length > limite - 1 ? snapshot.docs[snapshot.docs.length - 1] : null;
+
+  return {
+    dados,
+    proximoCursor,
+  };
+}
+
+/**
+ * Atualiza um documento existente.
+ */
+export const updateDocument = async (
+  collectionName: string,
+  id: string,
+  data: any
+) => {
   await updateDoc(doc(db, collectionName, id), {
     ...data,
     updatedAt: serverTimestamp(),
   });
 };
 
+/**
+ * Exclui um documento.
+ */
 export const deleteDocument = async (collectionName: string, id: string) => {
   await deleteDoc(doc(db, collectionName, id));
 };
