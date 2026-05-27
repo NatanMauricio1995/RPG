@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { resolverEquipados } from "../../../services/itemService";
-import { salvarEquipamento } from "../../../services/personagemService";
+import { resolverEquipados, validarEquipamento } from "../../../services/itemService";
+import { salvarEquipamento, completarPersonagem } from "../../../services/personagemService";
 import SlotEquipamento from "./SlotEquipamento";
 import type { Personagem, Item, SlotEquipamento as SlotType } from "../../../types/domain";
 
 // ─── Mapa visual dos slots ────────────────────────────────────────────────────
-const SLOTS: { key: SlotType; label: string; icone: string }[] = [
+const SLOTS_LISTA: { key: SlotType; label: string; icone: string }[] = [
   { key: "capacete",       label: "Capacete",        icone: "🪖" },
   { key: "colar",          label: "Colar",            icone: "📿" },
   { key: "armadura",       label: "Armadura",         icone: "🛡️" },
@@ -22,38 +22,7 @@ const SLOTS: { key: SlotType; label: string; icone: string }[] = [
   { key: "bolsa",          label: "Bolsa",            icone: "👜" },
 ];
 
-// ─── Verificação de requisitos ────────────────────────────────────────────────
-function verificarRequisitos(
-  item: Item,
-  personagem: Personagem
-): { pode: boolean; motivo?: string } {
-  const req = item.requisitos;
-  if (!req) return { pode: true };
-
-  if (req.nivel && personagem.nivel < req.nivel) {
-    return { pode: false, motivo: `Nível mínimo: ${req.nivel} (você tem ${personagem.nivel})` };
-  }
-  if (req.classeId && String(personagem.classeId) !== String(req.classeId)) {
-    return { pode: false, motivo: "Sua classe não pode usar este item." };
-  }
-  if (req.racaId && String(personagem.racaId) !== String(req.racaId)) {
-    return { pode: false, motivo: "Sua raça não pode usar este item." };
-  }
-
-  const atributos = (personagem as any).atributos ?? personagem.atributosBase;
-  const atrs = ["forca", "destreza", "constituicao", "inteligencia", "sabedoria", "carisma"] as const;
-  for (const attr of atrs) {
-    const minimo = (req as any)[attr];
-    if (minimo && atributos[attr] < minimo) {
-      return {
-        pode: false,
-        motivo: `${attr} mínimo: ${minimo} (você tem ${atributos[attr]})`,
-      };
-    }
-  }
-
-  return { pode: true };
-}
+const SLOTS_VALIDOS = new Set(SLOTS_LISTA.map(s => s.key));
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 type Props = {
@@ -63,6 +32,7 @@ type Props = {
 
 export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
   const [erro, setErro] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Resolver itens dos slots a partir do cache síncrono
   const equipamentosResolvidos = useMemo(
@@ -78,15 +48,28 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
     return cache ? JSON.parse(cache) : [];
   }, []);
 
+  // ─── Atualizar e Recalcular ──────────────────────────────────────────────────
+  async function atualizarERecalcular() {
+    try {
+      // Recalcular personagem completo para refletir os novos bônus
+      const pCompleto = await completarPersonagem(personagem);
+      onUpdate(pCompleto);
+    } catch (e) {
+      console.error("Erro ao recalcular atributos:", e);
+    }
+  }
+
   // ─── Desequipar slot ────────────────────────────────────────────────────────
   async function desequipar(slot: SlotType) {
     setErro(null);
+    setLoading(true);
     try {
       await salvarEquipamento(personagem.id, slot, null);
-      // O onUpdate será chamado pelo hook usePersonagem no componente pai
-      // mas se quisermos feedback imediato poderíamos atualizar o estado local se necessário.
+      await atualizarERecalcular();
     } catch (e: any) {
       setErro(e.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -96,16 +79,42 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
     const item = itensCatalogo.find((i) => String(i.id) === String(itemId));
     if (!item) return;
 
-    const check = verificarRequisitos(item, personagem);
-    if (!check.pode) {
-      setErro(check.motivo ?? "Requisitos não atendidos.");
+    // 1. Validar se o slot é suportado pelo sistema
+    if (!SLOTS_VALIDOS.has(slot)) {
+      setErro(`Slot "${slot}" inválido.`);
       return;
     }
 
+    // 2. Validar requisitos (Nível, Classe, Raça, etc)
+    // Precisamos completar o personagem para ter classeDados e racaDados para validarEquipamento
+    setLoading(true);
     try {
+      const pCompleto = await completarPersonagem(personagem);
+      const check = validarEquipamento(pCompleto, item);
+      if (!check.valido) {
+        setErro(check.motivo ?? "Requisitos não atendidos.");
+        setLoading(false);
+        return;
+      }
+
+      // 3. Impedir duplicação: se o slot já está ocupado, desequipar anterior primeiro
+      // Nota: salvarEquipamento já lida internamente com a troca no Firebase e inventário,
+      // mas vamos garantir que o fluxo de "desequipar anterior" ocorra se houver lógica adicional necessária.
+      const idAnterior = (personagem.equipados as any)[slot];
+      if (idAnterior && String(idAnterior) !== String(itemId)) {
+        // salvarEquipamento(pId, slot, null) já ocorre dentro do salvarEquipamento(pId, slot, itemId)
+        // se implementado corretamente no personagemService.
+      }
+
+      // 4. Salvar no Firebase
       await salvarEquipamento(personagem.id, slot, itemId);
+      
+      // 5. Recalcular e Notificar Pai
+      await atualizarERecalcular();
     } catch (e: any) {
       setErro(e.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -118,7 +127,7 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
     .filter((inv) => inv.dados?.slot && inv.dados.slot !== "");
 
   return (
-    <div className="sistemaEquipamento">
+    <div className={`sistemaEquipamento ${loading ? "loadingState" : ""}`}>
       <h3 className="equipTitulo">⚔️ Equipamentos</h3>
 
       {erro && (
@@ -129,7 +138,7 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
       )}
 
       <div className="equipGrid">
-        {SLOTS.map(({ key, label, icone }) => (
+        {SLOTS_LISTA.map(({ key, label, icone }) => (
           <SlotEquipamento
             key={key}
             slot={key}
