@@ -1,88 +1,52 @@
 "use client";
+import { useEffect, useState } from "react";
 import useCalendario from "../../hooks/useCalendario";
-import { useState } from "react";
-import dadosClima from "../../data/sistema/clima.json";
+import { buscarDadosClima } from "../../services/climaService";
 
 export default function Clima() {
+  const [config, setConfig] = useState<any>(null);
+  const [estacao, setEstacao] = useState("");
+  const [clima, setClima] = useState("");
+  const [intensidade, setIntensidade] = useState("");
+  const [carregando, setCarregando] = useState(true);
 
-const estacoes=dadosClima.estacoes;
+  useEffect(() => {
+    async function carregar() {
+      const dados = await buscarDadosClima();
+      if (dados) {
+        setConfig(dados);
+        setEstacao(dados.estacoes[0]);
+        setClima(dados.climasPorEstacao[dados.estacoes[0]][0]);
+        setIntensidade(dados.intensidades[0]);
+      }
+      setCarregando(false);
+    }
+    carregar();
+  }, []);
 
-const climasPorEstacao=
-dadosClima.climasPorEstacao as Record<string,string[]>;
+  function alterarEstacao(novaEstacao: string) {
+    setEstacao(novaEstacao);
+    if (config?.climasPorEstacao[novaEstacao]) {
+      setClima(config.climasPorEstacao[novaEstacao][0]);
+    }
+  }
 
-const intensidades=
-dadosClima.intensidades;
+  function gerarClima() {
+    if (!config) return;
+    const lista = config.climasPorEstacao[estacao];
+    let novoClima = clima;
+    while (novoClima === clima && lista.length > 1) {
+      novoClima = lista[Math.floor(Math.random() * lista.length)];
+    }
+    const novaIntensidade = config.intensidades[Math.floor(Math.random() * config.intensidades.length)];
+    setClima(novoClima);
+    setIntensidade(novaIntensidade);
+  }
 
-const [estacao,setEstacao]=
-useState("☀️ Verão");
+  const { dados: dadosCalendario, avancarDia } = useCalendario();
 
-const [clima,setClima]=
-useState("☀️ Sol");
-
-const [intensidade,setIntensidade]=
-useState("🟡 Moderado");
-
-function alterarEstacao(novaEstacao:string){
-
-setEstacao(novaEstacao);
-
-setClima(
-climasPorEstacao[novaEstacao][0]
-);
-
-}
-
-function gerarClima(){
-
-const lista=
-climasPorEstacao[estacao];
-
-let novoClima=clima;
-
-while(novoClima===clima){
-
-novoClima=
-lista[
-Math.floor(
-Math.random()*lista.length
-)
-];
-
-}
-
-const novaIntensidade=
-intensidades[
-Math.floor(
-Math.random()*intensidades.length
-)
-];
-
-setClima(novoClima);
-setIntensidade(novaIntensidade);
-
-}
-
-const{
-
-dados
-
-}=useCalendario();
-
-
-const mesAtual=
-
-dados.meses.find(
-(m)=>
-
-m.id===
-dados.mesAtual
-);
-
-const{
-
-avancarDia
-
-}=useCalendario();
+  if (carregando) return <div>Observando os céus...</div>;
+  if (!config) return <div>Configure o clima no painel do mestre.</div>;
 
 return(
 
@@ -94,7 +58,7 @@ Estação:
 
 <select value={estacao} onChange={(e)=> alterarEstacao(e.target.value) }>
 
-{estacoes.map((item)=>(
+{config.estacoes.map((item: any)=>(
 
 <option
 key={item}
@@ -123,7 +87,7 @@ setClima(e.target.value)
 }
 >
 
-{climasPorEstacao[estacao].map((item)=>(
+{config.climasPorEstacao[estacao].map((item: any)=>(
 
 <option
 key={item}
@@ -152,7 +116,7 @@ setIntensidade(e.target.value)
 }
 >
 
-{intensidades.map((item)=>(
+{config.intensidades.map((item: any)=>(
 
 <option
 key={item}
@@ -168,6 +132,7 @@ value={item}
 </select>
 
 </div>
+
 
 
 <button onClick={gerarClima}>

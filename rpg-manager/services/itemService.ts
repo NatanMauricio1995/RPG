@@ -16,11 +16,6 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-import itensData from "../data/sistema/itens.json";
-import armasData from "../data/sistema/armas.json";
-import armadurasData from "../data/sistema/armaduras.json";
-import acessoriosData from "../data/sistema/acessorios.json";
-import consumiveisData from "../data/sistema/consumiveis.json";
 import type { Item, SlotEquipamento, EfeitoItem } from "../types/domain";
 
 const COLECAO = "itens";
@@ -42,28 +37,6 @@ export async function listarItens(tipo?: string, ultimoDoc?: QueryDocumentSnapsh
 
     const { dados, proximoCursor } = await queryPaginada<Item>(COLECAO, filtros, 20, ultimoDoc);
     let itens = dados;
-
-    // Seed se estiver vazio e não for paginação nem filtro
-    if (itens.length === 0 && !ultimoDoc && !tipo) {
-      console.log("Semeando itens no Firebase...");
-      const todosPadrao = [
-        ...itensData,
-        ...armasData,
-        ...armadurasData,
-        ...acessoriosData,
-        ...consumiveisData
-      ];
-
-      for (const item of todosPadrao) {
-        const { id, ...dados } = item as any;
-        await setDoc(doc(db, COLECAO, String(id)), dados);
-      }
-      
-      const res = await queryPaginada<Item>(COLECAO, [orderBy("nome")], 20);
-      itens = res.dados;
-      _cacheItens = itens.map(normalizarItem);
-      return { itens: _cacheItens, cursor: res.proximoCursor || undefined };
-    }
 
     const itensNormalizados = itens.map(normalizarItem);
 

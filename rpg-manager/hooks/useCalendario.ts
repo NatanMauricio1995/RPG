@@ -1,54 +1,41 @@
 "use client";
 
 import {
-useEffect,
-useState
-}
-from "react";
+  useEffect,
+  useState
+} from "react";
+import { buscarCalendario } from "../services/calendarioService";
 
-import calendarioInicial
-from "../data/campanha/calendario.json";
+export default function useCalendario() {
+  const [dados, setDados] = useState<any>(null);
+  const [carregado, setCarregado] = useState(false);
 
-export default function useCalendario(){
-
-const[
-dados,
-setDados
-]=useState(
-calendarioInicial
-);
-
-const[
-carregado,
-setCarregado
-]=useState(
-false
-);
-
-
-useEffect(()=>{
-
-const salvo=
-
-localStorage.getItem(
-"calendarioRPG"
-);
-
-if(salvo){
-
-setDados(
-JSON.parse(
-salvo
-)
-);
-
-}
-
-setCarregado(
-true
-);
-
-},[]);
+  useEffect(() => {
+    async function carregar() {
+      const firebaseDados = await buscarCalendario();
+      if (firebaseDados) {
+        setDados(firebaseDados);
+      } else {
+        const salvo = localStorage.getItem("calendarioRPG");
+        if (salvo) {
+          setDados(JSON.parse(salvo));
+        } else {
+          setDados({
+            anoAtual: 1,
+            mesAtual: 1,
+            diaAtual: 1,
+            meses: [],
+            diasSemana: [],
+            fasesLua: [],
+            climas: [],
+            diasFestivos: []
+          });
+        }
+      }
+      setCarregado(true);
+    }
+    carregar();
+  }, []);
 
 
 useEffect(()=>{

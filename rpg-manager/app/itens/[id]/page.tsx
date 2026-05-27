@@ -1,13 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {useParams}
 from "next/navigation";
 
 import Link
 from "next/link";
 
-import itens
-from "../../../data/sistema/itens.json";
+import { buscarItem } from "../../../services/itemService";
 
 import FichaItem
 from "../../../components/Itens/FichaItem";
@@ -18,35 +18,31 @@ const params=
 useParams();
 
 const id=
-Number(
-params.id
-);
+params?.id ? String(params.id) : null;
 
-const item=
+const [item, setItem] = useState<any>(null);
+const [carregando, setCarregando] = useState(true);
 
-itens.find(
-(i)=>
+useEffect(() => {
+  async function carregar() {
+    if (id) {
+      const encontrado = await buscarItem(id);
+      setItem(encontrado);
+    }
+    setCarregando(false);
+  }
+  carregar();
+}, [id]);
 
-i.id===id
-);
-
+if (carregando) return <div className="carregando">Identificando item...</div>;
 
 if(!item){
-
-return(
-
-<div>
-
-<h1>
-
-❌ Item não encontrado
-
-</h1>
-
-</div>
-
-);
-
+  return(
+    <div>
+      <h1>❌ Item não encontrado</h1>
+      <Link href="/itens"><button className="botaoVoltar">⬅️ Voltar</button></Link>
+    </div>
+  );
 }
 
 

@@ -1,100 +1,62 @@
 "use client";
 
-import{
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState
+} from "react";
+import { buscarCalendario, salvarCalendario } from "../services/calendarioService";
 
-createContext,
-useContext,
-useEffect,
-useState
-
-}
-
-from "react";
-
-import calendarioInicial from "../data/campanha/calendario.json";
-
-const CalendarioContext=
-
-createContext<any>(
-null
-);
-
+const CalendarioContext = createContext<any>(null);
 
 export function CalendarioProvider({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  const [dados, setDados] = useState<any>(null);
+  const [carregado, setCarregado] = useState(false);
 
-children
+  useEffect(() => {
+    async function carregar() {
+      // Tentar Firebase primeiro
+      const firebaseDados = await buscarCalendario();
+      if (firebaseDados) {
+        setDados(firebaseDados);
+        setCarregado(true);
+        return;
+      }
 
-}:{
+      // Fallback cache local
+      const salvo = localStorage.getItem("calendarioRPG");
+      if (salvo) {
+        setDados(JSON.parse(salvo));
+      } else {
+        // Se nada existir, inicializa vazio mas sem import JSON
+        setDados({
+          anoAtual: 1,
+          mesAtual: 1,
+          diaAtual: 1,
+          meses: [],
+          diasSemana: [],
+          fasesLua: [],
+          climas: [],
+          diasFestivos: []
+        });
+      }
+      setCarregado(true);
+    }
+    carregar();
+  }, []);
 
-children:React.ReactNode
-
-}){
-
-const[
-dados,
-setDados
-]=useState(
-calendarioInicial
-);
-
-
-const[
-carregado,
-setCarregado
-]=useState(
-false
-);
-
-
-useEffect(()=>{
-
-const salvo=
-
-localStorage.getItem(
-"calendarioRPG"
-);
-
-if(
-salvo
-){
-
-setDados(
-JSON.parse(
-salvo
-)
-);
-
-}
-
-setCarregado(
-true
-);
-
-},[]);
-
-
-useEffect(()=>{
-
-if(
-carregado
-){
-
-localStorage.setItem(
-
-"calendarioRPG",
-
-JSON.stringify(
-dados
-)
-
-);
-
-}
-
-},[
-dados,
-carregado
-]);
+  useEffect(() => {
+    if (carregado && dados) {
+      localStorage.setItem("calendarioRPG", JSON.stringify(dados));
+      // Opcional: Salvar no Firebase automaticamente em cada mudança
+      // salvarCalendario(dados);
+    }
+  }, [dados, carregado]);
 
 
 function avancarDia(){

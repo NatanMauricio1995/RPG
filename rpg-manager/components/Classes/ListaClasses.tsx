@@ -6,9 +6,6 @@ import Link from "next/link";
 import CardClasse
 from "./CardClasse";
 
-import classesBase
-from "../../data/sistema/classes.json";
-
 import { listarClasses } from "../../services/personagemService";
 
 export default function ListaClasses(){
@@ -18,27 +15,18 @@ classes,
 setClasses
 ]=useState<any[]>([]);
 
+const [carregando, setCarregando] = useState(true);
+
 useEffect(()=>{
-
 async function carregar(){
-
-const firebase=
-
-await listarClasses();
-
-setClasses([
-
-...classesBase,
-
-...firebase
-
-]);
-
+const resultado = await listarClasses();
+setClasses(resultado.classes || []);
+setCarregando(false);
 }
-
 carregar();
-
 },[]);
+
+if (carregando) return <div className="carregando">Consultando guildas...</div>;
 
 return(
 

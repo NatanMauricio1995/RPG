@@ -16,9 +16,6 @@ import {
   normalizarPersonagem
 } from "../../services/personagemService";
 
-import classesBase from "../../data/sistema/classes.json";
-import racasBase from "../../data/sistema/racas.json";
-
 import {listarHabilidades} from "../../services/habilidadeService";
 
 type Props = {
@@ -40,11 +37,11 @@ export default function FormularioPersonagem({ modoEdicao = false }: Props) {
     async function carregarDados() {
       const classesFirebase = await listarClasses();
       const racasFirebase = await listarRacas();
-      const habilidadesFirebase = await listarHabilidades();
+      const { habilidades: habilidadesFirebase } = await listarHabilidades();
 
-      setClasses([...classesBase, ...classesFirebase]);
-      setRacas([...racasBase, ...racasFirebase]);
-      setHabilidadesDisponiveis(habilidadesFirebase);
+      setClasses(classesFirebase.classes || []);
+      setRacas(racasFirebase.racas || []);
+      setHabilidadesDisponiveis(habilidadesFirebase || []);
 
       if (modoEdicao && id) {
         const encontrado = await buscarPersonagem(id);

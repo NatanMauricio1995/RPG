@@ -14,7 +14,6 @@ import {
   setDoc
 } from "firebase/firestore";
 import { db } from "../firebase/config";
-import habilidadesData from "../data/sistema/habilidades.json";
 import { uploadImage } from "../firebase/storage";
 
 export interface Habilidade {
@@ -43,34 +42,6 @@ export async function listarHabilidades(ultimoDoc?: QueryDocumentSnapshot): Prom
 
     const { dados, proximoCursor } = await queryPaginada<Habilidade>(COLECAO, [orderBy("nome")], 20, ultimoDoc);
     let habilidades = dados;
-
-    // Seed if empty and no pagination
-    if (habilidades.length === 0 && habilidadesData.length > 0 && !ultimoDoc) {
-      console.log("Semeando habilidades no Firebase...");
-      for (const h of habilidadesData) {
-        const idStr = String((h as any).id || Date.now() + Math.random());
-        const novaHabilidade: Habilidade = {
-          nome: h.nome,
-          descricao: h.descricao || "Habilidade básica",
-          imagem: h.imagem || "/imagens/habilidades/padrao.png",
-          tipo: (h.tipo as any) || 'ativa',
-          dano: Number(h.dano || 0),
-          cura: Number(h.cura || 0),
-          custoMana: Number(h.custoMana || 0),
-          cooldown: Number(h.cooldown || 0),
-          alcance: Number(h.alcance || 1),
-          area: Number(h.area || 1),
-          nivelMinimo: Number(h.nivelMinimo || 1)
-        };
-        await setDoc(doc(db, COLECAO, idStr), novaHabilidade);
-      }
-      const res = await queryPaginada<Habilidade>(COLECAO, [orderBy("nome")], 20);
-      habilidades = res.dados;
-      if (typeof window !== "undefined") {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(habilidades));
-      }
-      return { habilidades, cursor: res.proximoCursor || undefined };
-    }
 
     if (typeof window !== "undefined" && !ultimoDoc) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(habilidades));

@@ -2,45 +2,14 @@
 
 import Image from "next/image";
 
-import habilidadesMonstros
-from "../../data/sistema/habilidadesMonstros.json";
-
-type Props={
-
-monstro:any;
-
+type Props = {
+  monstro: any;
 };
 
 export default function FichaMonstro({
-
-monstro
-
-}:Props){
-
-const habilidades=
-
-Array.isArray(
-monstro.habilidades
-)
-
-?
-
-habilidadesMonstros.filter(
-(h)=>
-
-typeof monstro.habilidades[0]==="number"
-
-&&
-
-monstro.habilidades.includes(
-h.id
-)
-
-)
-
-:
-
-monstro.habilidades || [];
+  monstro
+}: Props) {
+  const habilidades = monstro.habilidadesDetalhes || monstro.habilidades || [];
 
 
 const nomes={

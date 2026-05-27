@@ -1,16 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {useParams}
 from "next/navigation";
 
 import Link
 from "next/link";
 
-import monstros
-from "../../../data/sistema/monstros.json";
-
-import tiposMonstros
-from "../../../data/sistema/tiposMonstros.json";
+import { buscarMonstro } from "../../../services/combateService";
 
 import FichaMonstro
 from "../../../components/Bestiario/FichaMonstro";
@@ -21,58 +18,42 @@ const params=
 useParams();
 
 const id=
-Number(params.id);
+params?.id ? String(params.id) : null;
 
+const [monstro, setMonstro] = useState<any>(null);
+const [carregando, setCarregando] = useState(true);
 
-const monstroBase=
+useEffect(() => {
+  async function carregar() {
+    if (id) {
+      const encontrado = await buscarMonstro(id);
+      if (encontrado) {
+        // Popula habilidades se forem IDs
+        if (Array.isArray(encontrado.habilidades) && encontrado.habilidades.length > 0 && typeof encontrado.habilidades[0] === 'string') {
+          const { getDocs, collection, query, where, documentId } = await import("firebase/firestore");
+          const { db } = await import("../../../firebase/config");
+          const habsSnap = await getDocs(query(collection(db, "habilidadesMonstros")));
+          const todasHabs = habsSnap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+          encontrado.habilidadesDetalhes = todasHabs.filter(h => encontrado.habilidades.includes(h.id));
+        }
+      }
+      setMonstro(encontrado);
+    }
+    setCarregando(false);
+  }
+  carregar();
+}, [id]);
 
-monstros.find(
-(item)=>
+if (carregando) return <div className="carregando">Consultando grimório...</div>;
 
-item.id===id
-
-);
-
-
-if(!monstroBase){
-
-return(
-
-<div>
-
-<h1>
-
-❌ Monstro não encontrado
-
-</h1>
-
-</div>
-
-);
-
+if(!monstro){
+  return(
+    <div>
+      <h1>❌ Monstro não encontrado</h1>
+      <Link href="/bestiario"><button className="botaoVoltar">⬅️ Voltar</button></Link>
+    </div>
+  );
 }
-
-
-const tipo=
-
-tiposMonstros.find(
-(item)=>
-
-item.id===
-
-monstroBase.tipoId
-
-);
-
-
-const monstro={
-
-...monstroBase,
-
-tipo:
-tipo?.nome || ""
-
-};
 
 
 return(

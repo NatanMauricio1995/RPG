@@ -19,7 +19,8 @@ export default function InventarioGeralPage() {
     try {
       setCarregando(true);
       setErro(null);
-      const p = await listarPersonagens();
+      const res = await listarPersonagens();
+      const p = res.personagens || [];
       setPersonagens(p);
       if (p.length > 0) {
         setPersonagemSelecionadoId(p[0].id);

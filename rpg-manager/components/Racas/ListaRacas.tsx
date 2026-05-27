@@ -4,7 +4,6 @@ import {useEffect,useState} from "react";
 import Link from "next/link";
 import {listarRacas} from "../../services/personagemService";
 import CardRaca from "./CardRaca";
-import racasBase from "../../data/sistema/racas.json";
 
 export default function ListaRacas(){
 
@@ -13,43 +12,18 @@ racas,
 setRacas
 ]=useState<any[]>([]);
 
+const [carregando, setCarregando] = useState(true);
+
 useEffect(()=>{
-
 async function carregar(){
-
-const firebase=
-
-await listarRacas();
-
-const locais=
-
-JSON.parse(
-
-localStorage.getItem(
-"racasPersonalizadas"
-)
-
-||
-
-"[]"
-
-);
-
-setRacas([
-
-...racasBase,
-
-...firebase,
-
-...locais
-
-]);
-
+const resultado = await listarRacas();
+setRacas(resultado.racas || []);
+setCarregando(false);
 }
-
 carregar();
-
 },[]);
+
+if (carregando) return <div className="carregando">Consultando linhagens...</div>;
 
 return(
 

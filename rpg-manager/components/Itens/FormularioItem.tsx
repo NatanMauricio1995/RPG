@@ -4,8 +4,6 @@ import {useState, useEffect, type ChangeEvent} from "react";
 import {useParams, useRouter} from "next/navigation";
 import Image from "next/image";
 
-import classes from "../../data/sistema/classes.json";
-import racas from "../../data/sistema/racas.json";
 import {buscarItem, normalizarItem, salvarItem, editarItem} from "../../services/itemService";
 import type { Item } from "../../types/domain";
 

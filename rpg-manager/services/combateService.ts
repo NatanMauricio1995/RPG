@@ -1,9 +1,5 @@
 "use client";
 
-import monstrosData from "../data/sistema/monstros.json";
-import tiposMonstros from "../data/sistema/tiposMonstros.json";
-import habilidadesData from "../data/sistema/habilidades.json";
-import habilidadesMonstrosData from "../data/sistema/habilidadesMonstros.json";
 import {calcularBonusProficiencia,calcularModificador} from "./calculoService";
 import {calcularStatusDerivados,normalizarTipoEfeito,EfeitoAtivo} from "./efeitosService";
 import {buscarItem,resolverEquipados} from "./itemService";
@@ -13,7 +9,8 @@ import {
   updateDocument, 
   deleteDocument 
 } from "../firebase/firestore";
-import { limit, orderBy, query as firestoreQuery } from "firebase/firestore";
+import { limit, orderBy, query as firestoreQuery, getDocs, collection } from "firebase/firestore";
+import { db } from "../firebase/config";
 
 export type LadoCombate="aliado"|"inimigo";
 export type StatusCombate="preparacao"|"em_andamento"|"vitoria"|"derrota";
@@ -144,41 +141,22 @@ danos: RegistroDano[];
 
 export async function listarMonstrosCombate(){
   try {
-    // Tenta Firebase primeiro
-    const monstrosFirebase = await listDocuments("monstros", [limit(50)]);
-    if (monstrosFirebase.length > 0) {
-      return monstrosFirebase.map((m: any) => ({
+    const monstrosFirebase = await listDocuments("monstros", [limit(100)]);
+    const tiposDocs = await getDocs(collection(db, "tiposMonstros"));
+    const tipos = tiposDocs.docs.map(d => ({ id: d.id, ...d.data() } as any));
+
+    return monstrosFirebase.map((m: any) => {
+      const tipo = tipos.find((t: any) => t.id === m.tipoId);
+      return {
         ...m,
+        tipo: tipo?.nome || "Criatura",
         padrao: false
-      }));
-    }
+      };
+    });
   } catch (error) {
-    console.error("Erro ao listar monstros do Firebase, usando locais:", error);
+    console.error("Erro ao listar monstros do Firebase:", error);
+    return [];
   }
-
-  // Fallback local
-  const personalizados =
-  typeof window==="undefined"
-  ? []
-  : JSON.parse(localStorage.getItem("monstrosPersonalizados") || "[]");
-
-  const padrao=(monstrosData as any[]).map((monstro:any)=>{
-  const tipo=(tiposMonstros as any[]).find((item:any)=>item.id===monstro.tipoId);
-
-  return{
-  ...monstro,
-  tipo:tipo?.nome || "Criatura",
-  padrao:true
-  };
-  });
-
-  return[
-  ...padrao,
-  ...personalizados.map((monstro:any)=>({
-  ...monstro,
-  padrao:false
-  }))
-  ];
 }
 
 export async function iniciarCombate(
@@ -199,18 +177,20 @@ monstros: any[]
   );
 
   let indiceGlobal = 0;
-  const inimigos = monstros.flatMap((monstro) => {
+  const inimigosPromises = monstros.flatMap((monstro) => {
     const quantidade = Number(monstro.quantidade || 1);
     return Array.from({ length: quantidade }, (_, numero) => {
       const copia = {
         ...monstro,
         nome: quantidade > 1 ? `${monstro.nome} ${numero + 1}` : monstro.nome,
       };
-      const combatente = criarCombatenteMonstro(copia, indiceGlobal);
+      const p = criarCombatenteMonstro(copia, indiceGlobal);
       indiceGlobal++;
-      return combatente;
+      return p;
     });
   });
+
+  const inimigos = await Promise.all(inimigosPromises);
 
   const combatentes = [...aliados, ...inimigos];
   const log = [
@@ -427,10 +407,10 @@ function criarCombatentePersonagem(personagem: any, index: number): Combatente {
   };
 }
 
-function criarCombatenteMonstro(
+async function criarCombatenteMonstro(
 monstro:any,
 index:number | string
-):Combatente{
+):Promise<Combatente>{
 
 const atributos={
 forca:Number(monstro.atributos?.forca || 10),
@@ -466,7 +446,7 @@ esquiva:Math.max(0,calcularModificador(atributos.destreza)*3),
 velocidade:calcularModificador(atributos.destreza)+Number(monstro.deslocamento || 0)/3,
 atributos,
 efeitos:[],
-habilidades:criarHabilidadesMonstro(monstro),
+habilidades:await criarHabilidadesMonstro(monstro),
 cooldowns:{},
 vivo:true,
 escudo:0,
@@ -477,16 +457,18 @@ drop: monstro.drop || { ouro: Number(monstro.ouro || 10), itens: [] }
 
 }
 
-function criarHabilidadesMonstro(
+async function criarHabilidadesMonstro(
 monstro:any
-):HabilidadeCombate[]{
+):Promise<HabilidadeCombate[]>{
 
 const referencias=Array.isArray(monstro.habilidades) ? monstro.habilidades : [];
+const habsDocs = await getDocs(collection(db, "habilidadesMonstros"));
+const habilidadesMonstrosBase = habsDocs.docs.map(d => ({ id: d.id, ...d.data() } as any));
 
 return referencias.map((referencia:any,index:number)=>{
 const habilidade=typeof referencia==="object"
 ? referencia
-: (habilidadesMonstrosData as any[]).find((item:any)=>item.id===referencia);
+: habilidadesMonstrosBase.find((item:any)=>item.id===referencia);
 
 return{
 id:`monstro-${monstro.id}-${index}`,
@@ -567,11 +549,11 @@ combatentes:estado.combatentes.filter((item)=>item.id!==combatenteId)
 
 }
 
-export function alterarQuantidadeMonstro(
+export async function alterarQuantidadeMonstro(
 estado:EstadoCombate,
 combatenteId:string,
 delta:number
-):EstadoCombate{
+):Promise<EstadoCombate>{
 
 const combatente=buscarCombatente(estado,combatenteId);
 
@@ -579,7 +561,7 @@ if(!combatente || combatente.lado!=="inimigo")
 return estado;
 
 if(delta>0){
-const novo=criarCombatenteMonstro(
+const novo=await criarCombatenteMonstro(
 {
 id:combatente.origemId,
 nome:combatente.nome,
@@ -900,7 +882,20 @@ function criarLog(
 
 // ─── Monstros (Consolidado) ──────────────────────────────────────────────────
 export async function listarMonstros() {
-  return await listDocuments("monstros", [limit(50)]);
+  return await listDocuments("monstros", [limit(100)]);
+}
+
+export async function buscarMonstro(id: string) {
+  try {
+    const { getDoc, doc } = await import("firebase/firestore");
+    const snap = await getDoc(doc(db, "monstros", id));
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() } as any;
+    }
+  } catch (error) {
+    console.error("Erro ao buscar monstro:", error);
+  }
+  return null;
 }
 
 export async function salvarMonstro(dados: any) {

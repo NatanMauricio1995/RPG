@@ -14,7 +14,6 @@ import {
   QueryDocumentSnapshot
 } from "firebase/firestore";
 import { db } from "../firebase/config";
-import npcsData from "../data/campanha/npcs.json";
 
 import type { NPC, DialogoNPC, Faccao, Personagem, Missao, Item } from "../types/domain";
 import { listarMissoes } from "./missaoService";
@@ -57,20 +56,6 @@ export async function listarNPCs(ultimoDoc?: QueryDocumentSnapshot): Promise<{ n
 
     const { dados, proximoCursor } = await queryPaginada<NPC>(COLECAO, [orderBy("nome")], 20, ultimoDoc);
     let npcs = dados;
-
-    if (npcs.length === 0 && npcsData.length > 0 && !ultimoDoc) {
-      for (const seed of npcsData) {
-        const { id, ...dados } = seed;
-        await setDoc(doc(db, COLECAO, String(id)), dados);
-      }
-      const res = await queryPaginada<NPC>(COLECAO, [orderBy("nome")], 20);
-      npcs = res.dados;
-      const normalized = npcs.map(normalizarNPC);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(NPCS_STORAGE_KEY, JSON.stringify(normalized));
-      }
-      return { npcs: normalized, cursor: res.proximoCursor || undefined };
-    }
 
     const normalized = npcs.map(normalizarNPC);
 

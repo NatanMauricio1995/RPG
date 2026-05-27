@@ -18,10 +18,6 @@ import {
   startAfter
 } from "firebase/firestore";
 import { db } from "../firebase/config";
-import personagensData from "../data/campanha/personagens.json";
-import classes from "../data/sistema/classes.json";
-import racas from "../data/sistema/racas.json";
-import niveis from "../data/sistema/niveis.json";
 import { calcularVida, calcularAtributosFinais } from "./calculoService";
 import { buscarItem } from "./itemService";
 import { listarHabilidades } from "./habilidadeService";
@@ -70,8 +66,8 @@ export function criarModeloPersonagem(): Personagem {
     userId: "",
     nome: "",
     imagem: "/imagens/racas/padrao.png",
-    racaId: (racas[0] as any)?.id || 1,
-    classeId: (classes[0] as any)?.id || 1,
+    racaId: "1",
+    classeId: "1",
     nivel: 1,
     xpAtual: 0,
     xpNecessario: 100,
@@ -128,21 +124,6 @@ export async function listarPersonagens(userId?: string, ultimoDoc?: QueryDocume
 
     const { dados, proximoCursor } = await queryPaginada<Personagem>(COLECAO, filtros, 20, ultimoDoc);
     let personagens = dados;
-
-    // Seed se estiver vazio e sem paginação
-    if (personagens.length === 0 && personagensData.length > 0 && !ultimoDoc) {
-      console.log("Semeando personagens no Firebase...");
-      for (const p of personagensData) {
-        const { id, ...dados } = normalizarPersonagem(p);
-        await setDoc(doc(db, COLECAO, String(id)), dados);
-      }
-      const res = await queryPaginada<Personagem>(COLECAO, [orderBy("nome")], 20);
-      personagens = res.dados;
-      if (typeof window !== "undefined") {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(personagens));
-      }
-      return { personagens: personagens.map(normalizarPersonagem), cursor: res.proximoCursor || undefined };
-    }
 
     if (typeof window !== "undefined" && !ultimoDoc) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(personagens));
@@ -451,15 +432,31 @@ export async function equiparItemPersonagem(personagemId: string | number, itemI
   }
 }
 
+export async function listarNiveis(): Promise<Nivel[]> {
+  try {
+    const { getDocs, collection, query, orderBy } = await import("firebase/firestore");
+    const snap = await getDocs(query(collection(db, "niveis"), orderBy("nivel")));
+    return snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Nivel));
+  } catch (error) {
+    console.error("Erro ao listar níveis:", error);
+    return [];
+  }
+}
+
 export async function completarPersonagem(personagem: Personagem): Promise<PersonagemCompleto> {
   const p = normalizarPersonagem(personagem);
 
-  const classe = (classes as any[]).find((c) => String(c.id) === String(p.classeId)) as Classe;
-  const raca = (racas as any[]).find((r) => String(r.id) === String(p.racaId)) as Raca;
-  const dadosNivel = (niveis as any[]).find((n) => n.nivel === p.nivel) as Nivel;
+  // Busca dados necessários de forma assíncrona
+  const [resClasses, resRacas, niveis] = await Promise.all([
+    listarClasses(),
+    listarRacas(),
+    listarNiveis()
+  ]);
 
-  // Usa buscarItem que agora é async, mas aqui precisamos de algo sincrono ou await
-  // Como completarPersonagem é async, podemos dar await
+  const classe = resClasses.classes.find((c) => String(c.id) === String(p.classeId)) as Classe;
+  const raca = resRacas.racas.find((r) => String(r.id) === String(p.racaId)) as Raca;
+  const dadosNivel = niveis.find((n) => n.nivel === p.nivel) as Nivel;
+
   const itensEquipados: any[] = [];
   for (const inv of p.inventario) {
     if (inv.equipado) {
@@ -468,15 +465,15 @@ export async function completarPersonagem(personagem: Personagem): Promise<Perso
     }
   }
 
-  const { atributos, vidaMaxima, manaMaxima, armadura, velocidade, critico, ataque, bonus } = calcularAtributosFinais(
+  const { atributos, vidaMaxima, manaMaxima, armadura, velocidade, critico, ataque } = calcularStatusCompletos(
     p,
     raca,
     classe,
-    niveis as any[],
+    niveis,
     itensEquipados
   );
 
-  const todasHabilidades = await listarHabilidades();
+  const { habilidades: todasHabilidades } = await listarHabilidades();
   const habsClasseIds = classe?.habilidades || [];
   const habsClasse = todasHabilidades.filter(h => h.id && habsClasseIds.includes(h.id));
   const habsPersonagemIds = p.habilidadesIds || [];
@@ -501,7 +498,7 @@ export async function completarPersonagem(personagem: Personagem): Promise<Perso
     velocidade,
     critico,
     ataque,
-    bonus,
+    bonus: {},
     habilidades: Array.from(habilidadesUnicas.values()) as any[],
   };
 }
