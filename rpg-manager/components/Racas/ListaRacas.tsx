@@ -2,7 +2,7 @@
 
 import {useEffect,useState} from "react";
 import Link from "next/link";
-import {listarRacas} from "../../services/racaServiceFirebase";
+import {listarRacas} from "../../services/personagemService";
 import CardRaca from "./CardRaca";
 import racasBase from "../../data/sistema/racas.json";
 

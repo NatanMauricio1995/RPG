@@ -3,9 +3,8 @@
 import {useState,useEffect} from "react";
 import {useRouter} from "next/navigation";
 import Image from "next/image";
-import {salvarRaca} from "../../services/racaServiceFirebase";
+import {salvarRaca, listarRacas, editarRaca} from "../../services/personagemService";
 import {useParams} from "next/navigation";
-import {listarRacas,editarRaca} from "../../services/racaServiceFirebase";
 
 type Props={
 

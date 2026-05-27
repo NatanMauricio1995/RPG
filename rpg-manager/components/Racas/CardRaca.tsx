@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import {useRouter} from "next/navigation";
-import {excluirRaca} from "../../services/racaServiceFirebase";
+import {excluirRaca} from "../../services/personagemService";
 export default function CardRaca({
 raca
 }:any){

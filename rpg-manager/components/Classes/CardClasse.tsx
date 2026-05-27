@@ -4,10 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
 
-import {
-excluirClasse
-}
-from "../../services/classeServiceFirebase";
+import { excluirClasse } from "../../services/personagemService";
 
 export default function CardClasse({
 classe

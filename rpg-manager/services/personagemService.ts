@@ -264,6 +264,52 @@ export async function excluirPersonagem(id: string | number) {
   }
 }
 
+// ─── Classes (Consolidado) ───────────────────────────────────────────────────
+export async function listarClasses() {
+  const colecao = collection(db, "classes");
+  const q = query(colecao, limit(50));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((item) => ({
+    id: item.id,
+    ...item.data(),
+  })) as Classe[];
+}
+
+export async function salvarClasse(dados: any) {
+  return await addDoc(collection(db, "classes"), dados);
+}
+
+export async function editarClasse(id: string, dados: any) {
+  return await updateDoc(doc(db, "classes", id), dados);
+}
+
+export async function excluirClasse(id: string) {
+  return await deleteDoc(doc(db, "classes", id));
+}
+
+// ─── Raças (Consolidado) ──────────────────────────────────────────────────────
+export async function listarRacas() {
+  const colecao = collection(db, "racas");
+  const q = query(colecao, limit(50));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((item) => ({
+    id: item.id,
+    ...item.data(),
+  })) as Raca[];
+}
+
+export async function salvarRaca(dados: any) {
+  return await addDoc(collection(db, "racas"), dados);
+}
+
+export async function editarRaca(id: string, dados: any) {
+  return await updateDoc(doc(db, "racas", id), dados);
+}
+
+export async function excluirRaca(id: string) {
+  return await deleteDoc(doc(db, "racas", id));
+}
+
 export async function removerItem(personagemId: string | number, itemId: string) {
   try {
     const p = await buscarPersonagem(personagemId);

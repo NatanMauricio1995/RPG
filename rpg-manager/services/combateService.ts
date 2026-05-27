@@ -7,8 +7,13 @@ import habilidadesMonstrosData from "../data/sistema/habilidadesMonstros.json";
 import {calcularBonusProficiencia,calcularModificador} from "./calculoService";
 import {calcularStatusDerivados,normalizarTipoEfeito,EfeitoAtivo} from "./efeitosService";
 import {buscarItem,resolverEquipados} from "./itemService";
-import { listDocuments } from "../firebase/firestore";
-import { limit } from "firebase/firestore";
+import { 
+  listDocuments, 
+  createDocument, 
+  updateDocument, 
+  deleteDocument 
+} from "../firebase/firestore";
+import { limit, orderBy, query as firestoreQuery } from "firebase/firestore";
 
 export type LadoCombate="aliado"|"inimigo";
 export type StatusCombate="preparacao"|"em_andamento"|"vitoria"|"derrota";
@@ -847,4 +852,46 @@ function criarLog(
     texto,
     tipo
   };
+}
+
+// ─── Monstros (Consolidado) ──────────────────────────────────────────────────
+export async function listarMonstros() {
+  return await listDocuments("monstros", [limit(50)]);
+}
+
+export async function salvarMonstro(dados: any) {
+  return await createDocument("monstros", dados);
+}
+
+export async function editarMonstro(id: string, dados: any) {
+  return await updateDocument("monstros", id, dados);
+}
+
+export async function excluirMonstro(id: string) {
+  return await deleteDocument("monstros", id);
+}
+
+// ─── Histórico de Combate (Consolidado) ──────────────────────────────────────
+export async function salvarHistoricoCombate(historico: any) {
+  try {
+    return await createDocument("historicos_combate", {
+      ...historico,
+      data: historico.data || new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Erro ao salvar histórico de combate:", error);
+    return null;
+  }
+}
+
+export async function listarHistoricos(maxResults: number = 50) {
+  try {
+    return await listDocuments("historicos_combate", [
+      orderBy("data", "desc"),
+      limit(maxResults),
+    ]);
+  } catch (error) {
+    console.error("Erro ao listar históricos de combate:", error);
+    return [];
+  }
 }

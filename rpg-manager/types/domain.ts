@@ -304,17 +304,14 @@ export type EstadoCombate = {
 };
 
 export type HistoricoCombate = {
-  id: string | number;
+  id?: string | number;
   data: string;
-  participantes: { nome: string; lado: string }[];
+  participantes: string[];
   vencedor: string;
   derrotados: string[];
-  log: EntradaLog[];
-  recompensas?: {
-    xp: number;
-    ouro: number;
-    itens: string[];
-  };
+  xpDistribuido: { personagemId: string; valor: number }[];
+  ouroDistribuido: { personagemId: string; valor: number }[];
+  itensConsumidos: { personagemId: string; itemId: string; quantidade: number }[];
 };
 
 // ==================================

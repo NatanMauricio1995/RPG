@@ -4,9 +4,9 @@ import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import type { EstadoCombat as EstadoCombateType } from "../../services/combateService";
 import { buscarPersonagem, salvarPersonagem } from "../../services/personagemService";
-import { salvarHistoricoCombate, HistoricoCombate } from "../../services/historicoService";
+import { salvarHistoricoCombate } from "../../services/combateService";
 import { listarItens } from "../../services/itemService";
-import type { Personagem, Item } from "../../types/domain";
+import type { Personagem, Item, HistoricoCombate } from "../../types/domain";
 import "../../styles/combate.css";
 
 // Para evitar erro de tipagem se EstadoCombate não for exportado corretamente

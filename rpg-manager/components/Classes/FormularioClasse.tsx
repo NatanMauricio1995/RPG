@@ -4,7 +4,7 @@ import {useState,useEffect} from "react";
 import {useRouter,useParams} from "next/navigation";
 import Image from "next/image";
 import {listarHabilidades} from "../../services/habilidadeService";
-import {salvarClasse, editarClasse, listarClasses} from "../../services/classeServiceFirebase";
+import {salvarClasse, editarClasse, listarClasses} from "../../services/personagemService";
 
 type Props={
 modoEdicao?:boolean;

@@ -6,19 +6,19 @@ import Image from "next/image";
 
 import {enviarImagem} from "../../services/uploadImagem";
 
-import {
+import { 
+  salvarPersonagem, 
   buscarPersonagem,
+  atualizarPersonagem,
+  listarClasses,
+  listarRacas,
   criarModeloPersonagem,
-  normalizarPersonagem,
-  salvarPersonagem,
-  atualizarPersonagem
+  normalizarPersonagem
 } from "../../services/personagemService";
 
 import classesBase from "../../data/sistema/classes.json";
 import racasBase from "../../data/sistema/racas.json";
 
-import {listarClasses} from "../../services/classeServiceFirebase";
-import {listarRacas} from "../../services/racaServiceFirebase";
 import {listarHabilidades} from "../../services/habilidadeService";
 
 type Props = {

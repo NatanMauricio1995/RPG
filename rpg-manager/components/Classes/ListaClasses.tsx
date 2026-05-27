@@ -9,10 +9,7 @@ from "./CardClasse";
 import classesBase
 from "../../data/sistema/classes.json";
 
-import {
-listarClasses
-}
-from "../../services/classeServiceFirebase";
+import { listarClasses } from "../../services/personagemService";
 
 export default function ListaClasses(){
 
