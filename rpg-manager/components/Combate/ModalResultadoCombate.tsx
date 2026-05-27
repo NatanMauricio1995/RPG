@@ -1,262 +1,140 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Image from "next/image";
-import type { EstadoCombate, RegistroDano } from "../../services/combateService";
-import { buscarPersonagem, salvarPersonagem } from "../../services/personagemService";
-import { salvarHistorico, RegistroHistorico } from "../../services/historicoService";
-import { listarItens } from "../../services/itemService";
-import type { Personagem, Item } from "../../types/domain";
-import "../../styles/combate.css";
-
-type OpcoesCampos = {
-  vida: boolean;
-  mana: boolean;
-  xp: boolean;
-  ouro: boolean;
-  inventario: boolean;
-  efeitos: boolean;
-  mortes: boolean;
-};
+import { useState, useMemo } from "react";
+import type { EstadoCombate, Combatente } from "../../services/combateService";
+import { calcularResultadoCombate } from "../../services/combateService";
+import type { Personagem } from "../../types/domain";
+import Modal from "../UI/Modal";
+import Button from "../UI/Button";
 
 type Props = {
   estado: EstadoCombate;
-  onClose: () => void;
+  personagensSnapshot: Record<string, Personagem>; // Snapshot original por ID
+  onAplicar: (ids: string[]) => void; // IDs dos personagens a aplicar alterações
+  onCancelar: () => void;
 };
 
-export default function ModalResultadoCombate({ estado, onClose }: Props) {
-  const [salvando, setSalvando] = useState(false);
-  const [modoParc, setModoParc] = useState(false);
-  const [opcoes, setOpcoes] = useState<Record<string, OpcoesCampos>>({});
-  const [recompensas, setRecompensas] = useState({ xp: 0, ouro: 0 });
-  const [personagensOriginais, setPersonagensOriginais] = useState<Record<string, Personagem>>({});
-  const [itensCatalogo, setItensCatalogo] = useState<Item[]>([]);
-  const [carregando, setCarregando] = useState(true);
+export default function ModalResultadoCombate({ estado, personagensSnapshot, onAplicar, onCancelar }: Props) {
+  const [checklist, setChecklist] = useState<Record<string, boolean>>({});
+  const [modoParcial, setModoParcial] = useState(false);
 
-  const aliados = (estado.combatentes || []).filter((c) => c.lado === "aliado");
-  const inimigosDerrotados = (estado.combatentes || []).filter((c) => c.lado === "inimigo" && !c.vivo);
+  const resultado = useMemo(() => calcularResultadoCombate(estado), [estado]);
+  const vitoria = estado.status === "vitoria";
 
-  // ─── Carregar dados ────────────────────────────────────────────────────────
-  useEffect(() => {
-    async function carregarDados() {
-      const resItens = await listarItens();
-      setItensCatalogo(Array.isArray(resItens) ? resItens : resItens.itens || []);
+  const aliados = useMemo(() => {
+    return estado.combatentes.filter(c => c.lado === "aliado");
+  }, [estado.combatentes]);
 
-      const originais: Record<string, Personagem> = {};
-      const opts: Record<string, OpcoesCampos> = {};
+  // Inicializa checklist com todos selecionados
+  useState(() => {
+    const initial: Record<string, boolean> = {};
+    aliados.forEach(c => {
+      if (c.origemId) initial[String(c.origemId)] = true;
+    });
+    setChecklist(initial);
+  });
 
-      for (const c of aliados) {
-        const p = await buscarPersonagem(c.origemId);
-        if (p) originais[c.id] = p;
-
-        opts[c.id] = {
-          vida: true,
-          mana: true,
-          xp: true,
-          ouro: true,
-          inventario: true,
-          efeitos: true,
-          mortes: true,
-        };
-      }
-
-      setPersonagensOriginais(originais);
-      setOpcoes(opts);
-
-      // Calcular recompensas totais
-      let totalXP = 0;
-      let totalOuro = 0;
-      inimigosDerrotados.forEach((i: any) => {
-        totalXP += i.experiencia || 0;
-        totalOuro += i.drop?.ouro || 0;
-      });
-      setRecompensas({ xp: totalXP, ouro: totalOuro });
-      setCarregando(false);
-    }
-
-    carregarDados();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ─── Toggle de checkbox ────────────────────────────────────────────────────
-  function toggleOpcao(combatenteId: string, campo: keyof OpcoesCampos) {
-    setOpcoes((prev) => ({
-      ...prev,
-      [combatenteId]: {
-        ...prev[combatenteId],
-        [campo]: !prev[combatenteId][campo],
-      },
-    }));
-  }
-
-  // ─── Aplicar alterações ────────────────────────────────────────────────────
-  async function aplicarAlteracoes(apenasSelecionados: boolean) {
-    setSalvando(true);
-    try {
-      for (const combatente of aliados) {
-        const pOriginal = personagensOriginais[combatente.id];
-        if (!pOriginal) continue;
-
-        const opt: OpcoesCampos = apenasSelecionados
-          ? opcoes[combatente.id]
-          : { vida: true, mana: true, xp: true, ouro: true, inventario: true, efeitos: true, mortes: true };
-
-        const pAtualizado = { ...pOriginal };
-
-        if (opt.vida) pAtualizado.vidaAtual = combatente.vidaAtual;
-        if (opt.mana) pAtualizado.manaAtual = combatente.manaAtual;
-        
-        if (opt.mortes && !combatente.vivo) {
-          pAtualizado.vidaAtual = 0;
-        } else if (!opt.mortes && !combatente.vivo) {
-          if (pAtualizado.vidaAtual <= 0) pAtualizado.vidaAtual = 1;
-        }
-
-        if (opt.xp && estado.status === "vitoria") {
-          pAtualizado.xpAtual += recompensas.xp;
-        }
-
-        if (opt.ouro && estado.status === "vitoria") {
-          pAtualizado.ouro = (pAtualizado.ouro ?? 0) + recompensas.ouro;
-        }
-
-        if (opt.efeitos) {
-          pAtualizado.efeitosAtivos = combatente.efeitos;
-        }
-
-        if (opt.inventario && combatente.itensConsumidos && combatente.itensConsumidos.length > 0) {
-          pAtualizado.inventario = (pOriginal.inventario || []).map(inv => {
-            const consumido = combatente.itensConsumidos?.find((c: any) => c.itemId === inv.itemId);
-            if (consumido) {
-              return { ...inv, quantidade: Math.max(0, inv.quantidade - consumido.quantidade) };
-            }
-            return inv;
-          }).filter(inv => inv.quantidade > 0);
-        }
-
-        await salvarPersonagem(pAtualizado);
-      }
-
-      // Salvar histórico
-      const historico: RegistroHistorico = {
-        data: new Date().toISOString(),
-        participantes: estado.combatentes.map((c) => c.nome),
-        vencedor: estado.status === "vitoria" ? "aliados" : (estado.status === "derrota" ? "inimigos" : "empate"),
-        danos: (estado.danos || []).map(d => ({
-          atacanteId: d.atacanteId,
-          alvoId: d.alvoId,
-          valor: d.valor
-        })),
-      };
-
-      await salvarHistorico(historico);
-      onClose();
-    } catch (error) {
-      console.error("Erro ao aplicar alterações:", error);
-      alert("Erro ao salvar alterações.");
-    } finally {
-      setSalvando(false);
-    }
-  }
-
-  function getNomeItem(itemId: string) {
-    const item = itensCatalogo.find(i => String(i.id) === String(itemId));
-    return item?.nome || `Item ${itemId}`;
-  }
-
-  // ─── Render ────────────────────────────────────────────────────────────────
-  if (carregando) {
-    return (
-      <div className="modalSobreposicao" style={{ zIndex: 1000 }}>
-        <div className="modalConteudo resultadoCombate">
-          <p style={{ textAlign: "center", padding: "2rem" }}>📊 Carregando resultados...</p>
-        </div>
-      </div>
-    );
+  function handleFinalizar() {
+    const idsParaAplicar = Object.entries(checklist)
+      .filter(([, selected]) => selected)
+      .map(([id]) => id);
+    onAplicar(idsParaAplicar);
   }
 
   return (
-    <div className="modalSobreposicao" style={{ zIndex: 1000 }}>
-      <div className="modalConteudo resultadoCombate">
-        <h2 className={estado.status === "vitoria" ? "tituloVitoria" : "tituloDerrota"}>
-          {estado.status === "vitoria" ? "✦ VITÓRIA ✦" : "✦ DERROTA ✦"}
+    <Modal isOpen={true} onClose={onCancelar} title="Fim de Combate">
+      <div className="modalCombateResult">
+        <h2 className={vitoria ? "textVitoria" : "textDerrota"}>
+          {vitoria ? "⚔️ VITÓRIA!" : "💀 DERROTA"}
         </h2>
 
-        <div className="listaDifs">
-          {aliados.map((c) => {
-            const original = personagensOriginais[c.id];
-            return (
-              <div key={c.id} className="itemDif">
-                <div className="infoCombatente">
-                  <Image src={c.imagem} alt={c.nome} width={50} height={50} className="avatarMini" />
-                  <div className="nomeCombatente">
-                    <strong>{c.nome}</strong>
-                    {!c.vivo && <span className="tagMorte"> ☠ MORTO</span>}
-                  </div>
-                </div>
+        <div className="recompensasSection">
+          <h3>Recompensas do Grupo</h3>
+          <div className="recompensasGrid">
+            <div className="recompensaItem">
+              <span>✨ XP Total:</span>
+              <strong>{resultado.xp}</strong>
+            </div>
+            <div className="recompensaItem">
+              <span>💰 Ouro:</span>
+              <strong>{resultado.ouro}</strong>
+            </div>
+          </div>
+        </div>
 
-                {original && (
-                  <div className="diffsContainer">
-                    <span>Vida: {original.vidaAtual} → {c.vidaAtual}</span>
-                    <span>Mana: {original.manaAtual} → {c.manaAtual}</span>
-                    {estado.status === "vitoria" && (
-                      <>
-                        <span>XP: +{recompensas.xp}</span>
-                        <span>Ouro: +{recompensas.ouro}</span>
-                      </>
-                    )}
-                    {c.itensConsumidos && c.itensConsumidos.length > 0 && (
-                      <div className="consumidosBox">
-                        <strong>Itens:</strong>
-                        {c.itensConsumidos.map(item => (
-                          <span key={item.itemId} className="tagConsumo">{getNomeItem(item.itemId)} x{item.quantidade}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+        {resultado.itensConsumidos.length > 0 && (
+          <div className="consumidosSection">
+            <h3>Itens Consumidos</h3>
+            <ul>
+              {resultado.itensConsumidos.map(item => (
+                <li key={item.itemId}>Item ID: {item.itemId} (x{item.quantidade})</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-                {modoParc && (
-                  <div className="gridChecks">
-                    {Object.keys(opcoes[c.id]).map((campo) => (
-                      <label key={campo} className="checkLabel">
-                        <input
-                          type="checkbox"
-                          checked={(opcoes[c.id] as any)[campo]}
-                          onChange={() => toggleOpcao(c.id, campo as keyof OpcoesCampos)}
-                        />
-                        {campo}
-                      </label>
-                    ))}
+        <div className="statusPersonagensSection">
+          <h3>Alterações nos Personagens</h3>
+          {modoParcial ? (
+            <div className="checklistPersonagens">
+              {aliados.map(c => {
+                const snapshot = personagensSnapshot[String(c.origemId)];
+                if (!snapshot) return null;
+
+                return (
+                  <div key={c.id} className="checkItem">
+                    <input 
+                      type="checkbox" 
+                      id={`check-${c.id}`}
+                      checked={checklist[String(c.origemId)] || false}
+                      onChange={(e) => setChecklist(prev => ({ ...prev, [String(c.origemId)]: e.target.checked }))}
+                    />
+                    <label htmlFor={`check-${c.id}`}>
+                      {c.nome} (Vida: {snapshot.vidaAtual} → {c.vidaAtual}, Mana: {snapshot.manaAtual} → {c.manaAtual})
+                    </label>
                   </div>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ) : (
+            <p>As alterações de Vida, Mana, Ouro e XP serão aplicadas a todos os aliados vivos.</p>
+          )}
         </div>
 
         <div className="modalAcoes">
-          <button className="btnVoltar" onClick={onClose} disabled={salvando}>Cancelar</button>
-          
-          <div className="botoesDireita">
-            <button 
-              className={`btnSecundario ${modoParc ? "ativo" : ""}`}
-              onClick={() => setModoParc(!modoParc)}
-            >
-              Aplicar parcialmente
-            </button>
-
-            {modoParc ? (
-              <button className="btnPrimario" onClick={() => aplicarAlteracoes(true)} disabled={salvando}>
-                Aplicar selecionados
-              </button>
-            ) : (
-              <button className="btnPrimario" onClick={() => aplicarAlteracoes(false)} disabled={salvando}>
-                Aplicar tudo
-              </button>
-            )}
-          </div>
+          {!modoParcial ? (
+            <>
+              <Button variant="primary" onClick={handleFinalizar}>
+                Aplicar Tudo
+              </Button>
+              <Button variant="secondary" onClick={() => setModoParcial(true)}>
+                Aplicar Parcialmente
+              </Button>
+            </>
+          ) : (
+            <Button variant="primary" onClick={handleFinalizar}>
+              Confirmar Seleção
+            </Button>
+          )}
+          <Button variant="danger" onClick={onCancelar}>
+            Descartar Tudo
+          </Button>
         </div>
       </div>
-    </div>
+
+      <style jsx>{`
+        .modalCombateResult { display: flex; flex-direction: column; gap: 1.5rem; text-align: center; }
+        .textVitoria { color: var(--cor-sucesso); font-size: 2rem; }
+        .textDerrota { color: var(--cor-perigo); font-size: 2rem; }
+        .recompensasSection, .consumidosSection, .statusPersonagensSection { 
+          background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: left;
+        }
+        h3 { margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3rem; }
+        .recompensasGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .modalAcoes { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; }
+        .checklistPersonagens { display: flex; flex-direction: column; gap: 0.5rem; }
+        .checkItem { display: flex; align-items: center; gap: 0.5rem; }
+      `}</style>
+    </Modal>
   );
 }

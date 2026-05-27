@@ -66,7 +66,38 @@ drop?: {
 itensConsumidos?: { itemId: string; quantidade: number }[];
 };
 
-// ... (rest of code)
+export function calcularResultadoCombate(estado: EstadoCombate): {
+  xp: number; 
+  ouro: number; 
+  itensConsumidos: { itemId: string; quantidade: number }[]
+} {
+  let xp = 0;
+  let ouro = 0;
+  const mapaItens = new Map<string, number>();
+
+  estado.combatentes.forEach(c => {
+    // XP e Ouro apenas de inimigos derrotados
+    if (c.lado === "inimigo" && !c.vivo) {
+      xp += c.experiencia || 0;
+      ouro += c.drop?.ouro || 0;
+    }
+
+    // Itens consumidos por todos (aliados principalmente)
+    if (c.itensConsumidos) {
+      c.itensConsumidos.forEach(item => {
+        const qtd = mapaItens.get(item.itemId) || 0;
+        mapaItens.set(item.itemId, qtd + item.quantidade);
+      });
+    }
+  });
+
+  const itensConsumidos = Array.from(mapaItens.entries()).map(([itemId, quantidade]) => ({
+    itemId,
+    quantidade,
+  }));
+
+  return { xp, ouro, itensConsumidos };
+}
 
 export function consumirItemCombate(
   estado: EstadoCombate,

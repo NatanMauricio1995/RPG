@@ -31,6 +31,7 @@ export default function CombatePage() {
   const [quantidadesMonstros, setQuantidadesMonstros] = useState<Record<number, number>>({});
 
   const [estado, setEstado] = useState<EstadoCombate | null>(null);
+  const [personagensSnapshot, setPersonagensSnapshot] = useState<Record<string, any>>({});
   const [atacanteSelecionado, setAtacanteSelecionado] = useState("");
   const [alvoSelecionado, setAlvoSelecionado] = useState("");
   const [mostrarModalResultado, setMostrarModalResultado] = useState(false);
@@ -80,6 +81,15 @@ export default function CombatePage() {
     }
 
     try {
+      // Criar snapshot dos personagens selecionados
+      const snapshot: Record<string, any> = {};
+      personagens
+        .filter(p => personagensSelecionados.includes(Number(p.id)))
+        .forEach(p => {
+          snapshot[String(p.id)] = { ...p };
+        });
+      setPersonagensSnapshot(snapshot);
+
       const inimigos = monstros
         .filter((monstro: any) => monstrosSelecionados.includes(Number(monstro.id)))
         .map((monstro: any) => ({
@@ -106,7 +116,7 @@ export default function CombatePage() {
     setEstado(novoEstado);
     if (novoEstado.status !== "em_andamento") {
       setMostrarModalResultado(true);
-      if (novoEstado.status === "vitoria_aliados") {
+      if (novoEstado.status === "vitoria") {
         adicionarToast("sucesso", "Vitória dos heróis!");
       } else {
         adicionarToast("erro", "Os heróis foram derrotados...");
@@ -118,6 +128,45 @@ export default function CombatePage() {
     setMostrarModalResultado(false);
     setEstado(null);
   };
+
+  async function handleAplicarResultados(idsParaAplicar: string[]) {
+    if (!estado) return;
+
+    try {
+      const { atualizarPersonagem, buscarPersonagem } = await import("../../services/personagemService");
+      const { xp, ouro, itensConsumidos } = (await import("../../services/combateService")).calcularResultadoCombate(estado);
+      
+      const promises = idsParaAplicar.map(async (id) => {
+        const combatente = estado.combatentes.find(c => String(c.origemId) === id);
+        const pOriginal = personagensSnapshot[id];
+        if (!combatente || !pOriginal) return;
+
+        // Calcular XP e Ouro proporcional (ex: dividido pelo grupo)
+        const xpGanhado = Math.floor(xp / idsParaAplicar.length);
+        const ouroGanhado = Math.floor(ouro / idsParaAplicar.length);
+
+        const novosDados = {
+          vidaAtual: combatente.vidaAtual,
+          manaAtual: combatente.manaAtual,
+          xpAtual: (pOriginal.xpAtual || 0) + xpGanhado,
+          ouro: (pOriginal.ouro || 0) + ouroGanhado,
+        };
+
+        // TODO: Se tiver tempo, aplicar consumo de itens no inventário real aqui
+        // Mas o hook useInventario já lida com isso se estiver na página de inventário.
+        // Aqui no combate, precisaríamos chamar alterarQuantidade para cada item consumido.
+
+        await atualizarPersonagem(id, novosDados);
+      });
+
+      await Promise.all(promises);
+      adicionarToast("sucesso", "Resultados aplicados com sucesso!");
+      handleFecharModal();
+      carregar(); // Recarregar dados para limpar seleção
+    } catch (e) {
+      adicionarToast("erro", "Erro ao aplicar resultados.");
+    }
+  }
 
   function acaoAtaque() {
     if (!estado || !combatenteAtual || !alvoSelecionado) return;
@@ -293,7 +342,12 @@ export default function CombatePage() {
           </div>
 
           {mostrarModalResultado && (
-            <ModalResultadoCombate estado={estado} onClose={handleFecharModal} />
+            <ModalResultadoCombate 
+              estado={estado} 
+              personagensSnapshot={personagensSnapshot}
+              onAplicar={handleAplicarResultados}
+              onCancelar={handleFecharModal} 
+            />
           )}
         </section>
       )}
