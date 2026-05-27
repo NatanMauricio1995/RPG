@@ -2,73 +2,132 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {NPC} from "../../services/npcService";
+import { useState, useEffect } from "react";
+import { buscarItem } from "../../services/itemService";
+import { buscarMissao } from "../../services/missaoService";
+import type { NPC } from "../../services/npcService";
+import type { Item } from "../../types/domain";
 
-type Props={
-npc:NPC;
+const COR_FACCAO: Record<string, string> = {
+  Aliado:   "#4caf50",
+  Neutro:   "#aaa",
+  Inimigo:  "#f44336",
+  Mercador: "#ff9800",
 };
 
-export default function FichaNPC({
-npc
-}:Props){
+type Props = { npc: NPC };
 
-return(
-<div className="fichaNPC">
-<div className="acoesFichaNPC">
-<Link href="/npcs">
-<button className="botaoVoltar">Voltar</button>
-</Link>
-<Link href={`/npcs/${npc.id}/editar`}>
-<button className="botaoVoltar">Editar</button>
-</Link>
-</div>
+export default function FichaNPC({ npc }: Props) {
+  const [itensLoja,  setItensLoja]  = useState<Item[]>([]);
+  const [missoes,    setMissoes]    = useState<any[]>([]);
+  const [dialogoAberto, setDialogoAberto] = useState<string | null>(null);
 
-<h1>{npc.nome}</h1>
+  useEffect(() => {
+    // Resolver itens da loja
+    const lojaIds: string[] = (npc as any).loja ?? [];
+    Promise.all(lojaIds.map((id) => buscarItem(id))).then((res) =>
+      setItensLoja(res.filter(Boolean) as Item[])
+    );
 
-<Image
-src={npc.imagem || "/imagens/npcs/ChatGPT Image 18 de mai. de 2026, 18_23_40.png"}
-alt={npc.nome}
-width={360}
-height={360}
-className="imagemFichaNPC"
-/>
+    // Resolver missões
+    const missaoIds: string[] = (npc as any).missoes ?? [];
+    Promise.all(missaoIds.map((id) => buscarMissao(id))).then((res) =>
+      setMissoes(res.filter(Boolean))
+    );
+  }, [npc]);
 
-<div className="infoNPCGrid">
-<div><small>Idade</small><p>{npc.idade}</p></div>
-<div><small>Profissão</small><p>{npc.profissao || "Sem profissão"}</p></div>
-<div><small>Alinhamento</small><p>{npc.alinhamento}</p></div>
-<div><small>Relacionamento</small><p>{npc.relacionamento}</p></div>
-</div>
+  const faccao = (npc as any).faccao ?? "Neutro";
+  const dialogos = (npc as any).dialogos ?? [];
 
-<section className="blocoFichaNPC">
-<h2>Personalidade</h2>
-<p>{npc.personalidade || "Não definida."}</p>
-</section>
+  return (
+    <div className="fichaNPC container">
+      <Link href="/npcs"><button className="btnVoltar">⬅️ Voltar</button></Link>
 
-<section className="blocoFichaNPC">
-<h2>Diálogos</h2>
-{npc.dialogos.length>0 ? (
-npc.dialogos.map((dialogo,index)=>(
-<blockquote key={index}>{dialogo}</blockquote>
-))
-) : (
-<p>Nenhum diálogo registrado.</p>
-)}
-</section>
+      <div className="npcHeader">
+        <Image
+          src={npc.imagem || "/imagens/npcs/padrao.png"}
+          alt={npc.nome}
+          width={110}
+          height={110}
+          className="npcAvatar"
+        />
+        <div className="npcInfo">
+          <h1>{npc.nome}</h1>
+          <span className="npcProfissao">{npc.profissao}</span>
+          <span
+            className="badgeFaccao"
+            style={{ background: COR_FACCAO[faccao] ?? "#aaa" }}
+          >
+            {faccao}
+          </span>
+          <p className="npcDescricao">{npc.personalidade}</p>
+        </div>
+      </div>
 
-<section className="blocoFichaNPC">
-<h2>Inventário</h2>
-{npc.inventario.length>0 ? (
-<div className="inventarioNPC">
-{npc.inventario.map((item:any,index)=>(
-<span key={`${item.id}-${index}`}>{item.nome || item.id}</span>
-))}
-</div>
-) : (
-<p>Nenhum item registrado.</p>
-)}
-</section>
-</div>
-);
+      { dialogos.length > 0 && (
+        <section className="npcSecao">
+          <h2>💬 Diálogos</h2>
+          {dialogos.map((dialogo: any, i: number) => {
+            const id = dialogo.id ?? String(i);
+            const aberto = dialogoAberto === id;
+            return (
+              <div key={id} className="dialogoItem">
+                <button
+                  className="dialogoBtnToggle"
+                  onClick={() => setDialogoAberto(aberto ? null : id)}
+                >
+                  {aberto ? "▼" : "▶"} {dialogo.texto?.slice(0, 60) ?? `Diálogo ${i + 1}`}…
+                </button>
+                {aberto && (
+                  <div className="dialogoConteudo">
+                    <p>{dialogo.texto}</p>
+                    {(dialogo.opcoes ?? []).map((op: any, j: number) => (
+                      <div key={j} className="dialogoOpcao">↳ {op.texto}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
 
+      { itensLoja.length > 0 && (
+        <section className="npcSecao">
+          <h2>🛒 Loja</h2>
+          <div className="lojaGrid">
+            {itensLoja.map((item) => (
+              <div key={item.id} className="lojaItem">
+                <Image
+                  src={item.imagem || "/imagens/itens/padrao.png"}
+                  alt={item.nome}
+                  width={44}
+                  height={44}
+                />
+                <span>{item.nome}</span>
+                <span className="lojaPreco">💰 {item.preco ?? "—"}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      { missoes.length > 0 && (
+        <section className="npcSecao">
+          <h2>📜 Missões</h2>
+          <div className="missoesList">
+            {missoes.map((m) => (
+              <div key={m.id} className="missaoItem">
+                <span className="missaoNome">{m.nome ?? m.titulo}</span>
+                <span className={`badgeStatus status-${(m.status ?? "").toLowerCase().replace(" ", "-")}`}>
+                  {m.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </div>
+  );
 }
+*/
