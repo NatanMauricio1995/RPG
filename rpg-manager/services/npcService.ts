@@ -15,7 +15,8 @@ import {
 import { db } from "../firebase/config";
 import npcsData from "../data/campanha/npcs.json";
 
-import type { NPC, Dialogo, Faccao } from "../types/domain";
+import type { NPC, DialogoNPC, Faccao, Personagem, Missao } from "../types/domain";
+import { listarMissoes } from "./missaoService";
 
 export const NPCS_STORAGE_KEY = "npcs_cache";
 const COLECAO = "npcs";
@@ -30,10 +31,8 @@ export function criarModeloNPC(): NPC {
     faccao: "Neutro",
     funcao: "",
     localizacao: "",
-    relacionamento: 50,
-    loja: [],
-    dialogos: [],
-    missoes: []
+    reputacao: {},
+    missoes: [],
   };
 }
 
@@ -43,10 +42,10 @@ export function normalizarNPC(npc: any): NPC {
     ...modelo,
     ...npc,
     id: String(npc?.id || ""),
-    relacionamento: Number(npc?.relacionamento ?? 50),
-    loja: Array.isArray(npc?.loja) ? npc.loja : [],
-    dialogos: Array.isArray(npc?.dialogos) ? npc.dialogos : [],
-    missoes: Array.isArray(npc?.missoes) ? npc.missoes : []
+    reputacao: npc?.reputacao || {},
+    missoes: Array.isArray(npc?.missoes) ? npc.missoes : [],
+    loja: npc?.loja || undefined,
+    dialogo: npc?.dialogo || undefined
   };
 }
 
@@ -93,23 +92,62 @@ export async function buscarNPC(id: string): Promise<NPC | null> {
   }
 }
 
-export async function alterarRelacionamento(npcId: string, delta: number) {
+/**
+ * Atualiza a reputação de um personagem específico com este NPC.
+ */
+export async function atualizarReputacao(npcId: string, personagemId: string | number, delta: number) {
   try {
     const npc = await buscarNPC(npcId);
     if (!npc) return;
-    const novo = Math.max(0, Math.min(100, (npc.relacionamento || 50) + delta));
-    
-    let novaFaccao = npc.faccao;
-    if (novo >= 80) novaFaccao = "Aliado";
-    else if (novo <= 20) novaFaccao = "Inimigo";
-    else if (npc.faccao !== "Mercador") novaFaccao = "Neutro";
 
-    await updateDoc(doc(db, COLECAO, npcId), { 
-      relacionamento: novo,
-      faccao: novaFaccao
-    });
+    const pId = String(personagemId);
+    const atual = npc.reputacao[pId] || 0;
+    const nova = Math.max(-100, Math.min(100, atual + delta));
+
+    const novaReputacao = { ...npc.reputacao, [pId]: nova };
+    await updateDoc(doc(db, COLECAO, npcId), { reputacao: novaReputacao });
+
+    return nova;
   } catch (error) {
-    console.error("Erro ao alterar relacionamento:", error);
+    console.error("Erro ao atualizar reputação:", error);
+    throw error;
+  }
+}
+
+/**
+ * Retorna uma saudação diferente baseada na reputação do personagem.
+ */
+export function obterDialogo(npc: NPC, personagem: Personagem): string {
+  const pId = String(personagem.id);
+  const reputacao = npc.reputacao[pId] || 0;
+
+  if (!npc.dialogo) return `Olá, sou ${npc.nome}.`;
+
+  if (reputacao <= -50) return `O que você quer aqui? Saia da minha frente.`;
+  if (reputacao < 0) return `Seja breve, não tenho tempo para você.`;
+  if (reputacao >= 50) return `É uma honra revê-lo, grande ${personagem.nome}!`;
+
+  return npc.dialogo.saudacao;
+}
+
+/**
+ * Lista as missões que o NPC oferece e que o personagem pode aceitar.
+ */
+export async function listarMissoesDisponiveis(npcId: string, personagem: Personagem): Promise<Missao[]> {
+  try {
+    const npc = await buscarNPC(npcId);
+    if (!npc || !npc.missoes || npc.missoes.length === 0) return [];
+
+    const todasMissoes = await listarMissoes();
+
+    return todasMissoes.filter(m => 
+      npc.missoes.includes(m.id) && 
+      m.nivelRecomendado <= personagem.nivel &&
+      m.status === "disponível"
+    );
+  } catch (error) {
+    console.error("Erro ao listar missões disponíveis:", error);
+    return [];
   }
 }
 

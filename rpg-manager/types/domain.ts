@@ -218,12 +218,21 @@ export type Monstro = {
 // NPC
 // ==================================
 
-export type Faccao = "Aliado" | "Neutro" | "Inimigo" | "Mercador";
+export type Faccao = string;
 
-export type Dialogo = {
-  id: string;
+export type RespostaDialogo = {
+  condicao?: string; // Ex: "reputacao > 50"
   texto: string;
-  opcoes?: { texto: string; proximoId?: string; missaoId?: string }[];
+};
+
+export type DialogoNPC = {
+  saudacao: string;
+  respostas: RespostaDialogo[];
+};
+
+export type LojaNPC = {
+  itensIds: string[];
+  desconto?: number; // 0 a 1 (Ex: 0.1 = 10% de desconto)
 };
 
 export type NPC = {
@@ -234,10 +243,10 @@ export type NPC = {
   faccao: Faccao;
   funcao: string;
   localizacao?: string;
-  relacionamento?: number; // 0-100
-  loja?: string[]; // IDs de itens que vende
-  dialogos?: Dialogo[];
-  missoes?: string[]; // IDs de missões que oferece
+  reputacao: Record<string, number>; // personagemId -> valor -100 a 100
+  missoes: string[]; // IDs de missões que este NPC oferece
+  loja?: LojaNPC;
+  dialogo?: DialogoNPC;
 };
 
 // ==================================
