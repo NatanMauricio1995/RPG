@@ -96,12 +96,19 @@ texto:string;
 tipo:"sistema"|"ataque"|"habilidade"|"efeito"|"morte";
 };
 
+export type RegistroDano = {
+  atacanteId: string;
+  alvoId: string;
+  valor: number;
+};
+
 export type EstadoCombate={
 status:StatusCombate;
 turno:number;
 combatenteAtivoId:string;
 combatentes:Combatente[];
 log:EntradaLog[];
+danos: RegistroDano[];
 };
 
 export async function listarMonstrosCombate(){
@@ -237,6 +244,12 @@ texto+=` Acerto${critico ? " crítico" : ""}: ${atacante.danoBase}=${danoRolado.
 
 novoEstado=alterarVida(novoEstado,alvo.id,-danoFinal);
 novoEstado=adicionarLog(novoEstado,texto,"ataque");
+
+// Registrar dano para histórico
+novoEstado = {
+  ...novoEstado,
+  danos: [...(novoEstado.danos || []), { atacanteId, alvoId: alvo.id, valor: danoFinal }]
+};
 
 return finalizarAcao(novoEstado,atacante.id);
 
@@ -894,4 +907,6 @@ export async function listarHistoricos(maxResults: number = 50) {
     console.error("Erro ao listar históricos de combate:", error);
     return [];
   }
+}
+
 }

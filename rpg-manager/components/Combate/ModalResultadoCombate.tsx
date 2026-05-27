@@ -1,24 +1,21 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import type { EstadoCombat as EstadoCombateType } from "../../services/combateService";
+import type { EstadoCombate, RegistroDano } from "../../services/combateService";
 import { buscarPersonagem, salvarPersonagem } from "../../services/personagemService";
-import { salvarHistoricoCombate } from "../../services/combateService";
+import { salvarHistorico, RegistroHistorico } from "../../services/historicoService";
 import { listarItens } from "../../services/itemService";
-import type { Personagem, Item, HistoricoCombate } from "../../types/domain";
+import type { Personagem, Item } from "../../types/domain";
 import "../../styles/combate.css";
-
-// Para evitar erro de tipagem se EstadoCombate não for exportado corretamente
-type EstadoCombate = any;
 
 type OpcoesCampos = {
   vida: boolean;
   mana: boolean;
   xp: boolean;
   ouro: boolean;
-  efeitos: boolean;
   inventario: boolean;
+  efeitos: boolean;
   mortes: boolean;
 };
 
@@ -36,16 +33,14 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
   const [itensCatalogo, setItensCatalogo] = useState<Item[]>([]);
   const [carregando, setCarregando] = useState(true);
 
-  const aliados = (estado.combatentes || []).filter((c: any) => c.lado === "aliado");
-  const inimigosDerrotados = (estado.combatentes || []).filter((c: any) => c.lado === "inimigo" && !c.vivo);
+  const aliados = (estado.combatentes || []).filter((c) => c.lado === "aliado");
+  const inimigosDerrotados = (estado.combatentes || []).filter((c) => c.lado === "inimigo" && !c.vivo);
 
   // ─── Carregar dados ────────────────────────────────────────────────────────
   useEffect(() => {
     async function carregarDados() {
-      const [itens] = await Promise.all([
-        listarItens(),
-      ]);
-      setItensCatalogo(itens);
+      const resItens = await listarItens();
+      setItensCatalogo(Array.isArray(resItens) ? resItens : resItens.itens || []);
 
       const originais: Record<string, Personagem> = {};
       const opts: Record<string, OpcoesCampos> = {};
@@ -59,8 +54,8 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
           mana: true,
           xp: true,
           ouro: true,
-          efeitos: true,
           inventario: true,
+          efeitos: true,
           mortes: true,
         };
       }
@@ -97,66 +92,41 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
   async function aplicarAlteracoes(apenasSelecionados: boolean) {
     setSalvando(true);
     try {
-      const xpDistribuido:   { personagemId: string; valor: number }[] = [];
-      const ouroDistribuido: { personagemId: string; valor: number }[] = [];
-      const itensConsumidosGlobal: { personagemId: string; itemId: string; quantidade: number }[] = [];
-
       for (const combatente of aliados) {
         const pOriginal = personagensOriginais[combatente.id];
         if (!pOriginal) continue;
 
         const opt: OpcoesCampos = apenasSelecionados
           ? opcoes[combatente.id]
-          : { vida: true, mana: true, xp: true, ouro: true, efeitos: true, inventario: true, mortes: true };
+          : { vida: true, mana: true, xp: true, ouro: true, inventario: true, efeitos: true, mortes: true };
 
         const pAtualizado = { ...pOriginal };
 
-        // Aplicar Vida
-        if (opt.vida) {
-          pAtualizado.vidaAtual = combatente.vidaAtual;
-        }
-
-        // Aplicar Mana
-        if (opt.mana) {
-          pAtualizado.manaAtual = combatente.manaAtual;
-        }
-
-        // Aplicar Morte ou Ignorar
+        if (opt.vida) pAtualizado.vidaAtual = combatente.vidaAtual;
+        if (opt.mana) pAtualizado.manaAtual = combatente.manaAtual;
+        
         if (opt.mortes && !combatente.vivo) {
           pAtualizado.vidaAtual = 0;
         } else if (!opt.mortes && !combatente.vivo) {
-          // Ignorar morte: se vida ia ser 0 ou menos, garantir pelo menos 1
-          if (pAtualizado.vidaAtual <= 0) {
-            pAtualizado.vidaAtual = 1;
-          }
+          if (pAtualizado.vidaAtual <= 0) pAtualizado.vidaAtual = 1;
         }
 
-        // XP e Ouro
         if (opt.xp && estado.status === "vitoria") {
           pAtualizado.xpAtual += recompensas.xp;
-          xpDistribuido.push({ personagemId: String(pOriginal.id), valor: recompensas.xp });
         }
 
         if (opt.ouro && estado.status === "vitoria") {
           pAtualizado.ouro = (pAtualizado.ouro ?? 0) + recompensas.ouro;
-          ouroDistribuido.push({ personagemId: String(pOriginal.id), valor: recompensas.ouro });
         }
 
-        // Efeitos
         if (opt.efeitos) {
           pAtualizado.efeitosAtivos = combatente.efeitos;
         }
 
-        // Inventário
         if (opt.inventario && combatente.itensConsumidos && combatente.itensConsumidos.length > 0) {
           pAtualizado.inventario = (pOriginal.inventario || []).map(inv => {
             const consumido = combatente.itensConsumidos?.find((c: any) => c.itemId === inv.itemId);
             if (consumido) {
-              itensConsumidosGlobal.push({ 
-                personagemId: String(pOriginal.id), 
-                itemId: inv.itemId, 
-                quantidade: consumido.quantidade 
-              });
               return { ...inv, quantidade: Math.max(0, inv.quantidade - consumido.quantidade) };
             }
             return inv;
@@ -167,17 +137,18 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
       }
 
       // Salvar histórico
-      const historico: Omit<HistoricoCombate, "id"> = {
+      const historico: RegistroHistorico = {
         data: new Date().toISOString(),
-        participantes: estado.combatentes.map((c: any) => c.nome),
-        vencedor: estado.status === "vitoria" ? "Aliados" : "Inimigos",
-        derrotados: estado.combatentes.filter((c: any) => !c.vivo).map((c: any) => c.nome),
-        xpDistribuido,
-        ouroDistribuido,
-        itensConsumidos: itensConsumidosGlobal,
+        participantes: estado.combatentes.map((c) => c.nome),
+        vencedor: estado.status === "vitoria" ? "aliados" : (estado.status === "derrota" ? "inimigos" : "empate"),
+        danos: (estado.danos || []).map(d => ({
+          atacanteId: d.atacanteId,
+          alvoId: d.alvoId,
+          valor: d.valor
+        })),
       };
 
-      await salvarHistoricoCombate(historico);
+      await salvarHistorico(historico);
       onClose();
     } catch (error) {
       console.error("Erro ao aplicar alterações:", error);
@@ -185,21 +156,6 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
     } finally {
       setSalvando(false);
     }
-  }
-
-  // ─── Diff de um atributo numérico ──────────────────────────────────────────
-  function Diff({ antes, depois, label }: { antes: number; depois: number; label: string }) {
-    const delta = depois - antes;
-    const cor = delta >= 0 ? "#4caf50" : "#f44336";
-    if (delta === 0) return <span className="diffItem">{label}: {antes}</span>;
-    return (
-      <span className="diffItem">
-        {label}: {antes} → {depois}{" "}
-        <span style={{ color: cor, fontWeight: "bold" }}>
-          ({delta > 0 ? "+" : ""}{delta})
-        </span>
-      </span>
-    );
   }
 
   function getNomeItem(itemId: string) {
@@ -225,76 +181,41 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
           {estado.status === "vitoria" ? "✦ VITÓRIA ✦" : "✦ DERROTA ✦"}
         </h2>
 
-        {estado.status === "vitoria" && (
-          <div className="recompensasGerais">
-            <span className="recompensaXP">⭐ XP: +{recompensas.xp}</span>
-            <span className="recompensaOuro">💰 Ouro: +{recompensas.ouro}</span>
-          </div>
-        )}
-
-        <div className="modoParcialContainer">
-          <button
-            className={`btnToggleParcial ${modoParc ? "ativo" : ""}`}
-            onClick={() => setModoParc(!modoParc)}
-          >
-            {modoParc ? "⚙️ Customizar Persistência (Ativado)" : "⚙️ Customizar Persistência"}
-          </button>
-          <p className="legendaParcial">
-            {modoParc 
-              ? "Escolha exatamente quais alterações salvar no Firebase." 
-              : "Todas as alterações de vida, mana, XP e itens serão salvas."}
-          </p>
-        </div>
-
         <div className="listaDifs">
-          {aliados.map((c: any) => {
+          {aliados.map((c) => {
             const original = personagensOriginais[c.id];
             return (
               <div key={c.id} className="itemDif">
                 <div className="infoCombatente">
-                  <Image
-                    src={c.imagem}
-                    alt={c.nome}
-                    width={50}
-                    height={50}
-                    className="avatarMini"
-                  />
+                  <Image src={c.imagem} alt={c.nome} width={50} height={50} className="avatarMini" />
                   <div className="nomeCombatente">
                     <strong>{c.nome}</strong>
-                    <span>Nível {c.nivel}</span>
                     {!c.vivo && <span className="tagMorte"> ☠ MORTO</span>}
                   </div>
                 </div>
 
                 {original && (
                   <div className="diffsContainer">
-                    <div className="gridDiffs">
-                      <Diff label="Vida" antes={original.vidaAtual} depois={c.vidaAtual} />
-                      <Diff label="Mana" antes={original.manaAtual} depois={c.manaAtual} />
-                      {estado.status === "vitoria" && (
-                        <>
-                          <Diff label="XP" antes={original.xpAtual} depois={original.xpAtual + recompensas.xp} />
-                          <Diff label="Ouro" antes={original.ouro ?? 0} depois={(original.ouro ?? 0) + recompensas.ouro} />
-                        </>
-                      )}
-                    </div>
-
+                    <span>Vida: {original.vidaAtual} → {c.vidaAtual}</span>
+                    <span>Mana: {original.manaAtual} → {c.manaAtual}</span>
+                    {estado.status === "vitoria" && (
+                      <>
+                        <span>XP: +{recompensas.xp}</span>
+                        <span>Ouro: +{recompensas.ouro}</span>
+                      </>
+                    )}
                     {c.itensConsumidos && c.itensConsumidos.length > 0 && (
                       <div className="consumidosBox">
-                        <span className="tituloConsumidos">🧪 Itens usados:</span>
-                        <div className="tagsConsumidos">
-                          {c.itensConsumidos.map((item: any) => (
-                            <span key={item.itemId} className="tagConsumo">
-                              {getNomeItem(item.itemId)} x{item.quantidade}
-                            </span>
-                          ))}
-                        </div>
+                        <strong>Itens:</strong>
+                        {c.itensConsumidos.map(item => (
+                          <span key={item.itemId} className="tagConsumo">{getNomeItem(item.itemId)} x{item.quantidade}</span>
+                        ))}
                       </div>
                     )}
                   </div>
                 )}
 
-                {modoParc && opcoes[c.id] && (
+                {modoParc && (
                   <div className="gridChecks">
                     {Object.keys(opcoes[c.id]).map((campo) => (
                       <label key={campo} className="checkLabel">
@@ -303,7 +224,7 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
                           checked={(opcoes[c.id] as any)[campo]}
                           onChange={() => toggleOpcao(c.id, campo as keyof OpcoesCampos)}
                         />
-                        <span>{campo.charAt(0).toUpperCase() + campo.slice(1)}</span>
+                        {campo}
                       </label>
                     ))}
                   </div>
@@ -314,26 +235,25 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
         </div>
 
         <div className="modalAcoes">
-          <button className="btnVoltar" onClick={onClose} disabled={salvando}>
-            Descartar Tudo
-          </button>
+          <button className="btnVoltar" onClick={onClose} disabled={salvando}>Cancelar</button>
+          
           <div className="botoesDireita">
-            {modoParc && (
-              <button
-                className="btnSalvarParcial"
-                onClick={() => aplicarAlteracoes(true)}
-                disabled={salvando}
-              >
-                Aplicar Selecionados
+            <button 
+              className={`btnSecundario ${modoParc ? "ativo" : ""}`}
+              onClick={() => setModoParc(!modoParc)}
+            >
+              Aplicar parcialmente
+            </button>
+
+            {modoParc ? (
+              <button className="btnPrimario" onClick={() => aplicarAlteracoes(true)} disabled={salvando}>
+                Aplicar selecionados
+              </button>
+            ) : (
+              <button className="btnPrimario" onClick={() => aplicarAlteracoes(false)} disabled={salvando}>
+                Aplicar tudo
               </button>
             )}
-            <button
-              className="btnSalvarTudo"
-              onClick={() => aplicarAlteracoes(false)}
-              disabled={salvando}
-            >
-              {salvando ? "Salvando..." : "Aplicar Tudo"}
-            </button>
           </div>
         </div>
       </div>
