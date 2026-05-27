@@ -16,14 +16,13 @@ const COR_RARIDADE: Record<string, string> = {
   Único:    "#f44336",
 };
 
-const PESO_MAXIMO_PADRAO = 50;
-
 type Props = {
-  personagem: Personagem;
-  onUpdate: (p: Personagem) => void;
+  personagem?: Personagem;
+  personagemId?: string | number;
+  onUpdate?: (p: Personagem) => void;
 };
 
-export default function Inventario({ personagem, onUpdate }: Props) {
+export default function Inventario({ personagem: propPersonagem, personagemId, onUpdate }: Props) {
   const [aba, setAba] = useState<"inventario" | "catalogo">("inventario");
   const [filtroCatalogo, setFiltroCatalogo] = useState("");
 
@@ -39,27 +38,34 @@ export default function Inventario({ personagem, onUpdate }: Props) {
     capacidadeMaxima,
     porcentagemPeso,
     corPeso,
-  } = useInventario(personagem, onUpdate);
+  } = useInventario(propPersonagem || personagemId || null, onUpdate);
+
+  // Precisamos do objeto personagem para algumas lógicas locais de cura
+  // O hook retorna o inventário resolvido, mas não o personagem completo
+  // Porém, o hook useInventario agora gerencia o personagem internamente se passar ID.
+  // Vamos tentar obter o personagem do inventário ou passar via props.
 
   // ─── Consumir item ────────────────────────────────────────────────────────────
   async function handleConsumir(itemId: string, item: Item | null) {
     if (!item) return;
     try {
-      // Aplica cura se for consumível com cura
-      if (item.tipo === "Consumível" && (item.cura || item.mana)) {
-        const vidaMaxima = (personagem as any).vidaMaxima ?? 10;
-        const manaMaxima = (personagem as any).manaMaxima ?? 10;
+      // Se tivermos o objeto personagem completo, podemos aplicar efeitos imediatos (cura/mana)
+      // Caso contrário, apenas consumimos a quantidade.
+      // Idealmente, efeitos seriam processados pelo servidor ou por um serviço de efeitos.
+      
+      if (propPersonagem && item.tipo === "Consumível" && (item.cura || item.mana)) {
+        const vidaMaxima = (propPersonagem as any).vidaMaxima ?? 10;
+        const manaMaxima = (propPersonagem as any).manaMaxima ?? 10;
         
-        let novaVida = personagem.vidaAtual + (item.cura ?? 0);
+        let novaVida = propPersonagem.vidaAtual + (item.cura ?? 0);
         if (novaVida > vidaMaxima) novaVida = vidaMaxima;
         
-        let novaMana = personagem.manaAtual + (item.mana ?? 0);
+        let novaMana = propPersonagem.manaAtual + (item.mana ?? 0);
         if (novaMana > manaMaxima) novaMana = manaMaxima;
 
-        const pAtualizado = { ...personagem, vidaAtual: novaVida, manaAtual: novaMana };
-        await salvarPersonagem(pAtualizado);
-        if (onUpdate) onUpdate(pAtualizado);
+        await salvarPersonagem({ ...propPersonagem, vidaAtual: novaVida, manaAtual: novaMana });
       }
+
       // Reduz quantidade via hook
       await hookConsumirItem(itemId, 1);
     } catch (error: any) {
@@ -134,13 +140,15 @@ export default function Inventario({ personagem, onUpdate }: Props) {
           {inventario.map(({ itemId, quantidade, equipado, dados }) => (
             <div key={itemId} className={`itemInventario ${equipado ? "itemEquipado" : ""}`}>
               {/* Imagem */}
-              <Image
-                src={dados?.imagem || "/imagens/itens/padrao.png"}
-                alt={dados?.nome ?? itemId}
-                width={52}
-                height={52}
-                className="itemImagem"
-              />
+              <div className="itemImagemContainer">
+                <Image
+                  src={dados?.imagem || "/imagens/itens/padrao.png"}
+                  alt={dados?.nome ?? itemId}
+                  width={52}
+                  height={52}
+                  className="itemImagem"
+                />
+              </div>
 
               {/* Info */}
               <div className="itemInfo">

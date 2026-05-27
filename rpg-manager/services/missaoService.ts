@@ -42,7 +42,14 @@ export function normalizarMissao(missao: any): Missao {
     ...modelo,
     ...missao,
     id: String(missao?.id || ""),
-    objetivos: Array.isArray(missao?.objetivos) ? missao.objetivos : [],
+    objetivos: (Array.isArray(missao?.objetivos) ? missao.objetivos : []).map((o: any) => ({
+      descricao: String(o.descricao || ""),
+      tipo: String(o.tipo || "explorar"),
+      alvoId: String(o.alvoId || ""),
+      quantidadeTotal: Number(o.quantidadeTotal || 1),
+      quantidadeAtual: Number(o.quantidadeAtual || 0),
+      concluido: Boolean(o.concluido || false)
+    })),
     recompensas: missao?.recompensas || modelo.recompensas
   };
 }
@@ -59,12 +66,39 @@ export async function listarMissoes(): Promise<Missao[]> {
     
     return missoes.map(normalizarMissao);
   } catch (error) {
-    console.error("Erro ao listar missões do Firebase, tentando cache:", error);
+    console.error("Erro ao listar missões:", error);
     if (typeof window !== "undefined") {
       const cache = localStorage.getItem(MISSOES_CACHE_KEY);
       return cache ? JSON.parse(cache).map(normalizarMissao) : [];
     }
     return [];
+  }
+}
+
+export async function atualizarProgressoObjetivo(
+  missaoId: string, 
+  objetivoIndex: number, 
+  incremento: number = 1
+) {
+  try {
+    const missao = await buscarMissao(missaoId);
+    if (!missao || !missao.objetivos[objetivoIndex]) return;
+
+    const obj = missao.objetivos[objetivoIndex];
+    obj.quantidadeAtual = Math.min(obj.quantidadeTotal || 1, obj.quantidadeAtual + incremento);
+    obj.concluido = obj.quantidadeAtual >= (obj.quantidadeTotal || 1);
+
+    // Se todos concluídos, marcar missão como concluída? 
+    // Geralmente o mestre faz isso, mas podemos automatizar
+    const todasConcluidas = missao.objetivos.every(o => o.concluido);
+    const novoStatus = todasConcluidas ? "concluída" : missao.status;
+
+    await updateDoc(doc(db, COLECAO, missaoId), { 
+      objetivos: missao.objetivos,
+      status: novoStatus
+    });
+  } catch (error) {
+    console.error("Erro ao atualizar progresso da missão:", error);
   }
 }
 
@@ -97,15 +131,11 @@ export async function buscarMissao(id: string): Promise<Missao | undefined> {
   try {
     const docSnap = await getDoc(doc(db, COLECAO, id));
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Missao;
+      return normalizarMissao({ id: docSnap.id, ...docSnap.data() });
     }
-    
-    // Tenta no cache se não achar no Firebase (ou se falhar)
-    const missoes = await listarMissoes();
-    return missoes.find(m => m.id === id);
+    return undefined;
   } catch (error) {
     console.error("Erro ao buscar missão:", error);
-    const missoes = await listarMissoes();
-    return missoes.find(m => m.id === id);
+    return undefined;
   }
 }

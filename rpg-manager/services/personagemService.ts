@@ -11,6 +11,8 @@ import {
   setDoc,
   query,
   limit,
+  where,
+  onSnapshot
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import personagensData from "../data/campanha/personagens.json";
@@ -112,17 +114,22 @@ export function normalizarPersonagem(personagem: any): Personagem {
   return p;
 }
 
-export async function listarPersonagens(userId?: string): Promise<Personagem[]> {
+export async function listarPersonagens(userId?: string, ultimoDoc?: any): Promise<{ personagens: Personagem[], cursor?: any }> {
   try {
     let q = query(colecaoRef, limit(50));
     if (userId) {
       q = query(colecaoRef, where("userId", "==", userId), limit(50));
+    }
+    if (ultimoDoc) {
+      q = query(q, startAfter(ultimoDoc));
     }
     const snapshot = await getDocs(q);
     let personagens = snapshot.docs.map((d) => ({
       ...d.data(),
       id: d.id,
     })) as Personagem[];
+
+    const cursor = snapshot.docs[snapshot.docs.length - 1];
 
     // Seed se estiver vazio
     if (personagens.length === 0 && personagensData.length > 0) {
@@ -253,6 +260,74 @@ export async function excluirPersonagem(id: string | number) {
     await listarPersonagens(); // Atualiza cache
   } catch (error) {
     console.error("Erro ao excluir personagem:", error);
+    throw error;
+  }
+}
+
+export async function removerItem(personagemId: string | number, itemId: string) {
+  try {
+    const p = await buscarPersonagem(personagemId);
+    if (!p) throw new Error("Personagem não encontrado");
+
+    const novoInventario = (p.inventario || []).filter((i) => i.itemId !== itemId);
+    
+    // Também desequipar se estiver equipado
+    const novosEquipados = { ...p.equipados };
+    Object.keys(novosEquipados).forEach((slot) => {
+      if ((novosEquipados as any)[slot] === itemId) {
+        (novosEquipados as any)[slot] = null;
+      }
+    });
+
+    await atualizarPersonagem(personagemId, { 
+      inventario: novoInventario, 
+      equipados: novosEquipados 
+    });
+  } catch (error) {
+    console.error("Erro ao remover item:", error);
+    throw error;
+  }
+}
+
+export async function alterarQuantidade(personagemId: string | number, itemId: string, novaQuantidade: number) {
+  try {
+    const p = await buscarPersonagem(personagemId);
+    if (!p) throw new Error("Personagem não encontrado");
+
+    const novoInventario = [...(p.inventario || [])];
+    const index = novoInventario.findIndex((i) => i.itemId === itemId);
+    
+    if (index < 0) {
+      if (novaQuantidade > 0) {
+        novoInventario.push({ itemId, quantidade: novaQuantidade, equipado: false });
+      }
+    } else {
+      if (novaQuantidade <= 0) {
+        return await removerItem(personagemId, itemId);
+      }
+      novoInventario[index].quantidade = novaQuantidade;
+    }
+
+    await atualizarPersonagem(personagemId, { inventario: novoInventario });
+  } catch (error) {
+    console.error("Erro ao alterar quantidade:", error);
+    throw error;
+  }
+}
+
+export async function consumirItem(personagemId: string | number, itemId: string, quantidade: number = 1) {
+  try {
+    const p = await buscarPersonagem(personagemId);
+    if (!p) throw new Error("Personagem não encontrado");
+
+    const itemInv = (p.inventario || []).find((i) => i.itemId === itemId);
+    if (!itemInv || itemInv.quantidade < quantidade) {
+      throw new Error("Quantidade insuficiente para consumir.");
+    }
+
+    await alterarQuantidade(personagemId, itemId, itemInv.quantidade - quantidade);
+  } catch (error) {
+    console.error("Erro ao consumir item:", error);
     throw error;
   }
 }

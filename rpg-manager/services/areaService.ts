@@ -59,13 +59,29 @@ export async function listarAreas(): Promise<Area[]> {
     
     return areas.map(normalizarArea);
   } catch (error) {
-    console.error("Erro ao listar áreas do Firebase, tentando cache:", error);
+    console.error("Erro ao listar áreas:", error);
     if (typeof window !== "undefined") {
       const cache = localStorage.getItem(AREAS_CACHE_KEY);
       return cache ? JSON.parse(cache).map(normalizarArea) : [];
     }
     return [];
   }
+}
+
+export async function sortearInimigosArea(areaId: string): Promise<string[]> {
+  const area = await buscarArea(areaId);
+  if (!area || !area.monstros || area.monstros.length === 0) return [];
+
+  // Sorteia de 1 a 3 tipos de monstros da lista da área
+  const numTipos = Math.floor(Math.random() * 3) + 1;
+  const sorteados: string[] = [];
+  
+  for (let i = 0; i < numTipos; i++) {
+    const randomIdx = Math.floor(Math.random() * area.monstros.length);
+    sorteados.push(area.monstros[randomIdx]);
+  }
+
+  return sorteados;
 }
 
 export async function salvarArea(area: Partial<Area>) {
@@ -97,14 +113,11 @@ export async function buscarArea(id: string): Promise<Area | undefined> {
   try {
     const docSnap = await getDoc(doc(db, COLECAO, id));
     if (docSnap.exists()) {
-      return { id: docSnap.id, ...docSnap.data() } as Area;
+      return normalizarArea({ id: docSnap.id, ...docSnap.data() });
     }
-    
-    const areas = await listarAreas();
-    return areas.find(a => a.id === id);
+    return undefined;
   } catch (error) {
     console.error("Erro ao buscar área:", error);
-    const areas = await listarAreas();
-    return areas.find(a => a.id === id);
+    return undefined;
   }
 }

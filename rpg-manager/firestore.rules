@@ -1,45 +1,64 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Função auxiliar para verificar se o usuário é o dono
+    
+    // =========================================================================
+    // FUNÇÕES AUXILIARES
+    // =========================================================================
+    
+    // Verifica se o usuário está autenticado e é o dono do ID fornecido
     function isOwner(userId) {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    // =========================================================================
+    // PERSONAGENS
+    // Protege dados do personagem, inventário e equipamentos
+    // =========================================================================
     match /personagens/{id} {
-      // Permite ler se for o dono. 
-      // Nota: resource.data.userId para documentos existentes
-      // Para queries, o filtro de userId deve estar presente
-      allow read: if isOwner(resource.data.userId) || isOwner(request.resource.data.userId);
+      // Donos podem ler seus personagens. 
+      // resource.data.userId é usado para documentos existentes.
+      allow read: if isOwner(resource.data.userId);
       
+      // Criação permitida apenas se o userId coincidir com o usuário autenticado
       allow create: if request.auth != null 
                     && request.resource.data.userId == request.auth.uid
-                    && request.resource.data.nome is string
-                    && request.resource.data.nome.size() > 0;
+                    && request.resource.data.nome is string;
                     
+      // Updates permitidos apenas para o dono
       allow update: if isOwner(resource.data.userId)
                     && request.resource.data.userId == resource.data.userId;
                     
       allow delete: if isOwner(resource.data.userId);
     }
 
-    match /itens/{id} {
-      allow read: if true; // Catálogo é público
-      allow write: if false; // Apenas admin (via console ou script)
-    }
+    // =========================================================================
+    // SISTEMA (Itens, Monstros, Classes, Raças, Habilidades)
+    // Leitura pública, escrita apenas via Console ou Admin SDK
+    // =========================================================================
+    match /itens/{id} { allow read: if true; allow write: if false; }
+    match /monstros/{id} { allow read: if true; allow write: if false; }
+    match /classes/{id} { allow read: if true; allow write: if false; }
+    match /racas/{id} { allow read: if true; allow write: if false; }
+    match /habilidades/{id} { allow read: if true; allow write: if false; }
 
-    match /historicos_combate/{id} {
-      // Aqui assumimos que o histórico tem um campo userId
-      allow read: if isOwner(resource.data.userId);
-      allow create: if request.auth != null 
-                    && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false; // Histórico é imutável
-    }
-
-    // Regras gerais para outras coleções (NPCs, Missões, Áreas)
+    // =========================================================================
+    // CAMPANHA (NPCs, Missões, Áreas)
+    // Leitura pública, escrita apenas para mestres (admin)
+    // =========================================================================
     match /npcs/{id} { allow read: if true; allow write: if false; }
     match /missoes/{id} { allow read: if true; allow write: if false; }
     match /areas/{id} { allow read: if true; allow write: if false; }
-    match /monstros/{id} { allow read: if true; allow write: if false; }
+
+    // =========================================================================
+    // HISTÓRICO DE COMBATE
+    // Protegido por userId
+    // =========================================================================
+    match /historicos_combate/{id} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if request.auth != null 
+                    && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false; // Imutável
+    }
   }
 }

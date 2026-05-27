@@ -27,14 +27,18 @@ const COLECAO = "itens";
 const ITENS_CACHE_KEY = "itens_cache";
 const colecaoRef = collection(db, COLECAO);
 
-export async function listarItens(): Promise<Item[]> {
+export async function listarItens(ultimoDoc?: QueryDocumentSnapshot): Promise<{ itens: Item[], cursor?: QueryDocumentSnapshot }> {
   try {
-    const q = query(colecaoRef, limit(50));
+    let q = query(colecaoRef, limit(50));
+    if (ultimoDoc) {
+      q = query(colecaoRef, startAfter(ultimoDoc), limit(50));
+    }
     const snapshot = await getDocs(q);
     let itens = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Item[];
+    const novoCursor = snapshot.docs[snapshot.docs.length - 1];
 
-    // Seed se estiver vazio
-    if (itens.length === 0) {
+    // Seed se estiver vazio e não for paginação
+    if (itens.length === 0 && !ultimoDoc) {
       console.log("Semeando itens no Firebase...");
       const todosPadrao = [
         ...itensData,
@@ -51,20 +55,21 @@ export async function listarItens(): Promise<Item[]> {
       
       const newSnapshot = await getDocs(colecaoRef);
       itens = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Item[];
+      return { itens: itens.map(normalizarItem), cursor: newSnapshot.docs[newSnapshot.docs.length - 1] };
     }
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       localStorage.setItem(ITENS_CACHE_KEY, JSON.stringify(itens));
     }
 
-    return itens.map(normalizarItem);
+    return { itens: itens.map(normalizarItem), cursor: novoCursor };
   } catch (error) {
-    console.error("Erro ao listar itens, tentando cache:", error);
-    if (typeof window !== "undefined") {
+    console.error("Erro ao listar itens:", error);
+    if (typeof window !== "undefined" && !ultimoDoc) {
       const cache = localStorage.getItem(ITENS_CACHE_KEY);
-      return cache ? JSON.parse(cache).map(normalizarItem) : [];
+      return { itens: cache ? JSON.parse(cache).map(normalizarItem) : [] };
     }
-    return [];
+    return { itens: [] };
   }
 }
 
@@ -97,7 +102,7 @@ export async function buscarItem(referencia: string | number | Partial<Item> | n
 }
 
 export function resolverInventario(inventario: { itemId: string }[]): Item[] {
-  // Síncrono usando cache (fallback para lista vazia se cache falhar)
+  // Síncrono usando cache
   const cache = typeof window !== "undefined" ? localStorage.getItem(ITENS_CACHE_KEY) : null;
   const itens = cache ? JSON.parse(cache).map(normalizarItem) : [];
   

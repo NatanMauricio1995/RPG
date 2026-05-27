@@ -14,9 +14,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import npcsData from "../data/campanha/npcs.json";
-import { resolverInventario } from "./itemService";
 
-import type { NPC, Dialogo } from "../types/domain";
+import type { NPC, Dialogo, Faccao } from "../types/domain";
 
 export const NPCS_STORAGE_KEY = "npcs_cache";
 const COLECAO = "npcs";
@@ -31,6 +30,7 @@ export function criarModeloNPC(): NPC {
     faccao: "Neutro",
     funcao: "",
     localizacao: "",
+    relacionamento: 50,
     loja: [],
     dialogos: [],
     missoes: []
@@ -43,6 +43,7 @@ export function normalizarNPC(npc: any): NPC {
     ...modelo,
     ...npc,
     id: String(npc?.id || ""),
+    relacionamento: Number(npc?.relacionamento ?? 50),
     loja: Array.isArray(npc?.loja) ? npc.loja : [],
     dialogos: Array.isArray(npc?.dialogos) ? npc.dialogos : [],
     missoes: Array.isArray(npc?.missoes) ? npc.missoes : []
@@ -55,15 +56,11 @@ export async function listarNPCs(): Promise<NPC[]> {
     const snapshot = await getDocs(q);
     let npcs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as NPC[];
 
-    // Se estiver vazio, popula com o seed inicial (npcs.json)
     if (npcs.length === 0 && npcsData.length > 0) {
-      console.log("Semeando NPCs iniciais no Firebase...");
       for (const seed of npcsData) {
         const { id, ...dados } = seed;
-        // Usa o ID numérico como string no Firebase para o seed
         await setDoc(doc(db, COLECAO, String(id)), dados);
       }
-      // Recarrega após o seed
       const newSnapshot = await getDocs(colecaoRef);
       npcs = newSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as NPC[];
     }
@@ -72,12 +69,12 @@ export async function listarNPCs(): Promise<NPC[]> {
       localStorage.setItem(NPCS_STORAGE_KEY, JSON.stringify(npcs));
     }
 
-    return npcs;
+    return npcs.map(normalizarNPC);
   } catch (error) {
-    console.error("Erro ao listar NPCs do Firebase, tentando cache:", error);
+    console.error("Erro ao listar NPCs:", error);
     if (typeof window !== "undefined") {
       const cache = localStorage.getItem(NPCS_STORAGE_KEY);
-      return cache ? JSON.parse(cache) : [];
+      return cache ? JSON.parse(cache).map(normalizarNPC) : [];
     }
     return [];
   }
@@ -87,16 +84,32 @@ export async function buscarNPC(id: string): Promise<NPC | null> {
   try {
     const docSnap = await getDoc(doc(db, COLECAO, id));
     if (docSnap.exists()) {
-      return { ...docSnap.data(), id: docSnap.id } as NPC;
+      return normalizarNPC({ ...docSnap.data(), id: docSnap.id });
     }
-    
-    // Fallback para o cache
-    const cache = typeof window !== "undefined" ? localStorage.getItem(NPCS_STORAGE_KEY) : null;
-    const npcs = cache ? JSON.parse(cache) : [];
-    return npcs.find((n: NPC) => String(n.id) === id) || null;
+    return null;
   } catch (error) {
     console.error("Erro ao buscar NPC:", error);
     return null;
+  }
+}
+
+export async function alterarRelacionamento(npcId: string, delta: number) {
+  try {
+    const npc = await buscarNPC(npcId);
+    if (!npc) return;
+    const novo = Math.max(0, Math.min(100, (npc.relacionamento || 50) + delta));
+    
+    let novaFaccao = npc.faccao;
+    if (novo >= 80) novaFaccao = "Aliado";
+    else if (novo <= 20) novaFaccao = "Inimigo";
+    else if (npc.faccao !== "Mercador") novaFaccao = "Neutro";
+
+    await updateDoc(doc(db, COLECAO, npcId), { 
+      relacionamento: novo,
+      faccao: novaFaccao
+    });
+  } catch (error) {
+    console.error("Erro ao alterar relacionamento:", error);
   }
 }
 

@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import { resolverEquipados } from "../../../services/itemService";
-import { salvarPersonagem } from "../../../services/personagemService";
-import type { Personagem, Item, Equipados, SlotEquipamento } from "../../../types/domain";
+import { salvarEquipamento } from "../../../services/personagemService";
+import SlotEquipamento from "./SlotEquipamento";
+import type { Personagem, Item, SlotEquipamento as SlotType } from "../../../types/domain";
 
 // ─── Mapa visual dos slots ────────────────────────────────────────────────────
-const SLOTS: { key: SlotEquipamento; label: string; icone: string }[] = [
+const SLOTS: { key: SlotType; label: string; icone: string }[] = [
   { key: "capacete",       label: "Capacete",        icone: "🪖" },
   { key: "colar",          label: "Colar",            icone: "📿" },
   { key: "armadura",       label: "Armadura",         icone: "🛡️" },
@@ -79,24 +79,19 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
   }, []);
 
   // ─── Desequipar slot ────────────────────────────────────────────────────────
-  async function desequipar(slot: SlotEquipamento) {
+  async function desequipar(slot: SlotType) {
     setErro(null);
-    const itemId = personagem.equipados[slot];
-    if (!itemId) return;
-
-    // Atualiza inventário: marca equipado=false
-    const novoInventario = (personagem.inventario || []).map((inv) =>
-      String(inv.itemId) === String(itemId) ? { ...inv, equipado: false } : inv
-    );
-
-    const novosEquipados: Equipados = { ...personagem.equipados, [slot]: null };
-    const pAtualizado = { ...personagem, inventario: novoInventario, equipados: novosEquipados };
-    await salvarPersonagem(pAtualizado);
-    onUpdate(pAtualizado);
+    try {
+      await salvarEquipamento(personagem.id, slot, null);
+      // O onUpdate será chamado pelo hook usePersonagem no componente pai
+      // mas se quisermos feedback imediato poderíamos atualizar o estado local se necessário.
+    } catch (e: any) {
+      setErro(e.message);
+    }
   }
 
   // ─── Equipar item do inventário num slot ────────────────────────────────────
-  async function equiparItem(itemId: string, slot: SlotEquipamento) {
+  async function equiparItem(itemId: string, slot: SlotType) {
     setErro(null);
     const item = itensCatalogo.find((i) => String(i.id) === String(itemId));
     if (!item) return;
@@ -107,18 +102,11 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
       return;
     }
 
-    // Desequipar item que estava no slot antes
-    const idAnterior = personagem.equipados[slot];
-    const novoInventario = (personagem.inventario || []).map((inv) => {
-      if (String(inv.itemId) === String(itemId)) return { ...inv, equipado: true };
-      if (idAnterior && String(inv.itemId) === String(idAnterior)) return { ...inv, equipado: false };
-      return inv;
-    });
-
-    const novosEquipados: Equipados = { ...personagem.equipados, [slot]: itemId };
-    const pAtualizado = { ...personagem, inventario: novoInventario, equipados: novosEquipados };
-    await salvarPersonagem(pAtualizado);
-    onUpdate(pAtualizado);
+    try {
+      await salvarEquipamento(personagem.id, slot, itemId);
+    } catch (e: any) {
+      setErro(e.message);
+    }
   }
 
   // Itens do inventário que têm slot válido (para o seletor rápido)
@@ -141,59 +129,18 @@ export default function SistemaEquipamento({ personagem, onUpdate }: Props) {
       )}
 
       <div className="equipGrid">
-        {SLOTS.map(({ key, label, icone }) => {
-          const item = equipamentosResolvidos[key] as Item | null;
-
-          return (
-            <div key={key} className={`equipSlot ${item ? "equipSlotOcupado" : "equipSlotVazio"}`}>
-              <span className="equipSlotLabel">{icone} {label}</span>
-
-              {item ? (
-                <div className="equipItemOcupado">
-                  <Image
-                    src={item.imagem || "/imagens/itens/padrao.png"}
-                    alt={item.nome}
-                    width={40}
-                    height={40}
-                    className="equipItemImagem"
-                  />
-                  <span className="equipItemNome">{item.nome}</span>
-                  <button
-                    className="btnRetirar"
-                    onClick={() => desequipar(key)}
-                    title="Retirar"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <div className="equipSlotSelectWrapper">
-                  <select
-                    className="equipSlotSelect"
-                    defaultValue=""
-                    onChange={(e) => {
-                      if (e.target.value) equiparItem(e.target.value, key);
-                      e.target.value = "";
-                    }}
-                  >
-                    <option value="">— slot vazio —</option>
-                    {itensEquipaveis
-                      .filter(
-                        (inv) =>
-                          inv.dados?.slot === key ||
-                          (key === "anel2" && inv.dados?.slot === "anel1")
-                      )
-                      .map((inv) => (
-                        <option key={inv.itemId} value={inv.itemId}>
-                          {inv.dados?.nome ?? inv.itemId}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {SLOTS.map(({ key, label, icone }) => (
+          <SlotEquipamento
+            key={key}
+            slot={key}
+            label={label}
+            icone={icone}
+            item={equipamentosResolvidos[key] as Item | null}
+            itensEquipaveis={itensEquipaveis}
+            onEquipar={equiparItem}
+            onDesequipar={desequipar}
+          />
+        ))}
       </div>
 
       {/* Resumo de bônus ativos */}

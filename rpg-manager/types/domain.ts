@@ -234,6 +234,7 @@ export type NPC = {
   faccao: Faccao;
   funcao: string;
   localizacao?: string;
+  relacionamento?: number; // 0-100
   loja?: string[]; // IDs de itens que vende
   dialogos?: Dialogo[];
   missoes?: string[]; // IDs de missões que oferece

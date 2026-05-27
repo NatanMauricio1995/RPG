@@ -1,16 +1,59 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { listarItens, buscarItem } from "../services/itemService";
-import { salvarPersonagem } from "../services/personagemService";
+import { 
+  salvarPersonagem, 
+  ouvirPersonagem, 
+  removerItem, 
+  alterarQuantidade as alterarQuantidadeService,
+  consumirItem as consumirItemService,
+  atualizarPersonagem
+} from "../services/personagemService";
 import type { Personagem, InventarioItem, Item } from "../types/domain";
 
-export default function useInventario(personagem: Personagem | null, onUpdate?: (p: Personagem) => void) {
+export default function useInventario(
+  personagemOuId: Personagem | string | number | null, 
+  onUpdate?: (p: Personagem) => void
+) {
+  const [personagemInterno, setPersonagemInterno] = useState<Personagem | null>(
+    typeof personagemOuId === "object" ? personagemOuId : null
+  );
   const [itensCatalogo, setItensCatalogo] = useState<Item[]>([]);
 
+  const pId = useMemo(() => {
+    if (!personagemOuId) return null;
+    return typeof personagemOuId === "object" ? personagemOuId.id : personagemOuId;
+  }, [personagemOuId]);
+
+  // Sync se for ID
   useEffect(() => {
-    listarItens().then(setItensCatalogo);
+    if (!pId || typeof personagemOuId === "object") return;
+    
+    return ouvirPersonagem(pId, (p) => {
+      setPersonagemInterno(p);
+      if (p && onUpdate) onUpdate(p);
+    });
+  }, [pId, personagemOuId, onUpdate]);
+
+  // Sync se for objeto (atualiza estado interno quando o objeto mudar)
+  useEffect(() => {
+    if (typeof personagemOuId === "object") {
+      setPersonagemInterno(personagemOuId);
+    }
+  }, [personagemOuId]);
+
+  useEffect(() => {
+    listarItens().then((res) => {
+      if (Array.isArray(res)) {
+        setItensCatalogo(res);
+      } else {
+        setItensCatalogo(res.itens || []);
+      }
+    });
   }, []);
+
+  const personagem = personagemInterno;
 
   const calcularPesoAtual = useCallback(
     (inventario: InventarioItem[]) => {
@@ -24,7 +67,7 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
 
   const adicionarAoInventario = useCallback(
     async (itemId: string, quantidade: number = 1) => {
-      if (!personagem) return;
+      if (!personagem || !pId) return;
 
       const item = itensCatalogo.find((i) => String(i.id) === String(itemId));
       if (!item) return;
@@ -46,37 +89,22 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
         novoInventario.push({ itemId, quantidade, equipado: false });
       }
 
-      const personagemAtualizado = { ...personagem, inventario: novoInventario };
-      await salvarPersonagem(personagemAtualizado);
-      if (onUpdate) onUpdate(personagemAtualizado);
+      await atualizarPersonagem(pId, { inventario: novoInventario });
     },
-    [personagem, itensCatalogo, calcularPesoAtual, onUpdate]
+    [personagem, pId, itensCatalogo, calcularPesoAtual]
   );
 
   const removerDoInventario = useCallback(
     async (itemId: string) => {
-      if (!personagem) return;
-
-      const novoInventario = (personagem.inventario || []).filter((i) => i.itemId !== itemId);
-      
-      // Também desequipar se estiver equipado
-      const novosEquipados = { ...personagem.equipados };
-      Object.keys(novosEquipados).forEach((slot) => {
-        if ((novosEquipados as any)[slot] === itemId) {
-          (novosEquipados as any)[slot] = null;
-        }
-      });
-
-      const personagemAtualizado = { ...personagem, inventario: novoInventario, equipados: novosEquipados };
-      await salvarPersonagem(personagemAtualizado);
-      if (onUpdate) onUpdate(personagemAtualizado);
+      if (!pId) return;
+      await removerItem(pId, itemId);
     },
-    [personagem, onUpdate]
+    [pId]
   );
 
   const alterarQuantidade = useCallback(
     async (itemId: string, delta: number) => {
-      if (!personagem) return;
+      if (!personagem || !pId) return;
 
       const item = itensCatalogo.find((i) => String(i.id) === String(itemId));
       if (!item) return;
@@ -97,37 +125,22 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
         }
       }
 
-      if (novaQuantidade === 0) {
-        await removerDoInventario(itemId);
-        return;
-      }
-
-      novoInventario[index].quantidade = novaQuantidade;
-
-      const personagemAtualizado = { ...personagem, inventario: novoInventario };
-      await salvarPersonagem(personagemAtualizado);
-      if (onUpdate) onUpdate(personagemAtualizado);
+      await alterarQuantidadeService(pId, itemId, novaQuantidade);
     },
-    [personagem, itensCatalogo, calcularPesoAtual, removerDoInventario, onUpdate]
+    [personagem, pId, itensCatalogo, calcularPesoAtual]
   );
 
   const consumirItem = useCallback(
     async (itemId: string, quantidade: number = 1) => {
-      if (!personagem) return;
-
-      const itemInv = (personagem.inventario || []).find((i) => i.itemId === itemId);
-      if (!itemInv || itemInv.quantidade < quantidade) {
-        throw new Error("Quantidade insuficiente para consumir.");
-      }
-
-      await alterarQuantidade(itemId, -quantidade);
+      if (!pId) return;
+      await consumirItemService(pId, itemId, quantidade);
     },
-    [personagem, alterarQuantidade]
+    [pId]
   );
 
   const alternarEquipamento = useCallback(
     async (itemId: string) => {
-      if (!personagem) return;
+      if (!personagem || !pId) return;
 
       const item = await buscarItem(itemId);
       if (!item || !item.slot) return;
@@ -157,11 +170,9 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
         (novosEquipados as any)[slot] = itemId;
       }
 
-      const personagemAtualizado = { ...personagem, inventario: novoInventario, equipados: novosEquipados };
-      await salvarPersonagem(personagemAtualizado);
-      if (onUpdate) onUpdate(personagemAtualizado);
+      await atualizarPersonagem(pId, { inventario: novoInventario, equipados: novosEquipados });
     },
-    [personagem, onUpdate]
+    [personagem, pId]
   );
 
   // Inventário com dados resolvidos - síncrono via itensCatalogo (cache)
