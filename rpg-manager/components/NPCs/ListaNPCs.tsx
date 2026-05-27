@@ -14,8 +14,8 @@ export default function ListaNPCs() {
     setLoading(true);
     setErro(null);
     listarNPCs()
-      .then(dados => {
-        setNpcs(dados);
+      .then(res => {
+        setNpcs(res.npcs);
       })
       .catch(e => {
         setErro("Falha ao carregar NPCs.");

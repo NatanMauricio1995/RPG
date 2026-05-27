@@ -10,17 +10,18 @@ import CardItem from "./CardItem";
 
 export default function ListaItens(){
   const [itens, setItens] = useState<Item[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [tipo, setTipo] = useState("");
 
   useEffect(() => {
     async function carregar() {
-      const dados = await listarItens();
-      setItens(dados);
-      setCarregando(false);
+      setLoading(true);
+      const res = await listarItens(tipo || undefined);
+      setItens(res.itens);
+      setLoading(false);
     }
     carregar();
-  }, []);
+  }, [tipo]);
 
   async function handleExcluir(id: string) {
     if (!window.confirm("Deseja realmente excluir este item?")) return;
@@ -32,12 +33,7 @@ export default function ListaItens(){
     }
   }
 
-  const itensFiltrados = itens.filter(item => {
-    if (!tipo) return true;
-    return item.tipo === tipo;
-  });
-
-  if (carregando) return <div className="carregando">Mapeando tesouros...</div>;
+  if (loading) return <div className="carregando">Mapeando tesouros...</div>;
 
   return (
     <div>
@@ -56,7 +52,7 @@ export default function ListaItens(){
       </select>
 
       <div className="listaItensGrid">
-        {itensFiltrados.map(item => (
+        {itens.map(item => (
           <CardItem
             key={item.id}
             item={item}

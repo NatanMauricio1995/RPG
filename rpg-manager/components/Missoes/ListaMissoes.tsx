@@ -26,23 +26,21 @@ export default function ListaMissoes() {
     try {
       setLoading(true);
       setErro(null);
-      const lista = await listarMissoes();
-      setMissoes(lista);
+      const res = await listarMissoes(filtro === "Todas" ? undefined : filtro as any);
+      setMissoes(res.missoes);
     } catch (e) {
       setErro("Falha ao carregar o mural de missões.");
       adicionarToast("erro", "Erro ao carregar missões.");
     } finally {
       setLoading(false);
     }
-  }, [adicionarToast]);
+  }, [adicionarToast, filtro]);
 
   useEffect(() => { carregar(); }, [carregar]);
 
   const STATUS_OPCOES = ["Todas", "Não iniciada", "Em andamento", "Concluída", "Falhou"];
 
-  const filtradas = filtro === "Todas"
-    ? missoes
-    : missoes.filter((m) => m.status === filtro);
+  const filtradas = missoes; // Agora o filtro é feito no servidor
 
   const handleExcluir = async (id: string) => {
     if (!confirm("Tem certeza que deseja remover esta missão do mural?")) return;

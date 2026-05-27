@@ -43,16 +43,16 @@ export default function ListaAreas() {
     setLoading(true);
     setErro(null);
     try {
-      const [listaAreas, listaNPCs, listaMonstros, listaMissoes] = await Promise.all([
+      const [resAreas, resNPCs, listaMonstros, resMissoes] = await Promise.all([
         listarAreas(), 
         listarNPCs(),
         listarMonstros(),
         listarMissoes()
       ]);
-      setAreas(listaAreas);
-      setTodosNPCs(listaNPCs);
+      setAreas(resAreas.areas);
+      setTodosNPCs(resNPCs.npcs);
       setTodosMonstros(listaMonstros as any);
-      setTodasMissoes(listaMissoes);
+      setTodasMissoes(resMissoes.missoes);
     } catch (e) {
       setErro("Falha ao carregar os dados da área.");
       console.error(e);

@@ -10,12 +10,13 @@ import {
   getDoc,
   setDoc,
   query,
-  limit
+  limit,
+  QueryDocumentSnapshot
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import npcsData from "../data/campanha/npcs.json";
 
-import type { NPC, DialogoNPC, Faccao, Personagem, Missao } from "../types/domain";
+import type { NPC, DialogoNPC, Faccao, Personagem, Missao, Item } from "../types/domain";
 import { listarMissoes } from "./missaoService";
 
 export const NPCS_STORAGE_KEY = "npcs_cache";
@@ -49,33 +50,42 @@ export function normalizarNPC(npc: any): NPC {
   };
 }
 
-export async function listarNPCs(): Promise<NPC[]> {
+export async function listarNPCs(ultimoDoc?: QueryDocumentSnapshot): Promise<{ npcs: NPC[], cursor?: QueryDocumentSnapshot }> {
   try {
-    const q = query(colecaoRef, limit(50));
-    const snapshot = await getDocs(q);
-    let npcs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as NPC[];
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { orderBy } = await import("firebase/firestore");
 
-    if (npcs.length === 0 && npcsData.length > 0) {
+    const { dados, proximoCursor } = await queryPaginada<NPC>(COLECAO, [orderBy("nome")], 20, ultimoDoc);
+    let npcs = dados;
+
+    if (npcs.length === 0 && npcsData.length > 0 && !ultimoDoc) {
       for (const seed of npcsData) {
         const { id, ...dados } = seed;
         await setDoc(doc(db, COLECAO, String(id)), dados);
       }
-      const newSnapshot = await getDocs(colecaoRef);
-      npcs = newSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as NPC[];
+      const res = await queryPaginada<NPC>(COLECAO, [orderBy("nome")], 20);
+      npcs = res.dados;
+      const normalized = npcs.map(normalizarNPC);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(NPCS_STORAGE_KEY, JSON.stringify(normalized));
+      }
+      return { npcs: normalized, cursor: res.proximoCursor || undefined };
     }
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem(NPCS_STORAGE_KEY, JSON.stringify(npcs));
+    const normalized = npcs.map(normalizarNPC);
+
+    if (typeof window !== "undefined" && !ultimoDoc) {
+      localStorage.setItem(NPCS_STORAGE_KEY, JSON.stringify(normalized));
     }
 
-    return npcs.map(normalizarNPC);
+    return { npcs: normalized, cursor: proximoCursor || undefined };
   } catch (error) {
     console.error("Erro ao listar NPCs:", error);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       const cache = localStorage.getItem(NPCS_STORAGE_KEY);
-      return cache ? JSON.parse(cache).map(normalizarNPC) : [];
+      return { npcs: cache ? JSON.parse(cache).map(normalizarNPC) : [], cursor: undefined };
     }
-    return [];
+    return { npcs: [], cursor: undefined };
   }
 }
 
@@ -136,8 +146,8 @@ export async function buscarMissoesNPC(npcId: string, personagemNivel: number): 
     const npc = await buscarNPC(npcId);
     if (!npc || !npc.missoes) return [];
 
-    const todasMissoes = await listarMissoes();
-    return todasMissoes.filter(m => 
+    const { missoes } = await listarMissoes();
+    return missoes.filter(m => 
       npc.missoes.includes(m.id) && 
       (m.status === "disponivel" || m.status === "disponível") &&
       (m.nivelRecomendado || 1) <= personagemNivel
@@ -192,12 +202,12 @@ export async function listarMissoesDisponiveis(npcId: string, personagem: Person
     const npc = await buscarNPC(npcId);
     if (!npc || !npc.missoes || npc.missoes.length === 0) return [];
 
-    const todasMissoes = await listarMissoes();
+    const { missoes } = await listarMissoes();
 
-    return todasMissoes.filter(m => 
+    return missoes.filter(m => 
       npc.missoes.includes(m.id) && 
-      m.nivelRecomendado <= personagem.nivel &&
-      m.status === "disponível"
+      (m.nivelRecomendado || 1) <= personagem.nivel &&
+      (m.status === "disponível" || m.status === "disponivel")
     );
   } catch (error) {
     console.error("Erro ao listar missões disponíveis:", error);

@@ -27,18 +27,24 @@ const COLECAO = "itens";
 const ITENS_CACHE_KEY = "itens_cache";
 const colecaoRef = collection(db, COLECAO);
 
-export async function listarItens(ultimoDoc?: QueryDocumentSnapshot): Promise<{ itens: Item[], cursor?: QueryDocumentSnapshot }> {
-  try {
-    let q = query(colecaoRef, limit(50));
-    if (ultimoDoc) {
-      q = query(colecaoRef, startAfter(ultimoDoc), limit(50));
-    }
-    const snapshot = await getDocs(q);
-    let itens = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Item[];
-    const novoCursor = snapshot.docs[snapshot.docs.length - 1];
+let _cacheItens: Item[] | null = null;
 
-    // Seed se estiver vazio e não for paginação
-    if (itens.length === 0 && !ultimoDoc) {
+export async function listarItens(tipo?: string, ultimoDoc?: QueryDocumentSnapshot): Promise<{ itens: Item[], cursor?: QueryDocumentSnapshot }> {
+  if (_cacheItens && !tipo && !ultimoDoc) return { itens: _cacheItens };
+
+  try {
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { where, orderBy } = await import("firebase/firestore");
+    
+    const filtros: any[] = [];
+    if (tipo) filtros.push(where("tipo", "==", tipo));
+    filtros.push(orderBy("nome"));
+
+    const { dados, proximoCursor } = await queryPaginada<Item>(COLECAO, filtros, 20, ultimoDoc);
+    let itens = dados;
+
+    // Seed se estiver vazio e não for paginação nem filtro
+    if (itens.length === 0 && !ultimoDoc && !tipo) {
       console.log("Semeando itens no Firebase...");
       const todosPadrao = [
         ...itensData,
@@ -53,16 +59,22 @@ export async function listarItens(ultimoDoc?: QueryDocumentSnapshot): Promise<{ 
         await setDoc(doc(db, COLECAO, String(id)), dados);
       }
       
-      const newSnapshot = await getDocs(colecaoRef);
-      itens = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Item[];
-      return { itens: itens.map(normalizarItem), cursor: newSnapshot.docs[newSnapshot.docs.length - 1] };
+      const res = await queryPaginada<Item>(COLECAO, [orderBy("nome")], 20);
+      itens = res.dados;
+      _cacheItens = itens.map(normalizarItem);
+      return { itens: _cacheItens, cursor: res.proximoCursor || undefined };
     }
 
-    if (typeof window !== "undefined" && !ultimoDoc) {
-      localStorage.setItem(ITENS_CACHE_KEY, JSON.stringify(itens));
+    const itensNormalizados = itens.map(normalizarItem);
+
+    if (!tipo && !ultimoDoc) {
+      _cacheItens = itensNormalizados;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(ITENS_CACHE_KEY, JSON.stringify(itensNormalizados));
+      }
     }
 
-    return { itens: itens.map(normalizarItem), cursor: novoCursor };
+    return { itens: itensNormalizados, cursor: proximoCursor || undefined };
   } catch (error) {
     console.error("Erro ao listar itens:", error);
     if (typeof window !== "undefined" && !ultimoDoc) {

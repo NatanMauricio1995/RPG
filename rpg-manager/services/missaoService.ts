@@ -20,14 +20,20 @@ import type { Missao, ObjetivoMissao, StatusMissao } from "../types/domain";
 const COLECAO = "missoes";
 const colecaoRef = collection(db, COLECAO);
 
-export async function listarMissoes(): Promise<Missao[]> {
+export async function listarMissoes(status?: StatusMissao, ultimoDoc?: QueryDocumentSnapshot): Promise<{ missoes: Missao[], cursor?: QueryDocumentSnapshot }> {
   try {
-    const q = query(colecaoRef, limit(50));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Missao[];
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { where, orderBy } = await import("firebase/firestore");
+
+    const filtros: any[] = [];
+    if (status) filtros.push(where("status", "==", status));
+    filtros.push(orderBy("nome"));
+
+    const { dados, proximoCursor } = await queryPaginada<Missao>(COLECAO, filtros, 20, ultimoDoc);
+    return { missoes: dados, cursor: proximoCursor || undefined };
   } catch (error) {
     console.error("Erro ao listar missões:", error);
-    return [];
+    return { missoes: [], cursor: undefined };
   }
 }
 

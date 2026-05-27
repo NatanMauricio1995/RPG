@@ -50,24 +50,28 @@ export function normalizarArea(area: any): Area {
   };
 }
 
-export async function listarAreas(): Promise<Area[]> {
+export async function listarAreas(ultimoDoc?: QueryDocumentSnapshot): Promise<{ areas: Area[], cursor?: QueryDocumentSnapshot }> {
   try {
-    const q = query(colecaoRef, limit(50));
-    const snapshot = await getDocs(q);
-    const areas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Area[];
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { orderBy } = await import("firebase/firestore");
+
+    const { dados, proximoCursor } = await queryPaginada<Area>(COLECAO, [orderBy("nome")], 20, ultimoDoc);
+    const areas = dados;
     
-    if (typeof window !== "undefined") {
-      localStorage.setItem(AREAS_CACHE_KEY, JSON.stringify(areas));
+    const normalized = areas.map(normalizarArea);
+
+    if (typeof window !== "undefined" && !ultimoDoc) {
+      localStorage.setItem(AREAS_CACHE_KEY, JSON.stringify(normalized));
     }
     
-    return areas.map(normalizarArea);
+    return { areas: normalized, cursor: proximoCursor || undefined };
   } catch (error) {
     console.error("Erro ao listar áreas:", error);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       const cache = localStorage.getItem(AREAS_CACHE_KEY);
-      return cache ? JSON.parse(cache).map(normalizarArea) : [];
+      return { areas: cache ? JSON.parse(cache).map(normalizarArea) : [], cursor: undefined };
     }
-    return [];
+    return { areas: [], cursor: undefined };
   }
 }
 
@@ -123,10 +127,10 @@ export async function obterMissoesDisponiveis(areaId: string, personagem: Person
   const area = await buscarArea(areaId);
   if (!area || !area.missoesIds.length) return [];
 
-  const todasMissoes = await listarMissoes();
-  return todasMissoes.filter(m => 
+  const { missoes } = await listarMissoes();
+  return missoes.filter(m => 
     area.missoesIds.includes(m.id) && 
-    m.status === "disponivel" &&
+    (m.status === "disponivel" || m.status === "disponível") &&
     (!m.nivelRecomendado || m.nivelRecomendado <= personagem.nivel)
   );
 }
