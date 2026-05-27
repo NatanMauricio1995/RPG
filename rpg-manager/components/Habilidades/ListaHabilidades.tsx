@@ -7,7 +7,8 @@ import CardHabilidade from "./CardHabilidade";
 
 export default function ListaHabilidades() {
   const [habilidades, setHabilidades] = useState<Habilidade[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [busca, setBusca] = useState("");
 
   useEffect(() => {
@@ -15,14 +16,16 @@ export default function ListaHabilidades() {
   }, []);
 
   async function carregar() {
-    setCarregando(true);
+    setLoading(true);
+    setErro(null);
     try {
       const dados = await listarHabilidades();
       setHabilidades(dados);
     } catch (error) {
+      setErro("Falha ao carregar habilidades.");
       console.error("Erro ao carregar habilidades:", error);
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   }
 
@@ -67,8 +70,10 @@ export default function ListaHabilidades() {
         </Link>
       </div>
 
-      {carregando ? (
+      {loading ? (
         <div className="carregando">Convocando habilidades...</div>
+      ) : erro ? (
+        <div className="erroMensagem">{erro}</div>
       ) : filtradas.length > 0 ? (
         <div className="habilidadesGrid">
           {filtradas.map((h) => (

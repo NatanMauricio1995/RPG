@@ -7,16 +7,27 @@ import Link from "next/link";
 
 export default function ListaNPCs() {
   const [npcs, setNpcs] = useState<NPC[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    listarNPCs().then(dados => {
-      setNpcs(dados);
-      setCarregando(false);
-    });
+    setLoading(true);
+    setErro(null);
+    listarNPCs()
+      .then(dados => {
+        setNpcs(dados);
+      })
+      .catch(e => {
+        setErro("Falha ao carregar NPCs.");
+        console.error(e);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
-  if (carregando) return <div className="carregando">Convocando habitantes...</div>;
+  if (loading) return <div className="carregando">Convocando habitantes...</div>;
+  if (erro) return <div className="erroMensagem">{erro}</div>;
 
   return (
     <div className="habilidadesGrid">

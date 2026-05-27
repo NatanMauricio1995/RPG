@@ -29,7 +29,8 @@ export default function ListaAreas() {
   const [todasMissoes, setTodasMissoes] = useState<Missao[]>([]);
   
   const [aberta, setAberta] = useState<string | null>(null);
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   // Estados para Modal de Interação
   const [npcSelecionado, setNpcSelecionado] = useState<NPC | null>(null);
@@ -39,17 +40,25 @@ export default function ListaAreas() {
   const [dialogoNPC, setDialogoNPC] = useState<string>("");
 
   async function carregar() {
-    const [listaAreas, listaNPCs, listaMonstros, listaMissoes] = await Promise.all([
-      listarAreas(), 
-      listarNPCs(),
-      listarMonstros(),
-      listarMissoes()
-    ]);
-    setAreas(listaAreas);
-    setTodosNPCs(listaNPCs);
-    setTodosMonstros(listaMonstros as any);
-    setTodasMissoes(listaMissoes);
-    setCarregando(false);
+    setLoading(true);
+    setErro(null);
+    try {
+      const [listaAreas, listaNPCs, listaMonstros, listaMissoes] = await Promise.all([
+        listarAreas(), 
+        listarNPCs(),
+        listarMonstros(),
+        listarMissoes()
+      ]);
+      setAreas(listaAreas);
+      setTodosNPCs(listaNPCs);
+      setTodosMonstros(listaMonstros as any);
+      setTodasMissoes(listaMissoes);
+    } catch (e) {
+      setErro("Falha ao carregar os dados da área.");
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { carregar(); }, []);
@@ -77,7 +86,8 @@ export default function ListaAreas() {
     setModoInteracao("dialogo");
   };
 
-  if (carregando) return <p>Carregando áreas...</p>;
+  if (loading) return <p>Carregando áreas...</p>;
+  if (erro) return <div className="erroMensagem">{erro}</div>;
 
   return (
     <div className="listaAreas">

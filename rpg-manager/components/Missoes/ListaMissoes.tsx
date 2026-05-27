@@ -19,12 +19,12 @@ export default function ListaMissoes() {
   const { adicionarToast } = useToast();
   const [missoes, setMissoes] = useState<Missao[]>([]);
   const [filtro,  setFiltro]  = useState<string>("Todas");
-  const [carregando, setCarregando] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     try {
-      setCarregando(true);
+      setLoading(true);
       setErro(null);
       const lista = await listarMissoes();
       setMissoes(lista);
@@ -32,7 +32,7 @@ export default function ListaMissoes() {
       setErro("Falha ao carregar o mural de missões.");
       adicionarToast("erro", "Erro ao carregar missões.");
     } finally {
-      setCarregando(false);
+      setLoading(false);
     }
   }, [adicionarToast]);
 
@@ -55,7 +55,7 @@ export default function ListaMissoes() {
     }
   };
 
-  if (carregando) return <Loading mensagem="Consultando o mural de missões..." />;
+  if (loading) return <Loading mensagem="Consultando o mural de missões..." />;
   if (erro) return <Error mensagem={erro} onRetry={carregar} />;
 
   return (

@@ -7,16 +7,31 @@ import {
 
 export default function usePersonagem(id: number | string) {
   const [personagemAtual, setPersonagemAtual] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setErro(null);
 
     const unsubscribe = ouvirPersonagem(id, async (base) => {
-      if (base) {
-        const completo = await completarPersonagem(base);
-        setPersonagemAtual(completo);
-      } else {
-        setPersonagemAtual(null);
+      try {
+        if (base) {
+          const completo = await completarPersonagem(base);
+          setPersonagemAtual(completo);
+        } else {
+          setPersonagemAtual(null);
+        }
+      } catch (e) {
+        setErro("Erro ao carregar dados do personagem.");
+        console.error(e);
+      } finally {
+        setLoading(false);
       }
     });
 
@@ -25,6 +40,8 @@ export default function usePersonagem(id: number | string) {
 
   return {
     personagemAtual,
-    setPersonagemAtual
+    setPersonagemAtual,
+    loading,
+    erro
   };
 }

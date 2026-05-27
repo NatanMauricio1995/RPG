@@ -18,6 +18,18 @@ import {
 import { db } from "./config";
 
 /**
+ * Wrapper para consultas com tratamento de erro.
+ */
+export async function safeQuery<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    console.error('[Firestore]', e);
+    return fallback;
+  }
+}
+
+/**
  * Cria um novo documento em uma coleção.
  */
 export const createDocument = async (collectionName: string, data: any) => {
