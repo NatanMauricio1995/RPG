@@ -55,7 +55,7 @@ export default function ItemCard({
         
         <div className="detalhesRapidos">
           <span className="tagSubtipo">📦 {item.subtipo}</span>
-          {item.nivel && <span className="tagNivel">📜 Nível {item.nivel}</span>}
+          {item.nivelMinimo && <span className="tagNivel">📜 Nível {item.nivelMinimo}</span>}
           {item.peso !== undefined && <span className="tagPeso">⚖️ {item.peso}kg</span>}
         </div>
 

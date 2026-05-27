@@ -8,7 +8,9 @@ import {
   deleteDoc, 
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  query,
+  limit
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import npcsData from "../data/campanha/npcs.json";

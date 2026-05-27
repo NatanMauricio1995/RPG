@@ -1,4 +1,5 @@
 import { createDocument, listDocuments } from '../firebase/firestore';
+import { limit } from 'firebase/firestore';
 
 export interface HistoricoCombate {
   id?: string;
@@ -22,7 +23,7 @@ export async function salvarHistoricoCombate(historico: Omit<HistoricoCombate, '
 
 export async function listarHistoricos(): Promise<HistoricoCombate[]> {
   try {
-    return await listDocuments('historicos_combate') as HistoricoCombate[];
+    return await listDocuments('historicos_combate', [limit(50)]) as HistoricoCombate[];
   } catch (e) {
     console.error('Erro ao listar históricos:', e);
     return [];

@@ -48,7 +48,7 @@ sabedoria:0,
 carisma:0
 },
 
-idiomas:[],
+idiomas:[] as string[],
 
 imagem:"/imagens/racas/padrao.png"
 
@@ -81,7 +81,7 @@ encontrada
 ){
 
 setRaca(
-encontrada
+encontrada as any
 );
 
 }

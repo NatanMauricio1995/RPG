@@ -9,6 +9,8 @@ import {
   doc,
   getDoc,
   setDoc,
+  query,
+  limit,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import personagensData from "../data/campanha/personagens.json";
@@ -234,12 +236,14 @@ export async function completarPersonagem(personagem: Personagem): Promise<Perso
 
   const todasHabilidades = await listarHabilidades();
   const habsClasseIds = classe?.habilidades || [];
-  const habsClasse = todasHabilidades.filter(h => habsClasseIds.includes(h.id));
+  const habsClasse = todasHabilidades.filter(h => h.id && habsClasseIds.includes(h.id));
   const habsPersonagemIds = p.habilidadesIds || [];
-  const habsPersonagem = todasHabilidades.filter(h => habsPersonagemIds.includes(h.id));
+  const habsPersonagem = todasHabilidades.filter(h => h.id && habsPersonagemIds.includes(h.id));
 
-  const habilidadesUnicas = new Map<string, Habilidade>();
-  [...habsClasse, ...habsPersonagem].forEach(h => habilidadesUnicas.set(h.id, h as any));
+  const habilidadesUnicas = new Map<string, any>();
+  [...habsClasse, ...habsPersonagem].forEach(h => {
+    if (h.id) habilidadesUnicas.set(h.id, h);
+  });
 
   return {
     ...p,

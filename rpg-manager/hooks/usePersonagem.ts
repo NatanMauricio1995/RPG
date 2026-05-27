@@ -1,57 +1,28 @@
 "use client";
-import {useEffect,useState} from "react";
+import { useEffect, useState } from "react";
 import {
-buscarPersonagem,
-completarPersonagem
+  buscarPersonagem,
+  completarPersonagem
 } from "../services/personagemService";
 
-export default function usePersonagem(
-id:number
-){
+export default function usePersonagem(id: number | string) {
+  const [personagemAtual, setPersonagemAtual] = useState<any>(null);
 
-const[
+  useEffect(() => {
+    async function carregar() {
+      const base = await buscarPersonagem(id);
+      if (base) {
+        const completo = await completarPersonagem(base);
+        setPersonagemAtual(completo);
+      } else {
+        setPersonagemAtual(null);
+      }
+    }
+    carregar();
+  }, [id]);
 
-personagemAtual,
-setPersonagemAtual
-
-]=useState<any>(()=>{
-
-const personagemBase=
-buscarPersonagem(
-id
-);
-
-return personagemBase
-? completarPersonagem(personagemBase)
-: null;
-
-});
-
-
-useEffect(()=>{
-
-const personagemAtualizado=
-buscarPersonagem(
-id
-);
-
-setPersonagemAtual(
-personagemAtualizado
-? completarPersonagem(personagemAtualizado)
-: null
-);
-
-},[
-id
-]);
-
-
-return{
-
-personagemAtual,
-
-setPersonagemAtual
-
-};
-
+  return {
+    personagemAtual,
+    setPersonagemAtual
+  };
 }

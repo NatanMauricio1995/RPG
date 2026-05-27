@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import useInventario from "../../../hooks/useInventario";
 import usePersonagem from "../../../hooks/usePersonagem";
+import { buscarItem } from "../../../services/itemService";
 
 export default function CorpoEquipamento() {
   const params = useParams();
@@ -14,11 +16,11 @@ export default function CorpoEquipamento() {
     evento.preventDefault();
   }
 
-  function soltarItem(evento: any, slot: string) {
+  async function soltarItem(evento: any, slot: string) {
     evento.preventDefault();
     const itemId = evento.dataTransfer.getData("id");
     
-    const itemInfo = buscarItem(itemId);
+    const itemInfo = await buscarItem(itemId);
     if (!itemInfo) return;
 
     // Se o slot for compatível, equipamos
@@ -47,9 +49,9 @@ export default function CorpoEquipamento() {
   // Resolver itens equipados do inventário
   const equipados: Record<string, any> = {};
   inventario.forEach((invItem) => {
-    if (invItem.equipado) {
-      const itemInfo = buscarItem(invItem.itemId);
-      if (itemInfo && itemInfo.slot) {
+    if (invItem.equipado && invItem.dados) {
+      const itemInfo = invItem.dados;
+      if (itemInfo.slot) {
         equipados[itemInfo.slot] = itemInfo;
       }
     }

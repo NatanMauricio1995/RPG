@@ -116,5 +116,3 @@ export function calcularAtributosFinais(
     bonus,
   };
 }
-
-export { calcularVida, calcularModificador, calcularBonusProficiencia };

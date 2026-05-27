@@ -5,6 +5,7 @@ updateDocument,
 deleteDocument
 }
 from "../firebase/firestore";
+import { limit } from "firebase/firestore";
 
 
 const COLECAO="monstros";
@@ -12,9 +13,7 @@ const COLECAO="monstros";
 
 export async function listarMonstros(){
 
-return await listDocuments(
-COLECAO
-);
+return await listDocuments(COLECAO, [limit(50)]);
 
 }
 

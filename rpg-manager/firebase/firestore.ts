@@ -1,7 +1,7 @@
 import {
   collection, doc,
   addDoc, getDocs, getDoc, updateDoc, deleteDoc,
-  query, where, serverTimestamp, orderBy,
+  query, where, serverTimestamp, orderBy, limit,
 } from "firebase/firestore";
 import { db } from "./config";
 

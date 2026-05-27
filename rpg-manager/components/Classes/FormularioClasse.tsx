@@ -34,7 +34,7 @@ proficiencias:[] as string[],
 imagem:
 "/imagens/classes/padrao.png",
 
-habilidadesPorNivel:[{nivel:1,habilidades:[]}]});
+habilidadesPorNivel:[{nivel:1,habilidades:[] as string[]}]});
 const[
 habilidades,
 setHabilidades

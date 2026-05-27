@@ -8,6 +8,7 @@ import {calcularBonusProficiencia,calcularModificador} from "./calculoService";
 import {calcularStatusDerivados,normalizarTipoEfeito,EfeitoAtivo} from "./efeitosService";
 import {buscarItem,resolverEquipados} from "./itemService";
 import { listDocuments } from "../firebase/firestore";
+import { limit } from "firebase/firestore";
 
 export type LadoCombate="aliado"|"inimigo";
 export type StatusCombate="preparacao"|"em_andamento"|"vitoria"|"derrota";
@@ -77,7 +78,7 @@ log:EntradaLog[];
 export async function listarMonstrosCombate(){
   try {
     // Tenta Firebase primeiro
-    const monstrosFirebase = await listDocuments("monstros");
+    const monstrosFirebase = await listDocuments("monstros", [limit(50)]);
     if (monstrosFirebase.length > 0) {
       return monstrosFirebase.map((m: any) => ({
         ...m,
