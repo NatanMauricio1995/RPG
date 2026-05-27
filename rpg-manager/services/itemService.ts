@@ -209,3 +209,80 @@ function normalizarEfeitos(item: Partial<Item>): EfeitoItem[] {
   }
   return [];
 }
+
+// ─── Gerenciamento de Inventário (Persistência) ──────────────────────────────
+
+/**
+ * Função utilitária para buscar e atualizar personagem sem dependência circular
+ */
+async function atualizarInventarioBase(
+  personagemId: string | number, 
+  callback: (inventario: any[]) => any[]
+) {
+  const idStr = String(personagemId);
+  const docRef = doc(db, "personagens", idStr);
+  const snap = await getDoc(docRef);
+  
+  if (!snap.exists()) throw new Error("Personagem não encontrado");
+  
+  const personagem = snap.data();
+  const novoInventario = callback(personagem.inventario || []);
+  
+  await updateDoc(docRef, { inventario: novoInventario });
+  return { ...personagem, id: idStr, inventario: novoInventario };
+}
+
+export async function adicionarItem(personagemId: string | number, itemId: string, quantidade: number = 1) {
+  return await atualizarInventarioBase(personagemId, (inv) => {
+    const novo = [...inv];
+    const index = novo.findIndex((i) => String(i.itemId) === String(itemId));
+    
+    if (index >= 0) {
+      novo[index].quantidade += quantidade;
+    } else {
+      novo.push({ itemId: String(itemId), quantidade, equipado: false });
+    }
+    return novo;
+  });
+}
+
+export async function removerItem(personagemId: string | number, itemId: string) {
+  return await atualizarInventarioBase(personagemId, (inv) => {
+    return inv.filter((i) => String(i.itemId) !== String(itemId));
+  });
+}
+
+export async function alterarQuantidade(personagemId: string | number, itemId: string, delta: number) {
+  return await atualizarInventarioBase(personagemId, (inv) => {
+    const novo = [...inv];
+    const index = novo.findIndex((i) => String(i.itemId) === String(itemId));
+    
+    if (index >= 0) {
+      novo[index].quantidade += delta;
+      if (novo[index].quantidade <= 0) {
+        return novo.filter((i) => String(i.itemId) !== String(itemId));
+      }
+    }
+    return novo;
+  });
+}
+
+export async function consumirItem(personagemId: string | number, itemId: string) {
+  return await alterarQuantidade(personagemId, itemId, -1);
+}
+
+export async function equiparItem(personagemId: string | number, itemId: string) {
+  return await atualizarInventarioBase(personagemId, (inv) => {
+    return inv.map((i) => 
+      String(i.itemId) === String(itemId) ? { ...i, equipado: true } : i
+    );
+  });
+}
+
+export async function desequiparItem(personagemId: string | number, itemId: string) {
+  return await atualizarInventarioBase(personagemId, (inv) => {
+    return inv.map((i) => 
+      String(i.itemId) === String(itemId) ? { ...i, equipado: false } : i
+    );
+  });
+}

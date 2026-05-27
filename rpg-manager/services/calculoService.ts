@@ -116,3 +116,18 @@ export function calcularAtributosFinais(
     bonus,
   };
 }
+
+// ─── Inventário (Pesos e Capacidade) ─────────────────────────────────────────
+
+export function calcularPesoAtual(inventario: any[], itensCatalogo: any[]): number {
+  return (inventario || []).reduce((acc, inv) => {
+    const item = itensCatalogo.find((i) => String(i.id) === String(inv.itemId));
+    return acc + (item?.peso || 0) * (inv.quantidade || 0);
+  }, 0);
+}
+
+export function verificarPesoExcedido(personagem: any, itensCatalogo: any[]): boolean {
+  const pesoAtual = calcularPesoAtual(personagem.inventario, itensCatalogo);
+  const capacidade = personagem.capacidadeMaxima || 50;
+  return pesoAtual > capacidade;
+}
