@@ -9,36 +9,48 @@ import Loading from "../../UI/Loading";
 import Error from "../../UI/Error";
 import Button from "../../UI/Button";
 import { useToast } from "../../UI/Toast";
+import type { QueryDocumentSnapshot } from "firebase/firestore";
 
 export default function ListaPersonagens() {
   const [pesquisa, setPesquisa] = useState("");
   const [classe, setClasse] = useState("");
   const [raca, setRaca] = useState("");
   const [personagens, setPersonagens] = useState<any[]>([]);
-  const [carregando, setCarregando] = useState(true);
+  const [cursor, setCursor] = useState<QueryDocumentSnapshot | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMais, setLoadingMais] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   
   const { adicionarToast } = useToast();
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(async (proxima = false) => {
     try {
-      setCarregando(true);
+      if (proxima) setLoadingMais(true);
+      else setLoading(true);
+      
       setErro(null);
-      const base = await listarPersonagens();
-      const completos = await Promise.all(base.map(p => completarPersonagem(p)));
-      setPersonagens(completos);
+      const res = await listarPersonagens(undefined, proxima ? (cursor || undefined) : undefined);
+      const completos = await Promise.all(res.personagens.map(p => completarPersonagem(p)));
+      
+      if (proxima) {
+        setPersonagens(prev => [...prev, ...completos]);
+      } else {
+        setPersonagens(completos);
+      }
+      setCursor(res.cursor || null);
     } catch (e) {
       console.error(e);
       setErro("Não foi possível carregar a lista de personagens. Verifique sua conexão.");
       adicionarToast("erro", "Falha ao carregar personagens.");
     } finally {
-      setCarregando(false);
+      setLoading(false);
+      setLoadingMais(false);
     }
-  }, [adicionarToast]);
+  }, [adicionarToast, cursor]);
 
   useEffect(() => {
     carregar();
-  }, [carregar]);
+  }, []);
 
   const filtrados = personagens.filter((personagem) => {
     const nomeOk = (personagem.nome || "").toLowerCase().includes(pesquisa.toLowerCase());
@@ -50,18 +62,18 @@ export default function ListaPersonagens() {
   const classesUnicas = Array.from(new Set(personagens.map((p) => p.classe).filter(Boolean)));
   const racasUnicas = Array.from(new Set(personagens.map((p) => p.raca).filter(Boolean)));
 
-  if (carregando) return <Loading mensagem="Convocando aventureiros..." />;
+  if (loading) return <Loading mensagem="Convocando aventureiros..." />;
   
-  if (erro) return <Error mensagem={erro} onRetry={carregar} />;
+  if (erro) return <Error mensagem={erro} onRetry={() => carregar()} />;
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-4">
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-4 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
           <span>👥</span> Personagens
         </h1>
-        <Link href="/personagens/inserir">
-          <Button variant="primary" className="w-full sm:w-auto">
+        <Link href="/personagens/inserir" className="w-full sm:w-auto">
+          <Button variant="primary" className="w-full">
             + Novo Personagem
           </Button>
         </Link>
@@ -92,11 +104,26 @@ export default function ListaPersonagens() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtrados.map((personagem) => (
-            <CardPersonagem key={personagem.id} personagem={personagem} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtrados.map((personagem) => (
+              <CardPersonagem key={personagem.id} personagem={personagem} />
+            ))}
+          </div>
+          
+          {cursor && (
+            <div className="mt-12 text-center">
+              <Button 
+                variant="outline" 
+                onClick={() => carregar(true)} 
+                disabled={loadingMais}
+                className="px-10"
+              >
+                {loadingMais ? "Carregando..." : "Convocando mais heróis"}
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { EstadoCombate, Combatente } from "../../services/combateService";
 import { calcularResultadoCombate } from "../../services/combateService";
 import type { Personagem } from "../../types/domain";
@@ -25,14 +25,14 @@ export default function ModalResultadoCombate({ estado, personagensSnapshot, onA
     return estado.combatentes.filter(c => c.lado === "aliado");
   }, [estado.combatentes]);
 
-  // Inicializa checklist com todos selecionados
-  useState(() => {
+  // Inicializa checklist com todos selecionados corretamente via useEffect
+  useEffect(() => {
     const initial: Record<string, boolean> = {};
     aliados.forEach(c => {
       if (c.origemId) initial[String(c.origemId)] = true;
     });
     setChecklist(initial);
-  });
+  }, [aliados]);
 
   function handleFinalizar() {
     const idsParaAplicar = Object.entries(checklist)
@@ -43,7 +43,7 @@ export default function ModalResultadoCombate({ estado, personagensSnapshot, onA
 
   return (
     <Modal isOpen={true} onClose={onCancelar} title="Fim de Combate">
-      <div className="modalCombateResult">
+      <div className="modalCombateResult animate-in zoom-in-95 duration-200">
         <h2 className={vitoria ? "textVitoria" : "textDerrota"}>
           {vitoria ? "⚔️ VITÓRIA!" : "💀 DERROTA"}
         </h2>
@@ -65,59 +65,83 @@ export default function ModalResultadoCombate({ estado, personagensSnapshot, onA
         {resultado.itensConsumidos.length > 0 && (
           <div className="consumidosSection">
             <h3>Itens Consumidos</h3>
-            <ul>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {resultado.itensConsumidos.map(item => (
-                <li key={item.itemId}>Item ID: {item.itemId} (x{item.quantidade})</li>
+                <div key={item.itemId} className="text-xs bg-black/10 p-2 rounded">
+                  ID: {item.itemId} <span className="font-bold">(x{item.quantidade})</span>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
         <div className="statusPersonagensSection">
-          <h3>Alterações nos Personagens</h3>
-          {modoParcial ? (
-            <div className="checklistPersonagens">
-              {aliados.map(c => {
-                const snapshot = personagensSnapshot[String(c.origemId)];
-                if (!snapshot) return null;
+          <h3>Status dos Heróis</h3>
+          <div className="checklistPersonagens">
+            {aliados.map(c => {
+              const snapshot = personagensSnapshot[String(c.origemId)];
+              if (!snapshot) return null;
 
-                return (
-                  <div key={c.id} className="checkItem">
-                    <input 
-                      type="checkbox" 
-                      id={`check-${c.id}`}
-                      checked={checklist[String(c.origemId)] || false}
-                      onChange={(e) => setChecklist(prev => ({ ...prev, [String(c.origemId)]: e.target.checked }))}
-                    />
-                    <label htmlFor={`check-${c.id}`}>
-                      {c.nome} (Vida: {snapshot.vidaAtual} → {c.vidaAtual}, Mana: {snapshot.manaAtual} → {c.manaAtual})
-                    </label>
+              return (
+                <div key={c.id} className="p-3 border-b border-white/10 last:border-0">
+                  <div className="checkItem">
+                    {modoParcial && (
+                      <input 
+                        type="checkbox" 
+                        id={`check-${c.id}`}
+                        checked={checklist[String(c.origemId)] || false}
+                        onChange={(e) => setChecklist(prev => ({ ...prev, [String(c.origemId)]: e.target.checked }))}
+                        className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500 mr-3"
+                      />
+                    )}
+                    <div className="flex-1 text-left">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold">{c.nome}</span>
+                        <div className="text-[10px] space-x-2">
+                          <span className={c.vidaAtual < snapshot.vidaAtual ? "text-red-400" : "text-emerald-400"}>
+                            ❤️ {snapshot.vidaAtual} → {c.vidaAtual}
+                          </span>
+                          <span className="text-blue-400">
+                            💧 {snapshot.manaAtual} → {c.manaAtual}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Efeitos Ativos */}
+                      {c.efeitos.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {c.efeitos.map((e, idx) => (
+                            <span key={idx} className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/30">
+                              {e.tipo} ({e.duracao}t)
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p>As alterações de Vida, Mana, Ouro e XP serão aplicadas a todos os aliados vivos.</p>
-          )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="modalAcoes">
+        <div className="modalAcoes flex flex-col sm:flex-row gap-3">
           {!modoParcial ? (
             <>
-              <Button variant="primary" onClick={handleFinalizar}>
-                Aplicar Tudo
+              <Button variant="success" className="flex-1 h-12" onClick={handleFinalizar}>
+                Aplicar Alterações
               </Button>
-              <Button variant="secondary" onClick={() => setModoParcial(true)}>
+              <Button variant="secondary" className="flex-1 h-12" onClick={() => setModoParcial(true)}>
                 Aplicar Parcialmente
               </Button>
             </>
           ) : (
-            <Button variant="primary" onClick={handleFinalizar}>
+            <Button variant="primary" className="flex-1 h-12" onClick={handleFinalizar}>
               Confirmar Seleção
             </Button>
           )}
-          <Button variant="danger" onClick={onCancelar}>
-            Descartar Tudo
+          <Button variant="danger" className="w-full sm:w-auto h-12" onClick={onCancelar}>
+            Cancelar Alterações
           </Button>
         </div>
       </div>
@@ -129,11 +153,11 @@ export default function ModalResultadoCombate({ estado, personagensSnapshot, onA
         .recompensasSection, .consumidosSection, .statusPersonagensSection { 
           background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: left;
         }
-        h3 { margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3rem; }
+        h3 { margin-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.3rem; font-size: 0.9rem; font-weight: bold; text-transform: uppercase; color: rgba(255,255,255,0.6); }
         .recompensasGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .modalAcoes { display: flex; gap: 1rem; justify-content: center; margin-top: 1rem; }
-        .checklistPersonagens { display: flex; flex-direction: column; gap: 0.5rem; }
-        .checkItem { display: flex; align-items: center; gap: 0.5rem; }
+        .modalAcoes { margin-top: 1rem; }
+        .checklistPersonagens { display: flex; flex-direction: column; }
+        .checkItem { display: flex; align-items: center; }
       `}</style>
     </Modal>
   );

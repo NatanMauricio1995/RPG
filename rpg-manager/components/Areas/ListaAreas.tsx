@@ -4,12 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { listarAreas, excluirArea, type Area } from "../../services/areaService";
-import { listarNPCs, abrirLoja, buscarMissoesNPC, obterDialogo, type NPC } from "../../services/npcService";
-import { listarMonstros } from "../../services/combateService";
-import { listarMissoes } from "../../services/missaoService";
+import { abrirLoja, buscarMissoesNPC, obterDialogo, type NPC } from "../../services/npcService";
 import type { Monstro, Missao, Item } from "../../types/domain";
 import Modal from "../UI/Modal";
 import Button from "../UI/Button";
+import Loading from "../UI/Loading";
+import Error from "../UI/Error";
 
 const ICONE_TIPO: Record<string, string> = {
   Cidade:   "🏙️",
@@ -24,13 +24,13 @@ const ICONE_TIPO: Record<string, string> = {
 
 export default function ListaAreas() {
   const [areas, setAreas] = useState<Area[]>([]);
-  const [todosNPCs, setTodosNPCs] = useState<NPC[]>([]);
-  const [todosMonstros, setTodosMonstros] = useState<Monstro[]>([]);
-  const [todasMissoes, setTodasMissoes] = useState<Missao[]>([]);
+  const [cursor, setCursor] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingMais, setLoadingMais] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   
   const [aberta, setAberta] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+  const [detalhesArea, setDetalhesArea] = useState<Record<string, any>>({});
 
   // Estados para Modal de Interação
   const [npcSelecionado, setNpcSelecionado] = useState<NPC | null>(null);
@@ -39,29 +39,43 @@ export default function ListaAreas() {
   const [missoesNPC, setMissoesNPC] = useState<Missao[]>([]);
   const [dialogoNPC, setDialogoNPC] = useState<string>("");
 
-  async function carregar() {
-    setLoading(true);
+  async function carregar(proxima = false) {
+    if (proxima) setLoadingMais(true);
+    else setLoading(true);
     setErro(null);
     try {
-      const [resAreas, resNPCs, listaMonstros, resMissoes] = await Promise.all([
-        listarAreas(), 
-        listarNPCs(),
-        listarMonstros(),
-        listarMissoes()
-      ]);
-      setAreas(resAreas.areas);
-      setTodosNPCs(resNPCs.npcs);
-      setTodosMonstros(listaMonstros as any);
-      setTodasMissoes(resMissoes.missoes);
+      const res = await listarAreas(proxima ? cursor : undefined);
+      if (proxima) {
+        setAreas(prev => [...prev, ...res.areas]);
+      } else {
+        setAreas(res.areas);
+      }
+      setCursor(res.cursor || null);
     } catch (e) {
-      setErro("Falha ao carregar os dados da área.");
+      setErro("Falha ao carregar as áreas.");
       console.error(e);
     } finally {
       setLoading(false);
+      setLoadingMais(false);
     }
   }
 
   useEffect(() => { carregar(); }, []);
+
+  const handleToggleArea = async (id: string) => {
+    if (aberta === id) {
+      setAberta(null);
+      return;
+    }
+    setAberta(id);
+    if (!detalhesArea[id]) {
+      const { buscarAreaCompleta } = await import("../../services/areaService");
+      const completa = await buscarAreaCompleta(id);
+      if (completa) {
+        setDetalhesArea(prev => ({ ...prev, [id]: completa }));
+      }
+    }
+  };
 
   const handleFalarComNPC = (npc: NPC) => {
     setNpcSelecionado(npc);
@@ -86,146 +100,173 @@ export default function ListaAreas() {
     setModoInteracao("dialogo");
   };
 
-  if (loading) return <p>Carregando áreas...</p>;
-  if (erro) return <div className="erroMensagem">{erro}</div>;
+  if (loading) return <Loading mensagem="Mapeando territórios..." />;
+  if (erro) return <Error mensagem={erro} onRetry={() => carregar()} />;
 
   return (
-    <div className="listaAreas">
+    <div className="listaAreas animate-in fade-in duration-300 w-full max-w-6xl mx-auto px-4 py-8">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+        <h1 className="text-3xl font-black text-slate-800 dark:text-white">🌍 Mapa de Regiões</h1>
+        <Link href="/areas/inserir" className="w-full sm:w-auto">
+          <Button variant="primary" className="w-full">+ Nova Área</Button>
+        </Link>
+      </div>
+
       {areas.length === 0 && (
-        <p className="semAreas">Nenhuma área cadastrada ainda.</p>
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+          <p className="text-slate-400 mb-4">Nenhuma área mapeada ainda.</p>
+          <Link href="/areas/inserir">
+            <Button variant="primary">+ Criar Primeira Área</Button>
+          </Link>
+        </div>
       )}
 
-      {areas.map((area) => {
-        const expandida = aberta === area.id;
-        
-        const npcsArea = todosNPCs.filter((n) => area.npcsIds?.includes(n.id));
-        const monstrosArea = todosMonstros.filter((m) => area.monstrosIds?.includes(String(m.id)));
-        const missoesArea = todasMissoes.filter((m) => area.missoesIds?.includes(m.id));
+      <div className="grid grid-cols-1 gap-6">
+        {areas.map((area) => {
+          const expandida = aberta === area.id;
+          const completa = detalhesArea[area.id];
+          
+          const npcsArea = completa?.npcs || [];
+          const monstrosArea = completa?.monstros || [];
+          const missoesArea = completa?.missoes || [];
 
-        return (
-          <div key={area.id} className={`cardArea ${expandida ? "expandida" : ""}`}>
-            <div
-              className="cardAreaCabecalho"
-              onClick={() => setAberta(expandida ? null : area.id)}
-            >
-              {area.imagem ? (
-                <Image
-                  src={area.imagem}
-                  alt={area.nome}
-                  width={64}
-                  height={64}
-                  className="areaImagem"
-                />
-              ) : (
-                <div className="areaIconePlaceholder">
+          return (
+            <div key={area.id} className={`cardArea bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300 ${expandida ? "ring-2 ring-amber-500 shadow-xl" : "hover:shadow-md"}`}>
+              <div
+                className="p-5 flex items-center gap-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                onClick={() => handleToggleArea(area.id)}
+              >
+                <div className="h-16 w-16 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-3xl shadow-inner">
                   {ICONE_TIPO[area.tipo as string] ?? "📍"}
                 </div>
-              )}
-
-              <div className="areaInfo">
-                <h3>{area.nome}</h3>
-                <span className="areaTipo">{ICONE_TIPO[area.tipo as string] ?? "📍"} {area.tipo}</span>
-                <p className="areaDescricaoResumida">
-                  {area.descricao?.slice(0, 100)}{area.descricao?.length > 100 ? "…" : ""}
-                </p>
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">{area.nome}</h3>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">{area.tipo}</span>
+                </div>
+                <span className={`text-slate-300 transition-transform duration-300 ${expandida ? "rotate-180" : ""}`}>
+                  ▼
+                </span>
               </div>
 
-              <span className="expandirIcone">{expandida ? "▲" : "▼"}</span>
-            </div>
+              {expandida && (
+                <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-8 animate-in slide-in-from-top-4 duration-300">
+                  {!completa ? (
+                    <div className="py-8 flex flex-col items-center gap-3">
+                      <div className="animate-spin h-6 w-6 border-2 border-amber-500 border-t-transparent rounded-full"></div>
+                      <p className="text-sm text-slate-400">Consultando registros locais...</p>
+                    </div>
+                  ) : (
+                    <>
+                      {area.descricao && <p className="text-slate-600 dark:text-slate-400 leading-relaxed italic">"{area.descricao}"</p>}
 
-            {expandida && (
-              <div className="areaDetalhes">
-                {area.descricao && <p className="areaDescFull">{area.descricao}</p>}
-
-                <div className="areaSecao">
-                  <h4>👥 NPCs na Área</h4>
-                  {npcsArea.length > 0 ? (
-                    <div className="areaNPCsGrid">
-                      {npcsArea.map((n) => (
-                        <div key={n.id} className="areaNPCCard">
-                          <Image
-                            src={n.imagem || "/imagens/npcs/padrao.png"}
-                            alt={n.nome}
-                            width={36}
-                            height={36}
-                          />
-                          <div className="npcInfo">
-                            <span>{n.nome}</span>
-                            <button 
-                              className="btnFalar" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFalarComNPC(n);
-                              }}
-                            >
-                              💬 Interagir
-                            </button>
-                          </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <h4 className="font-bold flex items-center gap-2 text-slate-800 dark:text-white">
+                            <span>👥 NPCs Presentes</span>
+                            <span className="text-xs bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full">{npcsArea.length}</span>
+                          </h4>
+                          {npcsArea.length > 0 ? (
+                            <div className="space-y-2">
+                              {npcsArea.map((n: NPC) => (
+                                <div key={n.id} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                  <div className="flex items-center gap-3">
+                                    <div className="relative h-10 w-10 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
+                                      <Image src={n.imagem || "/imagens/npcs/padrao.png"} alt={n.nome} fill className="object-cover" />
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-bold">{n.nome}</p>
+                                      <p className="text-[10px] text-slate-500">{n.funcao}</p>
+                                    </div>
+                                  </div>
+                                  <Button size="sm" variant="outline" onClick={() => handleFalarComNPC(n)}>
+                                    Interagir
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          ) : <p className="text-sm text-slate-400 italic">Área deserta.</p>}
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="vazio">Nenhum NPC conhecido nesta região.</p>
-                  )}
-                </div>
 
-                <div className="areaSecao">
-                  <h4>🐉 Perigos & Exploração</h4>
-                  <div className="areaMonstrosGrid">
-                    {monstrosArea.length > 0 && (
-                      <div className="monstrosLista">
-                        {monstrosArea.map(m => (
-                          <span key={m.id} className="badgeMonstro">{m.nome} (v{m.nivel})</span>
-                        ))}
+                        <div className="space-y-4">
+                          <h4 className="font-bold flex items-center gap-2 text-slate-800 dark:text-white">
+                            <span>📜 Missões Locais</span>
+                            <span className="text-xs bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full">{missoesArea.length}</span>
+                          </h4>
+                          {missoesArea.length > 0 ? (
+                            <div className="space-y-2">
+                              {missoesArea.map((m: Missao) => (
+                                <Link key={m.id} href={`/missoes`} className="block p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 transition-colors shadow-sm">
+                                  <div className="flex justify-between items-center">
+                                    <p className="text-sm font-bold">{m.nome}</p>
+                                    <span className={`h-2 w-2 rounded-full ${m.status === 'disponível' || m.status === 'disponivel' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                                  </div>
+                                </Link>
+                              ))}
+                            </div>
+                          ) : <p className="text-sm text-slate-400 italic">Sem missões ativas.</p>}
+                        </div>
                       </div>
-                    )}
-                    <Link
-                      href={`/combate?areaId=${area.id}`}
-                      className="btnCombateArea"
-                    >
-                      ⚔️ Entrar em Combate
-                    </Link>
-                  </div>
-                </div>
 
-                <div className="areaSecao">
-                  <h4>📜 Missões Locais</h4>
-                  {missoesArea.length > 0 ? (
-                    <div className="areaMissoesGrid">
-                      {missoesArea.map((m) => (
-                        <Link key={m.id} href={`/missoes`} className="areaMissaoBtn">
-                          <span className={`statusDot ${m.status}`}></span>
-                          {m.nome}
+                      <div className="space-y-4">
+                        <h4 className="font-bold flex items-center gap-2 text-slate-800 dark:text-white">
+                          <span>🐉 Perigos Detectados</span>
+                          <span className="text-xs bg-slate-200 dark:bg-slate-800 px-2 py-0.5 rounded-full">{monstrosArea.length}</span>
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {monstrosArea.map((m: any) => (
+                            <span key={m.id} className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-bold rounded-lg border border-red-100 dark:border-red-900/50">
+                              {m.nome} (v{m.nivel})
+                            </span>
+                          ))}
+                          {monstrosArea.length === 0 && <span className="text-sm text-slate-400 italic">Região segura.</span>}
+                        </div>
+                        <Link href={`/combate?areaId=${area.id}`} className="inline-flex mt-2">
+                          <Button variant="danger" className="shadow-lg shadow-red-500/20">
+                            ⚔️ Iniciar Combate Local
+                          </Button>
                         </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="vazio">Sem missões ativas nesta área.</p>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-6 border-t border-slate-200 dark:border-slate-800">
+                        <Link href={`/areas/editar/${area.id}`}>
+                          <Button variant="outline" size="sm">✏️ Editar</Button>
+                        </Link>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Excluir "${area.nome}"?`)) {
+                              await excluirArea(area.id);
+                              carregar();
+                            }
+                          }}
+                        >
+                          🗑 Excluir
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
-                <div className="areaAcoes">
-                  <Link href={`/areas/editar/${area.id}`}>
-                    <button className="btnEditar">✏️ Editar</button>
-                  </Link>
-                  <button
-                    className="btnExcluir"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      if (confirm(`Excluir "${area.nome}"?`)) {
-                        await excluirArea(area.id);
-                        carregar();
-                      }
-                    }}
-                  >
-                    🗑 Excluir
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {cursor && (
+        <div className="mt-12 text-center">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={() => carregar(true)} 
+            disabled={loadingMais}
+            className="px-8"
+          >
+            {loadingMais ? "Explorando..." : "Mapear Mais Regiões"}
+          </Button>
+        </div>
+      )}
 
       {npcSelecionado && (
         <Modal 
@@ -235,34 +276,36 @@ export default function ListaAreas() {
         >
           <div className="npcInteracao">
             <div className="npcHeader">
-              <Image 
-                src={npcSelecionado.imagem || "/imagens/npcs/padrao.png"} 
-                alt={npcSelecionado.nome} 
-                width={80} 
-                height={80}
-              />
+              <div className="relative h-20 w-20 rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm">
+                <Image 
+                  src={npcSelecionado.imagem || "/imagens/npcs/padrao.png"} 
+                  alt={npcSelecionado.nome} 
+                  fill
+                  className="object-cover"
+                />
+              </div>
               <div>
-                <h3>{npcSelecionado.nome}</h3>
-                <p>{npcSelecionado.funcao} · {npcSelecionado.faccao}</p>
+                <h3 className="text-xl font-black text-slate-800 dark:text-white">{npcSelecionado.nome}</h3>
+                <p className="text-sm text-amber-600 font-bold">{npcSelecionado.funcao} · {npcSelecionado.faccao}</p>
               </div>
             </div>
             
-            <div className="npcConteudo">
+            <div className="npcConteudo mt-6">
               {modoInteracao === "inicio" && (
                 <>
-                  <p className="npcDesc">{npcSelecionado.descricao}</p>
-                  <div className="npcOpcoes">
-                    <Button variant="primary" onClick={() => handleConversar(npcSelecionado)}>
+                  <p className="text-slate-600 dark:text-slate-400 italic mb-6">"{npcSelecionado.personalidade || npcSelecionado.descricao}"</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Button variant="primary" className="h-12" onClick={() => handleConversar(npcSelecionado)}>
                       🗣️ Conversar
                     </Button>
                     {npcSelecionado.loja && (
-                      <Button variant="success" onClick={() => handleAbrirLoja(npcSelecionado.id)}>
-                        💰 Loja
+                      <Button variant="success" className="h-12" onClick={() => handleAbrirLoja(npcSelecionado.id)}>
+                        💰 Ver Mercadorias
                       </Button>
                     )}
                     {npcSelecionado.missoes && npcSelecionado.missoes.length > 0 && (
-                      <Button variant="secondary" onClick={() => handleVerMissoes(npcSelecionado.id)}>
-                        📜 Missões
+                      <Button variant="secondary" className="h-12 sm:col-span-2" onClick={() => handleVerMissoes(npcSelecionado.id)}>
+                        📜 Pedir Trabalho
                       </Button>
                     )}
                   </div>
@@ -270,46 +313,51 @@ export default function ListaAreas() {
               )}
 
               {modoInteracao === "dialogo" && (
-                <div className="npcDialogoBox">
-                  <p className="dialogoTexto">"{dialogoNPC}"</p>
-                  <Button variant="ghost" onClick={() => setModoInteracao("inicio")}>
+                <div className="space-y-4">
+                  <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-2xl border-l-4 border-amber-500 font-medium italic">
+                    "{dialogoNPC}"
+                  </div>
+                  <Button variant="ghost" className="w-full" onClick={() => setModoInteracao("inicio")}>
                     Voltar
                   </Button>
                 </div>
               )}
 
               {modoInteracao === "loja" && (
-                <div className="npcLoja">
-                  <h4>Itens Disponíveis</h4>
-                  <div className="listaItensLoja">
+                <div className="space-y-4">
+                  <h4 className="font-bold text-slate-800 dark:text-white uppercase tracking-widest text-xs">Itens Disponíveis</h4>
+                  <div className="max-h-[350px] overflow-y-auto pr-2 space-y-2">
                     {itensLoja.map(item => (
-                      <div key={item.id} className="itemLoja">
-                        <span className="itemName">{item.nome}</span>
-                        <span className="itemPreco">🪙 {item.preco}</span>
+                      <div key={item.id} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <span className="font-bold text-sm">{item.nome}</span>
+                        <span className="text-amber-600 font-black">🪙 {item.preco}</span>
                       </div>
                     ))}
-                    {itensLoja.length === 0 && <p>A loja está vazia.</p>}
+                    {itensLoja.length === 0 && <p className="text-center py-8 text-slate-400 italic">O estoque está vazio.</p>}
                   </div>
-                  <Button variant="ghost" onClick={() => setModoInteracao("inicio")}>
+                  <Button variant="ghost" className="w-full" onClick={() => setModoInteracao("inicio")}>
                     Voltar
                   </Button>
                 </div>
               )}
 
               {modoInteracao === "missoes" && (
-                <div className="npcMissoes">
-                  <h4>Missões Oferecidas</h4>
-                  <div className="listaMissoesNPC">
+                <div className="space-y-4">
+                  <h4 className="font-bold text-slate-800 dark:text-white uppercase tracking-widest text-xs">Trabalhos Oferecidos</h4>
+                  <div className="max-h-[350px] overflow-y-auto pr-2 space-y-3">
                     {missoesNPC.map(m => (
-                      <div key={m.id} className="missaoNPC">
-                        <h5>{m.nome}</h5>
-                        <p>{m.descricao}</p>
-                        <Button size="small">Aceitar Missão</Button>
+                      <div key={m.id} className="p-4 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                        <div className="flex justify-between items-start">
+                          <h5 className="font-bold text-slate-800 dark:text-white">{m.nome}</h5>
+                          <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Nível {m.nivelRecomendado}</span>
+                        </div>
+                        <p className="text-xs text-slate-500 line-clamp-2 italic">"{m.descricao}"</p>
+                        <Button size="small" className="w-full">Aceitar Missão</Button>
                       </div>
                     ))}
-                    {missoesNPC.length === 0 && <p>Nenhuma missão disponível no momento.</p>}
+                    {missoesNPC.length === 0 && <p className="text-center py-8 text-slate-400 italic">Sem trabalhos no momento.</p>}
                   </div>
-                  <Button variant="ghost" onClick={() => setModoInteracao("inicio")}>
+                  <Button variant="ghost" className="w-full" onClick={() => setModoInteracao("inicio")}>
                     Voltar
                   </Button>
                 </div>
@@ -318,14 +366,8 @@ export default function ListaAreas() {
           </div>
           
           <style jsx>{`
-            .npcInteracao { display: flex; flex-direction: column; gap: 1rem; }
-            .npcHeader { display: flex; gap: 1rem; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
-            .npcOpcoes { display: grid; grid-template-columns: 1fr; gap: 0.5rem; margin-top: 1rem; }
-            .npcDialogoBox { background: #f9f9f9; padding: 1rem; border-radius: 8px; font-style: italic; }
-            .listaItensLoja, .listaMissoesNPC { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; max-height: 300px; overflow-y: auto; }
-            .itemLoja { display: flex; justify-content: space-between; padding: 0.5rem; border-bottom: 1px solid #eee; }
-            .missaoNPC { padding: 0.8rem; border: 1px solid #ddd; border-radius: 6px; }
-            @media (min-width: 640px) { .npcOpcoes { grid-template-columns: 1fr 1fr; } }
+            .npcHeader { display: flex; gap: 1.5rem; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 1.5rem; }
+            :global(.dark) .npcHeader { border-color: rgba(255,255,255,0.05); }
           `}</style>
         </Modal>
       )}

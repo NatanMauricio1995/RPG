@@ -133,15 +133,15 @@ export default function CombatePage() {
     if (!estado) return;
 
     try {
-      const { atualizarPersonagem, buscarPersonagem } = await import("../../services/personagemService");
-      const { xp, ouro, itensConsumidos } = (await import("../../services/combateService")).calcularResultadoCombate(estado);
+      const { atualizarPersonagem } = await import("../../services/personagemService");
+      const { alterarQuantidade } = await import("../../services/itemService");
+      const { xp, ouro } = (await import("../../services/combateService")).calcularResultadoCombate(estado);
       
       const promises = idsParaAplicar.map(async (id) => {
         const combatente = estado.combatentes.find(c => String(c.origemId) === id);
         const pOriginal = personagensSnapshot[id];
         if (!combatente || !pOriginal) return;
 
-        // Calcular XP e Ouro proporcional (ex: dividido pelo grupo)
         const xpGanhado = Math.floor(xp / idsParaAplicar.length);
         const ouroGanhado = Math.floor(ouro / idsParaAplicar.length);
 
@@ -150,11 +150,15 @@ export default function CombatePage() {
           manaAtual: combatente.manaAtual,
           xpAtual: (pOriginal.xpAtual || 0) + xpGanhado,
           ouro: (pOriginal.ouro || 0) + ouroGanhado,
+          efeitosAtivos: combatente.efeitos, // Salvar efeitos ativos
         };
 
-        // TODO: Se tiver tempo, aplicar consumo de itens no inventário real aqui
-        // Mas o hook useInventario já lida com isso se estiver na página de inventário.
-        // Aqui no combate, precisaríamos chamar alterarQuantidade para cada item consumido.
+        // Consumir itens do inventário real
+        if (combatente.itensConsumidos && combatente.itensConsumidos.length > 0) {
+          for (const item of combatente.itensConsumidos) {
+            await alterarQuantidade(id, item.itemId, -item.quantidade);
+          }
+        }
 
         await atualizarPersonagem(id, novosDados);
       });
@@ -162,8 +166,9 @@ export default function CombatePage() {
       await Promise.all(promises);
       adicionarToast("sucesso", "Resultados aplicados com sucesso!");
       handleFecharModal();
-      carregar(); // Recarregar dados para limpar seleção
+      carregar(); 
     } catch (e) {
+      console.error(e);
       adicionarToast("erro", "Erro ao aplicar resultados.");
     }
   }

@@ -9,7 +9,9 @@ import {
   doc, 
   getDoc,
   query,
-  limit
+  limit,
+  QueryDocumentSnapshot,
+  setDoc
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import habilidadesData from "../data/sistema/habilidades.json";
@@ -34,47 +36,54 @@ const COLECAO = "habilidades";
 const CACHE_KEY = "habilidades_cache";
 const colecaoRef = collection(db, COLECAO);
 
-export async function listarHabilidades(): Promise<Habilidade[]> {
+export async function listarHabilidades(ultimoDoc?: QueryDocumentSnapshot): Promise<{ habilidades: Habilidade[], cursor?: QueryDocumentSnapshot }> {
   try {
-    const q = query(colecaoRef, limit(50));
-    const snapshot = await getDocs(q);
-    let habilidades = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Habilidade[];
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { orderBy } = await import("firebase/firestore");
 
-    // Seed if empty
-    if (habilidades.length === 0 && habilidadesData.length > 0) {
+    const { dados, proximoCursor } = await queryPaginada<Habilidade>(COLECAO, [orderBy("nome")], 20, ultimoDoc);
+    let habilidades = dados;
+
+    // Seed if empty and no pagination
+    if (habilidades.length === 0 && habilidadesData.length > 0 && !ultimoDoc) {
       console.log("Semeando habilidades no Firebase...");
       for (const h of habilidadesData) {
+        const idStr = String((h as any).id || Date.now() + Math.random());
         const novaHabilidade: Habilidade = {
           nome: h.nome,
-          descricao: "Habilidade básica",
-          imagem: "/imagens/habilidades/padrao.png",
-          tipo: 'ativa',
-          dano: 0,
-          cura: 0,
-          custoMana: 0,
-          cooldown: 0,
-          alcance: 1,
-          area: 1,
-          nivelMinimo: 1
+          descricao: h.descricao || "Habilidade básica",
+          imagem: h.imagem || "/imagens/habilidades/padrao.png",
+          tipo: (h.tipo as any) || 'ativa',
+          dano: Number(h.dano || 0),
+          cura: Number(h.cura || 0),
+          custoMana: Number(h.custoMana || 0),
+          cooldown: Number(h.cooldown || 0),
+          alcance: Number(h.alcance || 1),
+          area: Number(h.area || 1),
+          nivelMinimo: Number(h.nivelMinimo || 1)
         };
-        await addDoc(colecaoRef, novaHabilidade);
+        await setDoc(doc(db, COLECAO, idStr), novaHabilidade);
       }
-      const newSnapshot = await getDocs(colecaoRef);
-      habilidades = newSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Habilidade[];
+      const res = await queryPaginada<Habilidade>(COLECAO, [orderBy("nome")], 20);
+      habilidades = res.dados;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(habilidades));
+      }
+      return { habilidades, cursor: res.proximoCursor || undefined };
     }
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(habilidades));
     }
 
-    return habilidades;
+    return { habilidades, cursor: proximoCursor || undefined };
   } catch (error) {
     console.error("Erro ao listar habilidades, tentando cache:", error);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       const cache = localStorage.getItem(CACHE_KEY);
-      return cache ? JSON.parse(cache) : [];
+      return { habilidades: cache ? JSON.parse(cache) : [], cursor: undefined };
     }
-    return [];
+    return { habilidades: [], cursor: undefined };
   }
 }
 

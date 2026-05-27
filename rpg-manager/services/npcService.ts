@@ -239,3 +239,18 @@ export async function excluirNPC(id: string) {
     throw error;
   }
 }
+
+/**
+ * Busca um NPC e popula os detalhes das suas missões.
+ */
+export async function buscarNPCComMissoes(npcId: string): Promise<NPC & { missoesDetalhes: Missao[] }> {
+  const npc = await buscarNPC(npcId);
+  if (!npc) throw new Error("NPC não encontrado");
+  
+  const { buscarMissao } = await import("./missaoService");
+  const missoesDetalhes = (await Promise.all(
+    (npc.missoes || []).map(id => buscarMissao(String(id)))
+  )).filter((m): m is Missao => !!m);
+
+  return { ...npc, missoesDetalhes };
+}

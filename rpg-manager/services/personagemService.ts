@@ -12,7 +12,10 @@ import {
   query,
   limit,
   where,
-  onSnapshot
+  onSnapshot,
+  QueryDocumentSnapshot,
+  orderBy,
+  startAfter
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 import personagensData from "../data/campanha/personagens.json";
@@ -114,46 +117,45 @@ export function normalizarPersonagem(personagem: any): Personagem {
   return p;
 }
 
-export async function listarPersonagens(userId?: string, ultimoDoc?: any): Promise<{ personagens: Personagem[], cursor?: any }> {
+export async function listarPersonagens(userId?: string, ultimoDoc?: QueryDocumentSnapshot): Promise<{ personagens: Personagem[], cursor?: QueryDocumentSnapshot }> {
   try {
-    let q = query(colecaoRef, limit(50));
+    const { queryPaginada } = await import("../firebase/firestore");
+    const filtros: any[] = [];
     if (userId) {
-      q = query(colecaoRef, where("userId", "==", userId), limit(50));
+      filtros.push(where("userId", "==", userId));
     }
-    if (ultimoDoc) {
-      q = query(q, startAfter(ultimoDoc));
-    }
-    const snapshot = await getDocs(q);
-    let personagens = snapshot.docs.map((d) => ({
-      ...d.data(),
-      id: d.id,
-    })) as Personagem[];
+    filtros.push(orderBy("nome"));
 
-    const cursor = snapshot.docs[snapshot.docs.length - 1];
+    const { dados, proximoCursor } = await queryPaginada<Personagem>(COLECAO, filtros, 20, ultimoDoc);
+    let personagens = dados;
 
-    // Seed se estiver vazio
-    if (personagens.length === 0 && personagensData.length > 0) {
+    // Seed se estiver vazio e sem paginação
+    if (personagens.length === 0 && personagensData.length > 0 && !ultimoDoc) {
       console.log("Semeando personagens no Firebase...");
       for (const p of personagensData) {
         const { id, ...dados } = normalizarPersonagem(p);
         await setDoc(doc(db, COLECAO, String(id)), dados);
       }
-      const newSnapshot = await getDocs(colecaoRef);
-      personagens = newSnapshot.docs.map((d) => ({ ...d.data(), id: d.id })) as Personagem[];
+      const res = await queryPaginada<Personagem>(COLECAO, [orderBy("nome")], 20);
+      personagens = res.dados;
+      if (typeof window !== "undefined") {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(personagens));
+      }
+      return { personagens: personagens.map(normalizarPersonagem), cursor: res.proximoCursor || undefined };
     }
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       localStorage.setItem(CACHE_KEY, JSON.stringify(personagens));
     }
 
-    return personagens.map(normalizarPersonagem);
+    return { personagens: personagens.map(normalizarPersonagem), cursor: proximoCursor || undefined };
   } catch (error) {
     console.error("Erro ao listar personagens, tentando cache:", error);
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !ultimoDoc) {
       const cache = localStorage.getItem(CACHE_KEY);
-      return cache ? JSON.parse(cache).map(normalizarPersonagem) : [];
+      return { personagens: cache ? JSON.parse(cache).map(normalizarPersonagem) : [], cursor: undefined };
     }
-    return [];
+    return { personagens: [], cursor: undefined };
   }
 }
 
@@ -265,14 +267,15 @@ export async function excluirPersonagem(id: string | number) {
 }
 
 // ─── Classes (Consolidado) ───────────────────────────────────────────────────
-export async function listarClasses() {
-  const colecao = collection(db, "classes");
-  const q = query(colecao, limit(50));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((item) => ({
-    id: item.id,
-    ...item.data(),
-  })) as Classe[];
+export async function listarClasses(ultimoDoc?: QueryDocumentSnapshot): Promise<{ classes: Classe[], cursor?: QueryDocumentSnapshot }> {
+  try {
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { dados, proximoCursor } = await queryPaginada<Classe>("classes", [orderBy("nome")], 20, ultimoDoc);
+    return { classes: dados, cursor: proximoCursor || undefined };
+  } catch (error) {
+    console.error("Erro ao listar classes:", error);
+    return { classes: [], cursor: undefined };
+  }
 }
 
 export async function salvarClasse(dados: any) {
@@ -288,14 +291,15 @@ export async function excluirClasse(id: string) {
 }
 
 // ─── Raças (Consolidado) ──────────────────────────────────────────────────────
-export async function listarRacas() {
-  const colecao = collection(db, "racas");
-  const q = query(colecao, limit(50));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((item) => ({
-    id: item.id,
-    ...item.data(),
-  })) as Raca[];
+export async function listarRacas(ultimoDoc?: QueryDocumentSnapshot): Promise<{ racas: Raca[], cursor?: QueryDocumentSnapshot }> {
+  try {
+    const { queryPaginada } = await import("../firebase/firestore");
+    const { dados, proximoCursor } = await queryPaginada<Raca>("racas", [orderBy("nome")], 20, ultimoDoc);
+    return { racas: dados, cursor: proximoCursor || undefined };
+  } catch (error) {
+    console.error("Erro ao listar raças:", error);
+    return { racas: [], cursor: undefined };
+  }
 }
 
 export async function salvarRaca(dados: any) {

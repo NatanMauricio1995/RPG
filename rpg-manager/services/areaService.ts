@@ -172,3 +172,32 @@ export async function buscarArea(id: string): Promise<Area | undefined> {
     return undefined;
   }
 }
+
+/**
+ * Busca uma área e popula todos os detalhes (NPCs, Missões, Monstros).
+ */
+export async function buscarAreaCompleta(areaId: string) {
+  const area = await buscarArea(areaId);
+  if (!area) return null;
+
+  const { buscarNPC } = await import("./npcService");
+  const { buscarMissao } = await import("./missaoService");
+  const { listarMonstros } = await import("./combateService");
+
+  const [npcs, missoes, todosMonstros] = await Promise.all([
+    Promise.all((area.npcsIds || []).map(id => buscarNPC(String(id)))),
+    Promise.all((area.missoesIds || []).map(id => buscarMissao(String(id)))),
+    listarMonstros(),
+  ]);
+
+  const monstros = todosMonstros.filter(m => 
+    (area.monstrosIds || []).map(String).includes(String(m.id))
+  );
+
+  return {
+    ...area,
+    npcs: npcs.filter((n): n is NPC => !!n),
+    missoes: missoes.filter((m): m is Missao => !!m),
+    monstros,
+  };
+}
