@@ -378,6 +378,75 @@ export async function consumirItem(personagemId: string | number, itemId: string
   }
 }
 
+export async function desequiparItemPersonagem(personagemId: string | number, itemId: string) {
+  try {
+    const p = await buscarPersonagem(personagemId);
+    if (!p) throw new Error("Personagem não encontrado");
+
+    const item = await buscarItem(itemId);
+    if (!item) throw new Error("Item não encontrado");
+
+    // 1. Atualizar Slots e Inventário
+    const novosEquipados = { ...p.equipados };
+    const slot = item.slot;
+    if ((novosEquipados as any)[slot] === itemId) {
+      (novosEquipados as any)[slot] = null;
+    }
+
+    const novoInventario = (p.inventario || []).map((inv) =>
+      String(inv.itemId) === String(itemId) ? { ...inv, equipado: false } : inv
+    );
+
+    // 2. Salvar e Recalcular (o Firebase onSnapshot ou o retorno do save garantem a consistência)
+    await atualizarPersonagem(personagemId, {
+      equipados: novosEquipados,
+      inventario: novoInventario,
+    });
+
+    return await completarPersonagem(p);
+  } catch (error) {
+    console.error("Erro ao desequipar item:", error);
+    throw error;
+  }
+}
+
+export async function equiparItemPersonagem(personagemId: string | number, itemId: string) {
+  try {
+    const pBase = await buscarPersonagem(personagemId);
+    if (!pBase) throw new Error("Personagem não encontrado");
+
+    const pCompleto = await completarPersonagem(pBase);
+    const item = await buscarItem(itemId);
+    if (!item) throw new Error("Item não encontrado");
+
+    // 1. Validar requisitos
+    const check = (await import("./itemService")).validarEquipamento(pCompleto, item);
+    if (!check.valido) throw new Error(check.motivo);
+
+    // 2. Atualizar Slots e Inventário
+    const slot = item.slot;
+    const itemAnteriorId = (pBase.equipados as any)[slot];
+    
+    const novosEquipados = { ...pBase.equipados, [slot]: itemId };
+    const novoInventario = (pBase.inventario || []).map((inv) => {
+      if (String(inv.itemId) === String(itemId)) return { ...inv, equipado: true };
+      if (itemAnteriorId && String(inv.itemId) === String(itemAnteriorId)) return { ...inv, equipado: false };
+      return inv;
+    });
+
+    // 3. Persistir
+    await atualizarPersonagem(personagemId, {
+      equipados: novosEquipados,
+      inventario: novoInventario,
+    });
+
+    return await completarPersonagem(pBase);
+  } catch (error) {
+    console.error("Erro ao equipar item:", error);
+    throw error;
+  }
+}
+
 export async function completarPersonagem(personagem: Personagem): Promise<PersonagemCompleto> {
   const p = normalizarPersonagem(personagem);
 

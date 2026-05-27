@@ -286,3 +286,43 @@ export async function desequiparItem(personagemId: string | number, itemId: stri
     );
   });
 }
+
+/**
+ * Valida se um personagem pode equipar um item específico
+ */
+export function validarEquipamento(
+  personagem: PersonagemCompleto, 
+  item: Item
+): { valido: boolean; motivo?: string } {
+  // 1. Nível Mínimo
+  const nivelMin = item.nivelMinimo || 1;
+  if (nivelMin > personagem.nivel) {
+    return { valido: false, motivo: `Nível insuficiente (Requer: ${nivelMin})` };
+  }
+
+  // 2. Raças Permitidas (se vazio, todos podem)
+  const racas = (item as any).racasPermitidas || [];
+  if (racas.length > 0 && !racas.includes(personagem.racaId)) {
+    return { valido: false, motivo: "Sua raça não possui treinamento com este item." };
+  }
+
+  // 3. Classes Permitidas (se vazio, todos podem)
+  const classes = (item as any).classesPermitidas || [];
+  if (classes.length > 0 && !classes.includes(personagem.classeId)) {
+    return { valido: false, motivo: "Sua classe não pode equipar este item." };
+  }
+
+  // 4. Regra Especial: Magos não podem usar armaduras pesadas
+  const classeNome = (personagem.classeDados?.nome || "").toLowerCase();
+  const subtipoItem = (item.subtipo || "").toLowerCase();
+  if (classeNome === "mago" && subtipoItem === "pesada") {
+    return { valido: false, motivo: "Magos não podem equipar armaduras do tipo 'pesada'." };
+  }
+
+  // 5. Slot válido
+  if (!item.slot) {
+    return { valido: false, motivo: "Este item não é um equipamento válido para slots." };
+  }
+
+  return { valido: true };
+}
