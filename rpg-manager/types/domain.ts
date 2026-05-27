@@ -349,12 +349,12 @@ export type RegistroClima = {
 // MISSÕES / ÁREAS
 // ==================================
 
+export type StatusMissao = "disponivel" | "em_andamento" | "concluida" | "falhou";
+
 export type ObjetivoMissao = {
   descricao: string;
-  tipo: "matar" | "coletar" | "falar" | "explorar";
-  alvoId?: string;
-  quantidadeTotal?: number;
-  quantidadeAtual: number;
+  progresso: number;
+  total: number;
   concluido: boolean;
 };
 
@@ -362,15 +362,15 @@ export type Missao = {
   id: string;
   nome: string;
   descricao: string;
+  status: StatusMissao;
   objetivos: ObjetivoMissao[];
   recompensas: {
-    ouro?: number;
-    xp?: number;
-    itens?: string[];
+    xp: number;
+    ouro: number;
+    itens: string[]; // IDs dos itens
   };
   npcId: string;
-  status: "disponível" | "ativa" | "concluída" | "falhou";
-  nivelRecomendado: number;
+  nivelRecomendado?: number;
 };
 
 export type Area = {
