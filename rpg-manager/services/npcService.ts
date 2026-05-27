@@ -93,9 +93,65 @@ export async function buscarNPC(id: string): Promise<NPC | null> {
 }
 
 /**
+ * Abre a loja do NPC, aplicando descontos baseados na reputação.
+ */
+export async function abrirLoja(npcId: string, personagemId?: string): Promise<Item[]> {
+  try {
+    const npc = await buscarNPC(npcId);
+    if (!npc || !npc.loja) return [];
+
+    const { listarItens } = await import("./itemService");
+    const { itens } = await listarItens();
+    
+    // Usando itensIds conforme definido em domain.ts
+    const itensLoja = itens.filter(i => npc.loja?.itensIds.includes(i.id));
+
+    // Cálculo de desconto: 1% de desconto para cada 10 pontos de reputação positiva
+    // Além do desconto base da loja
+    let descontoReputacao = 0;
+    if (personagemId) {
+      const reputacao = npc.reputacao[personagemId] || 0;
+      if (reputacao > 0) {
+        descontoReputacao = Math.floor(reputacao / 10) / 100; // Máximo 10% se reputação for 100
+      }
+    }
+
+    const descontoBase = npc.loja.desconto || 0;
+
+    return itensLoja.map(item => ({
+      ...item,
+      preco: Math.floor((item.preco || 0) * (1 - descontoBase) * (1 - descontoReputacao))
+    }));
+  } catch (error) {
+    console.error("Erro ao abrir loja:", error);
+    return [];
+  }
+}
+
+/**
+ * Busca missões oferecidas pelo NPC que o personagem pode aceitar.
+ */
+export async function buscarMissoesNPC(npcId: string, personagemNivel: number): Promise<Missao[]> {
+  try {
+    const npc = await buscarNPC(npcId);
+    if (!npc || !npc.missoes) return [];
+
+    const todasMissoes = await listarMissoes();
+    return todasMissoes.filter(m => 
+      npc.missoes.includes(m.id) && 
+      (m.status === "disponivel" || m.status === "disponível") &&
+      (m.nivelRecomendado || 1) <= personagemNivel
+    );
+  } catch (error) {
+    console.error("Erro ao buscar missões do NPC:", error);
+    return [];
+  }
+}
+
+/**
  * Atualiza a reputação de um personagem específico com este NPC.
  */
-export async function atualizarReputacao(npcId: string, personagemId: string | number, delta: number) {
+export async function atualizarReputacao(npcId: string, personagemId: string | number, delta: number): Promise<void> {
   try {
     const npc = await buscarNPC(npcId);
     if (!npc) return;
@@ -106,8 +162,6 @@ export async function atualizarReputacao(npcId: string, personagemId: string | n
 
     const novaReputacao = { ...npc.reputacao, [pId]: nova };
     await updateDoc(doc(db, COLECAO, npcId), { reputacao: novaReputacao });
-
-    return nova;
   } catch (error) {
     console.error("Erro ao atualizar reputação:", error);
     throw error;

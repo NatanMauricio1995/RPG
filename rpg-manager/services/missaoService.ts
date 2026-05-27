@@ -61,14 +61,9 @@ export async function aceitarMissao(personagemId: string | number, missaoId: str
 }
 
 /**
- * Atualiza o progresso de um objetivo específico da missão.
+ * Avança o progresso de um objetivo específico da missão.
  */
-export async function atualizarProgresso(
-  personagemId: string | number, 
-  missaoId: string, 
-  objetivoIndex: number, 
-  valor: number
-) {
+export async function avancarObjetivo(missaoId: string, objetivoIndex: number, delta: number): Promise<void> {
   try {
     const missao = await buscarMissao(missaoId);
     if (!missao || !missao.objetivos[objetivoIndex]) return;
@@ -76,22 +71,21 @@ export async function atualizarProgresso(
     const objetivos = [...missao.objetivos];
     const obj = objetivos[objetivoIndex];
     
-    obj.progresso = Math.min(obj.total, obj.progresso + valor);
+    obj.progresso = Math.min(obj.total, obj.progresso + delta);
     obj.concluido = obj.progresso >= obj.total;
 
     await updateDoc(doc(db, COLECAO, missaoId), { objetivos });
-    
-    // Se todos concluídos, o mestre pode chamar concluirMissao manualmente
-    // ou podemos disparar um alerta na UI.
   } catch (error) {
-    console.error("Erro ao atualizar progresso da missão:", error);
+    console.error("Erro ao avançar objetivo da missão:", error);
+    throw error;
   }
 }
 
 /**
  * Finaliza a missão e aplica as recompensas ao personagem.
+ * Retorna o resumo das recompensas aplicadas.
  */
-export async function concluirMissao(personagemId: string | number, missaoId: string) {
+export async function concluirMissao(missaoId: string, personagemId: string | number): Promise<{xp: number; ouro: number; itens: string[]}> {
   try {
     const missao = await buscarMissao(missaoId);
     if (!missao) throw new Error("Missão não encontrada");
@@ -101,19 +95,19 @@ export async function concluirMissao(personagemId: string | number, missaoId: st
     if (!personagem) throw new Error("Personagem não encontrado");
 
     // 1. Aplicar Recompensas
-    const pAtualizado = { ...personagem };
-    pAtualizado.xpAtual += (missao.recompensas.xp || 0);
-    pAtualizado.ouro += (missao.recompensas.ouro || 0);
+    const xp = (missao.recompensas.xp || 0);
+    const ouro = (missao.recompensas.ouro || 0);
+    const itens = (missao.recompensas.itens || []);
 
     // 2. Salvar Personagem (XP e Ouro)
     await atualizarPersonagem(personagemId, {
-      xpAtual: pAtualizado.xpAtual,
-      ouro: pAtualizado.ouro
+      xpAtual: (personagem.xpAtual || 0) + xp,
+      ouro: (personagem.ouro || 0) + ouro
     });
 
     // 3. Adicionar Itens Recompensa
-    if (missao.recompensas.itens && missao.recompensas.itens.length > 0) {
-      for (const itemId of missao.recompensas.itens) {
+    if (itens.length > 0) {
+      for (const itemId of itens) {
         await adicionarItem(personagemId, itemId, 1);
       }
     }
@@ -121,6 +115,7 @@ export async function concluirMissao(personagemId: string | number, missaoId: st
     // 4. Atualizar Status da Missão
     await updateDoc(doc(db, COLECAO, missaoId), { status: "concluida" });
 
+    return { xp, ouro, itens };
   } catch (error) {
     console.error("Erro ao concluir missão:", error);
     throw error;
