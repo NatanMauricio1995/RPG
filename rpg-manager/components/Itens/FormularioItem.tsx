@@ -1,619 +1,148 @@
 "use client";
 
-import {useState,type ChangeEvent} from "react";
-import {useParams,useRouter} from "next/navigation";
+import {useState, useEffect, type ChangeEvent} from "react";
+import {useParams, useRouter} from "next/navigation";
 import Image from "next/image";
 
 import classes from "../../data/sistema/classes.json";
 import racas from "../../data/sistema/racas.json";
-import {buscarItem,normalizarItem} from "../../services/itemService";
+import {buscarItem, normalizarItem, salvarItem, editarItem} from "../../services/itemService";
+import type { Item } from "../../types/domain";
 
-type Props={
-modoEdicao?:boolean;
+type Props = {
+  modoEdicao?: boolean;
 };
 
-const modeloItem={
-
-id:Date.now(),
-nome:"",
-descricao:"",
-tipo:"Equipamento",
-subtipo:"Arma",
-nivelMinimo:1,
-imagem:"/imagens/itens/padrao.png",
-
-classePermitida:[] as string[],
-racaPermitida:[] as string[],
-
-bonus:{
-forca:0,
-destreza:0,
-constituicao:0,
-inteligencia:0,
-sabedoria:0,
-carisma:0
-},
-
-efeitos:[
-{
-tipo:"vida",
-valor:0
-}
-]
-
+const modeloItem = {
+  nome: "",
+  descricao: "",
+  tipo: "Equipamento",
+  subtipo: "Arma",
+  nivelMinimo: 1,
+  imagem: "/imagens/itens/padrao.png",
+  bonus: {
+    forca: 0,
+    destreza: 0,
+    constituicao: 0,
+    inteligencia: 0,
+    sabedoria: 0,
+    carisma: 0
+  },
+  efeitos: [] as any[]
 };
 
-type ItemFormulario=typeof modeloItem;
-type CampoLista="classePermitida"|"racaPermitida";
-type EfeitoItem=ItemFormulario["efeitos"][number];
-type OpcaoImagem={
-id:number | string;
-nome:string;
-imagem?:string;
-};
-type ItemSalvo={
-id:number | string;
-};
-
-export default function FormularioItem({
-modoEdicao=false
-}:Props){
-
-const router=useRouter();
-const params=useParams();
-const id=Number(params?.id);
-
-const[item,setItem]=useState<ItemFormulario>(()=>{
-
-if(modoEdicao && id){
-const encontrado=buscarItem(id);
-
-if(encontrado){
-return{
-...modeloItem,
-...normalizarItem(encontrado),
-bonus:{
-...modeloItem.bonus,
-...(encontrado.bonus || {})
-},
-efeitos:Array.isArray(encontrado.efeitos) && encontrado.efeitos.length>0
-? encontrado.efeitos
-: modeloItem.efeitos,
-classePermitida:encontrado.classePermitida || modeloItem.classePermitida,
-racaPermitida:encontrado.racaPermitida || modeloItem.racaPermitida
-};
-}
-}
-
-return modeloItem;
-
-});
-
-
-const nomesAtributos={
-
-forca:"Força",
-destreza:"Destreza",
-constituicao:"Constituição",
-inteligencia:"Inteligência",
-sabedoria:"Sabedoria",
-carisma:"Carisma"
-
-};
-
-
-function alterarCampo(
-evento:ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-){
-
-setItem(anterior=>({
-...anterior,
-[evento.target.name]:evento.target.value
-}));
-
-}
-
-
-function alterarBonus(
-atributo:string,
-valor:number
-){
-
-setItem(anterior=>({
-...anterior,
-
-bonus:{
-...anterior.bonus,
-[atributo]:valor
-}
-
-}));
-
-}
-
-
-function alternarLista(
-campo:CampoLista,
-valor:string
-){
-
-setItem(anterior=>{
-
-const lista=anterior[campo];
-
-return{
-
-...anterior,
-
-[campo]:
-
-lista.includes(valor)
-
-? lista.filter(
-v=>v!==valor
-)
-
-: [...lista,valor]
-
-};
-
-});
-
-}
-
-
-function alterarEfeito(
-index:number,
-campo:keyof EfeitoItem,
-valor:string | number
-){
-
-setItem(anterior=>{
-
-const novosEfeitos=[
-...anterior.efeitos
-];
-
-novosEfeitos[index]={
-
-...novosEfeitos[index],
-
-[campo]:valor
-
-};
-
-return{
-
-...anterior,
-
-efeitos:
-novosEfeitos
-
-};
-
-});
-
-}
-
-
-function adicionarEfeito(){
-
-setItem(anterior=>({
-
-...anterior,
-
-efeitos:[
-
-...anterior.efeitos,
-
-{
-tipo:"vida",
-valor:0
-}
-
-]
-
-}));
-
-}
-
-
-function removerEfeito(
-index:number
-){
-
-setItem(anterior=>({
-
-...anterior,
-
-efeitos:
-
-anterior.efeitos.filter(
-(_,i:number)=>i!==index
-)
-
-}));
-
-}
-
-
-function carregarImagem(
-evento:ChangeEvent<HTMLInputElement>
-){
-
-const arquivo=
-evento.target.files?.[0];
-
-if(!arquivo)return;
-
-const leitor=
-new FileReader();
-
-leitor.onload=()=>{
-
-setItem(anterior=>({
-
-...anterior,
-
-imagem:
-String(leitor.result || "/imagens/itens/padrao.png")
-
-}));
-
-};
-
-leitor.readAsDataURL(
-arquivo
-);
-
-}
-
-
-function salvar(){
-
-const itensSalvos=
-
-JSON.parse(
-
-localStorage.getItem(
-"itensPersonalizados"
-)
-
-||"[]"
-
-);
-
-const atualizados=modoEdicao
-? (itensSalvos as ItemSalvo[]).filter((itemSalvo)=>Number(itemSalvo.id)!==Number(item.id))
-: itensSalvos;
-
-localStorage.setItem(
-
-"itensPersonalizados",
-
-JSON.stringify([
-
-...atualizados,
-item
-
-])
-
-);
-
-router.push("/itens");
-
-}
-
-
-const imagemClasse=(classe:OpcaoImagem)=>
-
-classe.imagem?.startsWith("/")
-? classe.imagem
-: "/imagens/classes/padrao.png";
-
-
-const imagemRaca=(raca:OpcaoImagem)=>
-
-raca.imagem?.startsWith("/")
-? raca.imagem
-: "/imagens/racas/padrao.png";
-
-
-return(
-
-<div className="formulario">
-
-<h2 className="formularioTitulo">
-
-{modoEdicao ? "✦ Editar Item ✦" : "✦ Criar Item ✦"}
-
-</h2>
-
-<label>Nome</label>
-
-<input
-name="nome"
-value={item.nome}
-onChange={alterarCampo}
-/>
-
-<label>Descrição</label>
-
-<textarea
-name="descricao"
-value={item.descricao}
-onChange={alterarCampo}
-/>
-
-<label>Tipo</label>
-
-<select
-name="subtipo"
-value={item.subtipo}
-onChange={alterarCampo}
->
-<option>Arma</option>
-<option>Armadura</option>
-<option>Acessório</option>
-<option>Munição</option>
-<option>Consumível</option>
-</select>
-
-<label>Nível mínimo</label>
-
-<input
-name="nivelMinimo"
-type="number"
-value={item.nivelMinimo}
-onChange={alterarCampo}
-/>
-
-<label>Efeitos especiais</label>
-
-{
-
-item.efeitos.map(
-(efeito,index:number)=>(
-
-<div
-key={index}
-className="efeitoContainer"
->
-
-<div className="bonusGrid">
-
-<select
-value={efeito.tipo}
-onChange={(e)=>
-
-alterarEfeito(
-index,
-"tipo",
-e.target.value
-)
-
-}
->
-
-<option value="vida">Vida</option>
-<option value="mana">Mana</option>
-<option value="critico">Crítico</option>
-<option value="armadura">Armadura</option>
-<option value="velocidade">Velocidade</option>
-<option value="veneno">Veneno</option>
-<option value="sangramento">Sangramento</option>
-<option value="paralisia">Paralisia</option>
-<option value="medo">Medo</option>
-<option value="cura">Cura</option>
-<option value="escudo">Escudo</option>
-
-</select>
-
-<input
-type="number"
-value={efeito.valor}
-onChange={(e)=>
-
-alterarEfeito(
-index,
-"valor",
-Number(e.target.value)
-)
-
-}
-/>
-
-</div>
-
-<button
-type="button"
-className="botaoRemover"
-onClick={()=>
-removerEfeito(index)
-}
->
-
-🗑 Remover
-
-</button>
-
-</div>
-
-)
-
-)
-
-}
-
-<button
-type="button"
-onClick={adicionarEfeito}
->
-
-➕ Adicionar efeito
-
-</button>
-
-<label>Imagem</label>
-
-<input
-type="file"
-accept="image/*"
-onChange={carregarImagem}
-/>
-
-<label>Classes Permitidas</label>
-
-<div className="checkboxGrid">
-
-{
-
-(classes as OpcaoImagem[]).map(
-(classe)=>(
-
-<div
-key={classe.id}
-className="cardSelecao"
->
-
-<Image
-src={imagemClasse(classe)}
-alt={classe.nome}
-width={80}
-height={80}
-className="imagemSelecao"
-/>
-
-<label>
-
-<input
-type="checkbox"
-checked={item.classePermitida.includes(classe.nome)}
-onChange={()=>alternarLista("classePermitida",classe.nome)}
-/>
-
-{classe.nome}
-
-</label>
-
-</div>
-
-)
-
-)
-
-}
-
-</div>
-
-<label>Raças Permitidas</label>
-
-<div className="checkboxGrid">
-
-{
-
-(racas as OpcaoImagem[]).map(
-(raca)=>(
-
-<div
-key={raca.id}
-className="cardSelecao"
->
-
-<Image
-src={imagemRaca(raca)}
-alt={raca.nome}
-width={80}
-height={80}
-className="imagemSelecao"
-/>
-
-<label>
-
-<input
-type="checkbox"
-checked={item.racaPermitida.includes(raca.nome)}
-onChange={()=>alternarLista("racaPermitida",raca.nome)}
-/>
-
-{raca.nome}
-
-</label>
-
-</div>
-
-)
-
-)
-
-}
-
-</div>
-
-<label>Bônus do Item</label>
-
-<div className="bonusGrid">
-
-{
-
-Object.keys(item.bonus).map(
-(atributo)=>(
-
-<div key={atributo}>
-
-<label>
-
-{nomesAtributos[
-atributo as keyof typeof nomesAtributos
-]}
-
-</label>
-
-<input
-type="number"
-value={item.bonus[
-atributo as keyof typeof item.bonus
-]}
-onChange={(e)=>
-alterarBonus(
-atributo,
-Number(e.target.value)
-)
-}
-/>
-
-</div>
-
-)
-
-)
-
-}
-
-</div>
-
-<div className="previewImagem">
-
-<Image
-src={item.imagem}
-alt="Preview item"
-width={180}
-height={180}
-/>
-
-</div>
-
-<button
-className="botaoSalvar"
-onClick={salvar}
->
-
-{modoEdicao ? "💾 Salvar Alterações" : "💾 Salvar Item"}
-
-</button>
-
-</div>
-
-);
-
+export default function FormularioItem({ modoEdicao = false }: Props) {
+  const router = useRouter();
+  const params = useParams();
+  const id = params?.id ? String(params.id) : null;
+
+  const [item, setItem] = useState<any>(modeloItem);
+  const [carregando, setCarregando] = useState(modoEdicao);
+
+  useEffect(() => {
+    if (modoEdicao && id) {
+      buscarItem(id).then(encontrado => {
+        if (encontrado) {
+          setItem(normalizarItem(encontrado));
+        }
+        setCarregando(false);
+      });
+    }
+  }, [modoEdicao, id]);
+
+  function alterarCampo(evento: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    setItem((anterior: any) => ({
+      ...anterior,
+      [evento.target.name]: evento.target.value
+    }));
+  }
+
+  function alterarBonus(atributo: string, valor: number) {
+    setItem((anterior: any) => ({
+      ...anterior,
+      bonus: {
+        ...anterior.bonus,
+        [atributo]: valor
+      }
+    }));
+  }
+
+  function carregarImagem(evento: ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0];
+    if (!arquivo) return;
+    const leitor = new FileReader();
+    leitor.onload = () => {
+      setItem((anterior: any) => ({
+        ...anterior,
+        imagem: String(leitor.result || "/imagens/itens/padrao.png")
+      }));
+    };
+    leitor.readAsDataURL(arquivo);
+  }
+
+  async function salvar() {
+    try {
+      if (modoEdicao && id) {
+        await editarItem(id, item);
+      } else {
+        await salvarItem(item);
+      }
+      router.push("/itens");
+    } catch (error) {
+      console.error("Erro ao salvar item:", error);
+    }
+  }
+
+  if (carregando) return <div>Forjando item...</div>;
+
+  return (
+    <div className="formulario">
+      <h2 className="formularioTitulo">
+        {modoEdicao ? "✦ Editar Item ✦" : "✦ Criar Item ✦"}
+      </h2>
+
+      <label>Nome</label>
+      <input name="nome" value={item.nome} onChange={alterarCampo} />
+
+      <label>Descrição</label>
+      <textarea name="descricao" value={item.descricao} onChange={alterarCampo} />
+
+      <label>Tipo</label>
+      <select name="subtipo" value={item.subtipo} onChange={alterarCampo}>
+        <option>Arma</option>
+        <option>Armadura</option>
+        <option>Acessório</option>
+        <option>Munição</option>
+        <option>Consumível</option>
+      </select>
+
+      <label>Nível mínimo</label>
+      <input name="nivelMinimo" type="number" value={item.nivelMinimo} onChange={alterarCampo} />
+
+      <label>Bônus do Item</label>
+      <div className="bonusGrid">
+        {Object.keys(item.bonus || {}).map((atributo) => (
+          <div key={atributo}>
+            <label>{atributo}</label>
+            <input
+              type="number"
+              value={(item.bonus as any)[atributo]}
+              onChange={(e) => alterarBonus(atributo, Number(e.target.value))}
+            />
+          </div>
+        ))}
+      </div>
+
+      <label>Imagem</label>
+      <input type="file" accept="image/*" onChange={carregarImagem} />
+
+      <div className="previewImagem">
+        <Image src={item.imagem || "/imagens/itens/padrao.png"} alt="Preview item" width={180} height={180} />
+      </div>
+
+      <button className="botaoSalvar" onClick={salvar}>
+        {modoEdicao ? "💾 Salvar Alterações" : "💾 Salvar Item"}
+      </button>
+    </div>
+  );
 }

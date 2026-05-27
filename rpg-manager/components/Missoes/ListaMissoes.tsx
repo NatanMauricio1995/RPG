@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { listarMissoes } from "../../services/missaoServiceFirebase";
-import type { Missao } from "../../types/domain";
+import { listarMissoes, Missao } from "../../services/missaoService";
 import Link from "next/link";
 
 export default function ListaMissoes() {
@@ -23,22 +22,22 @@ export default function ListaMissoes() {
       {missoes.map(missao => (
         <div key={missao.id} className="cardHabilidade">
           <div className="conteudoHabilidade">
-            <div className="tipoHabilidade">{missao.status} | Nível {missao.nivelRecomendado}</div>
+            <div className="tipoHabilidade">{missao.status}</div>
             <h3 className="nomeHabilidade">{missao.nome}</h3>
             <p className="descricaoHabilidade">{missao.descricao}</p>
             <div className="statsHabilidade">
                <div className="statHabilidade">
-                  <span className="statLabel">XP:</span>
-                  <span className="statValor">{missao.recompensas.xp}</span>
+                  <span className="statLabel">Objetivo:</span>
+                  <span className="statValor">{missao.objetivo}</span>
                </div>
                <div className="statHabilidade">
-                  <span className="statLabel">Ouro:</span>
-                  <span className="statValor">{missao.recompensas.ouro}</span>
+                  <span className="statLabel">Recompensa:</span>
+                  <span className="statValor">{missao.recompensa}</span>
                </div>
             </div>
           </div>
           <div className="acoesHabilidade">
-             <Link href={`/missoes/${missao.id}`} className="botaoHabilidade botaoEditarHabilidade">Ver Objetivos</Link>
+             <Link href={`/missoes/${missao.id}`} className="botaoHabilidade botaoEditarHabilidade">Ver Detalhes</Link>
           </div>
         </div>
       ))}

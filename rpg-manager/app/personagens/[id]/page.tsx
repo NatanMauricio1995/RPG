@@ -7,7 +7,7 @@ import Link from "next/link";
 
 import usePersonagem from "../../../hooks/usePersonagem";
 import useNivel from "../../../hooks/useNivel";
-import { useInventario } from "../../../contexts/InventarioContext";
+import { useInventarioContext } from "../../../contexts/InventarioContext";
 
 import InformacoesBasicas from "../../../components/Personagem/Ficha/InformacoesBasicas";
 import Atributos from "../../../components/Personagem/Ficha/Atributos";
@@ -18,7 +18,7 @@ import Inventario from "../../../components/Personagem/Inventario/Inventario";
 export default function Ficha() {
   const params = useParams();
   const { personagemAtual, setPersonagemAtual } = usePersonagem(Number(params.id));
-  const { carregarInventario } = useInventario();
+  const { carregarInventario } = useInventarioContext();
   const [abaAtiva, setAbaAtiva] = useState<"geral" | "equipamentos" | "inventario">("geral");
 
   const {
@@ -33,8 +33,8 @@ export default function Ficha() {
 
   useEffect(() => {
     if (!personagemAtual) return;
-    carregarInventario(personagemAtual.inventario || []);
-  }, [personagemAtual, carregarInventario]);
+    carregarInventario(personagemAtual.inventario || [], personagemAtual.equipados);
+  }, [personagemAtual]);
 
   if (!personagemAtual) {
     return (

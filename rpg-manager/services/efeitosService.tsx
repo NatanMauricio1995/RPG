@@ -1,5 +1,4 @@
-import { calcularModificador } from "./calculoService";
-import { calcularAtributosFinais } from "./personagemService";
+import { calcularModificador, calcularAtributosFinais } from "./calculoService";
 import type { EfeitoAtivo, Personagem, BonusEquipados, Atributos, Equipados } from "../types/domain";
 
 export const ATRIBUTOS_COMBATE: (keyof Atributos)[] = [

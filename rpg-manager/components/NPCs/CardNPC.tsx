@@ -14,7 +14,7 @@ npc,
 onExcluir
 }:Props){
 
-function confirmarExclusao(){
+async function confirmarExclusao(){
 
 if(npc.padrao){
 window.alert("NPCs padrão não são removidos da base. Edite para criar uma versão personalizada.");
@@ -24,7 +24,7 @@ return;
 if(!window.confirm(`Deseja excluir ${npc.nome}?`))
 return;
 
-excluirNPC(npc.id);
+await excluirNPC(npc.id);
 onExcluir();
 
 }

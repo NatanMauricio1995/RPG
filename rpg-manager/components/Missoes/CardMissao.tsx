@@ -9,9 +9,9 @@ type Props = {
 };
 
 export default function CardMissao({ missao, onEditar, onExcluir }: Props) {
-  function confirmarExclusao() {
+  async function confirmarExclusao() {
     if (!window.confirm(`Deseja excluir a missão "${missao.nome}"?`)) return;
-    excluirMissao(missao.id);
+    await excluirMissao(missao.id);
     onExcluir();
   }
 

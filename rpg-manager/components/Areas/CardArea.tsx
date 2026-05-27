@@ -10,9 +10,9 @@ type Props = {
 };
 
 export default function CardArea({ area, onEditar, onExcluir }: Props) {
-  function confirmarExclusao() {
+  async function confirmarExclusao() {
     if (!window.confirm(`Deseja excluir a área "${area.nome}"?`)) return;
-    excluirArea(area.id);
+    await excluirArea(area.id);
     onExcluir();
   }
 

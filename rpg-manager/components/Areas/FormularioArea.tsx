@@ -10,8 +10,7 @@ type Props = {
 };
 
 export default function FormularioArea({ areaInicial, onSalvar, onCancelar }: Props) {
-  const [area, setArea] = useState<Area>({
-    id: Date.now(),
+  const [area, setArea] = useState<Partial<Area>>({
     nome: "",
     descricao: "",
     tipo: "Cidade",
@@ -42,9 +41,9 @@ export default function FormularioArea({ areaInicial, onSalvar, onCancelar }: Pr
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    salvarArea(area);
+    await salvarArea(area);
     onSalvar();
   };
 

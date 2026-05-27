@@ -7,6 +7,7 @@ import habilidadesMonstrosData from "../data/sistema/habilidadesMonstros.json";
 import {calcularBonusProficiencia,calcularModificador} from "./calculoService";
 import {calcularStatusDerivados,normalizarTipoEfeito,EfeitoAtivo} from "./efeitosService";
 import {buscarItem,resolverEquipados} from "./itemService";
+import { listDocuments } from "../firebase/firestore";
 
 export type LadoCombate="aliado"|"inimigo";
 export type StatusCombate="preparacao"|"em_andamento"|"vitoria"|"derrota";
@@ -27,7 +28,7 @@ efeitos:EfeitoAtivo[];
 
 export type Combatente={
 id:string;
-origemId:number;
+origemId:string | number;
 lado:LadoCombate;
 nome:string;
 imagem:string;
@@ -51,6 +52,11 @@ escudo:number;
 quantidade:number;
 vidaUnitaria:number;
 equipamentos?:any;
+experiencia?: number;
+drop?: {
+  ouro?: number;
+  itens?: string[];
+};
 };
 
 export type EntradaLog={
@@ -68,144 +74,93 @@ combatentes:Combatente[];
 log:EntradaLog[];
 };
 
-export function listarMonstrosCombate(){
+export async function listarMonstrosCombate(){
+  try {
+    // Tenta Firebase primeiro
+    const monstrosFirebase = await listDocuments("monstros");
+    if (monstrosFirebase.length > 0) {
+      return monstrosFirebase.map((m: any) => ({
+        ...m,
+        padrao: false
+      }));
+    }
+  } catch (error) {
+    console.error("Erro ao listar monstros do Firebase, usando locais:", error);
+  }
 
-const personalizados=
-typeof window==="undefined"
-? []
-: JSON.parse(localStorage.getItem("monstrosPersonalizados") || "[]");
+  // Fallback local
+  const personalizados =
+  typeof window==="undefined"
+  ? []
+  : JSON.parse(localStorage.getItem("monstrosPersonalizados") || "[]");
 
-const padrao=(monstrosData as any[]).map((monstro:any)=>{
-const tipo=(tiposMonstros as any[]).find((item:any)=>item.id===monstro.tipoId);
+  const padrao=(monstrosData as any[]).map((monstro:any)=>{
+  const tipo=(tiposMonstros as any[]).find((item:any)=>item.id===monstro.tipoId);
 
-return{
-...monstro,
-tipo:tipo?.nome || "Criatura",
-padrao:true
-};
-});
+  return{
+  ...monstro,
+  tipo:tipo?.nome || "Criatura",
+  padrao:true
+  };
+  });
 
-return[
-...padrao,
-...personalizados.map((monstro:any)=>({
-...monstro,
-padrao:false
-}))
-];
-
+  return[
+  ...padrao,
+  ...personalizados.map((monstro:any)=>({
+  ...monstro,
+  padrao:false
+  }))
+  ];
 }
 
-export function iniciarCombate(
-personagens:any[],
-monstros:any[]
-):EstadoCombate{
+export async function iniciarCombate(
+personagensIds: (string | number)[],
+monstros: any[]
+): Promise<EstadoCombate> {
+  // Precisamos carregar os personagens completos
+  const { listarPersonagens, completarPersonagem } = await import("./personagemService");
+  const todosP = await listarPersonagens();
+  const selecionados = todosP.filter(p => personagensIds.includes(p.id));
+  
+  const personagensCompletos = await Promise.all(
+    selecionados.map(p => completarPersonagem(p))
+  );
 
-const aliados=
+  const aliados = personagensCompletos.map((personagem, index) =>
+    criarCombatentePersonagem(personagem, index)
+  );
 
-personagens.map(
-(personagem,index)=>
+  let indiceGlobal = 0;
+  const inimigos = monstros.flatMap((monstro) => {
+    const quantidade = Number(monstro.quantidade || 1);
+    return Array.from({ length: quantidade }, (_, numero) => {
+      const copia = {
+        ...monstro,
+        nome: quantidade > 1 ? `${monstro.nome} ${numero + 1}` : monstro.nome,
+      };
+      const combatente = criarCombatenteMonstro(copia, indiceGlobal);
+      indiceGlobal++;
+      return combatente;
+    });
+  });
 
-criarCombatentePersonagem(
-personagem,
-index
-)
+  const combatentes = [...aliados, ...inimigos];
+  const log = [
+    criarLog(
+      1,
+      0,
+      "Combate iniciado. O mestre escolhe manualmente quem age a cada ação.",
+      "sistema"
+    ),
+  ];
 
-);
-
-let indiceGlobal=0;
-
-const inimigos=
-
-monstros.flatMap(
-(monstro)=>{
-
-const quantidade=
-
-Number(
-monstro.quantidade || 1
-);
-
-return Array.from(
-
-{
-length:quantidade
-},
-
-(_,numero)=>{
-
-const copia={
-
-...monstro,
-
-nome:
-
-quantidade>1
-
-?
-
-`${monstro.nome} ${numero+1}`
-
-:
-
-monstro.nome
-
-};
-
-const combatente=
-
-criarCombatenteMonstro(
-copia,
-indiceGlobal
-);
-
-indiceGlobal++;
-
-return combatente;
-
-}
-
-);
-
-}
-
-);
-
-const combatentes=[
-
-...aliados,
-...inimigos
-
-];
-
-const log=[
-
-criarLog(
-
-1,
-0,
-
-"Combate iniciado. O mestre escolhe manualmente quem age a cada ação.",
-
-"sistema"
-
-)
-
-];
-
-return verificarResultado({
-
-status:"em_andamento",
-
-turno:1,
-
-combatenteAtivoId:"",
-
-combatentes,
-
-log
-
-});
-
+  return verificarResultado({
+    status: "em_andamento",
+    turno: 1,
+    combatenteAtivoId: "",
+    combatentes,
+    log,
+  });
 }
 
 export function executarAtaqueBasico(
@@ -356,13 +311,10 @@ return tipo==="paralisia" || tipo==="medo";
 
 }
 
-import { completarPersonagem } from "./personagemService";
-
 function criarCombatentePersonagem(personagem: any, index: number): Combatente {
-  const comp = personagem; // Já vem completo de iniciarCombate
+  const comp = personagem;
   const nivel = comp.nivel || 1;
   const equipamentos = comp.equipados;
-  const arma = buscarItem(equipamentos.arma);
 
   return {
     id: `aliado-${comp.id}-${index}`,
@@ -378,7 +330,7 @@ function criarCombatentePersonagem(personagem: any, index: number): Combatente {
     manaMaxima: comp.manaMaxima,
     armadura: comp.armadura,
     ataque: comp.ataque,
-    danoBase: arma?.dano || "1d6",
+    danoBase: "1d6", // Simplificado para garantir síncrono
     critico: comp.critico,
     esquiva: comp.esquiva || 0,
     velocidade: comp.velocidade,
@@ -389,7 +341,7 @@ function criarCombatentePersonagem(personagem: any, index: number): Combatente {
         ...efeito,
         tipo: normalizarTipoEfeito(efeito.tipo),
       })),
-    habilidades: comp.habilidades.map((h: any) => ({
+    habilidades: (comp.habilidades || []).map((h: any) => ({
       ...h,
       cooldownRestante: 0,
     })),
@@ -400,7 +352,6 @@ function criarCombatentePersonagem(personagem: any, index: number): Combatente {
     equipamentos,
   };
 }
-
 
 function criarCombatenteMonstro(
 monstro:any,
@@ -423,7 +374,7 @@ const defesa=Number(monstro.defesa || monstro.armadura || 10+calcularModificador
 
 return{
 id:`inimigo-${monstro.id}-${index}-${Math.random().toString(36).substr(2, 9)}`,
-origemId:Number(monstro.id),
+origemId:String(monstro.id),
 lado:"inimigo",
 nome:monstro.nome || "Criatura",
 imagem:monstro.imagem || "/imagens/monstros/goblin.png",
@@ -445,121 +396,10 @@ habilidades:criarHabilidadesMonstro(monstro),
 cooldowns:{},
 vivo:true,
 escudo:0,
-quantidade:1
+quantidade:1,
+experiencia: Number(monstro.experiencia || monstro.xp || 50),
+drop: monstro.drop || { ouro: Number(monstro.ouro || 10), itens: [] }
 };
-
-}
-
-function criarHabilidadesPersonagem(
-personagem:any
-):HabilidadeCombate[]{
-
-if(
-personagem.habilidades &&
-Array.isArray(
-personagem.habilidades
-)
-){
-
-return personagem.habilidades.map(
-(habilidade:any)=>({
-
-id:
-String(
-habilidade.id
-),
-
-nome:
-habilidade.nome ||
-
-"Habilidade",
-
-descricao:
-habilidade.descricao ||
-
-"",
-
-custoMana:
-Number(
-habilidade.custoMana || 0
-),
-
-dano:
-habilidade.dano
-? String(
-habilidade.dano
-)
-: "0",
-
-cooldown:
-Number(
-habilidade.cooldown || 0
-),
-
-cooldownRestante:0,
-
-alcance:
-Number(
-habilidade.alcance || 1
-),
-
-tipo:
-habilidade.tipo ||
-"especial",
-
-area:
-Number(
-habilidade.area || 1
-),
-
-efeitos:
-habilidade.efeitos || []
-
-})
-
-);
-
-}
-
-
-const nivel=
-Number(
-personagem.nivel || 1
-);
-
-return[
-
-{
-id:"golpe-poderoso",
-nome:"Golpe Poderoso",
-descricao:"Ataque concentrado que sacrifica fôlego por dano consistente.",
-custoMana:2,
-dano:"1d10",
-cooldown:1,
-cooldownRestante:0,
-alcance:1,
-tipo:"fisico",
-area:1,
-efeitos:[]
-},
-
-{
-id:"centelha-arcana",
-nome:"Centelha Arcana",
-descricao:"Explosão mágica curta.",
-custoMana:4,
-dano:nivel>=5
-? "2d8"
-: "1d8",
-cooldown:2,
-cooldownRestante:0,
-alcance:6,
-tipo:"magico",
-area:1,
-efeitos:[]
-}
-
-];
 
 }
 
@@ -595,18 +435,6 @@ origem:habilidade?.nome || monstro.nome
 };
 });
 
-}
-
-export function salvarHistoricoCombate(historico: any) {
-  if (typeof window === "undefined") return;
-  const atuais = JSON.parse(localStorage.getItem("historicoCombate") || "[]");
-  atuais.unshift({
-    ...historico,
-    id: Date.now(),
-    data: new Date().toLocaleDateString(),
-    hora: new Date().toLocaleTimeString(),
-  });
-  localStorage.setItem("historicoCombate", JSON.stringify(atuais.slice(0, 50))); // Manter os últimos 50
 }
 
 function finalizarAcao(
@@ -688,7 +516,9 @@ mana:combatente.manaMaxima,
 armadura:combatente.armadura,
 dano:combatente.danoBase,
 atributos:combatente.atributos,
-habilidades:combatente.habilidades
+habilidades:combatente.habilidades,
+experiencia: combatente.experiencia,
+drop: combatente.drop
 },
 `extra-${Date.now()}`
 );
@@ -992,37 +822,4 @@ function criarLog(
     texto,
     tipo
   };
-
-
-
-}
-tipo:EntradaLog["tipo"]
-):EstadoCombate{
-
-return{
-...estado,
-log:[
-criarLog(estado.log.length+1,estado.turno,texto,tipo),
-...estado.log
-]
-};
-
-}
-
-function criarLog(
-  id:number,
-  turno:number,
-  texto:string,
-  tipo:EntradaLog["tipo"]
-):EntradaLog{
-
-  return{
-    id,
-    turno,
-    texto,
-    tipo
-  };
-
-
-
 }

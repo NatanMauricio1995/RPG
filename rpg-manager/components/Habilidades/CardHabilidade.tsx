@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { Habilidade } from "../../types/domain";
+import { Habilidade } from "../../services/habilidadeService";
 
 type Props = {
   habilidade: Habilidade;
@@ -20,7 +20,7 @@ export default function CardHabilidade({ habilidade, onExcluir }: Props) {
         className="imagemHabilidade"
       />
       <div className="conteudoHabilidade">
-        <div className="tipoHabilidade">{habilidade.tipo} | {habilidade.categoria}</div>
+        <div className="tipoHabilidade">{habilidade.tipo} | Nível {habilidade.nivelMinimo}</div>
         <h3 className="nomeHabilidade">{habilidade.nome}</h3>
         <p className="descricaoHabilidade">{habilidade.descricao}</p>
         
@@ -30,16 +30,12 @@ export default function CardHabilidade({ habilidade, onExcluir }: Props) {
             <span className="statValor">{habilidade.custoMana} MP</span>
           </div>
           <div className="statHabilidade">
+            <span className="statLabel">Dano:</span>
+            <span className="statValor">{habilidade.dano}</span>
+          </div>
+          <div className="statHabilidade">
             <span className="statLabel">CD:</span>
             <span className="statValor">{habilidade.cooldown} T</span>
-          </div>
-          <div className="statHabilidade">
-            <span className="statLabel">Alcance:</span>
-            <span className="statValor">{habilidade.alcance}m</span>
-          </div>
-          <div className="statHabilidade">
-            <span className="statLabel">Área:</span>
-            <span className="statValor">{habilidade.area}m</span>
           </div>
         </div>
       </div>
@@ -52,7 +48,7 @@ export default function CardHabilidade({ habilidade, onExcluir }: Props) {
           Editar
         </Link>
         <button 
-          onClick={() => onExcluir?.(habilidade.id)}
+          onClick={() => onExcluir?.(habilidade.id!)}
           className="botaoHabilidade botaoExcluirHabilidade"
         >
           Excluir

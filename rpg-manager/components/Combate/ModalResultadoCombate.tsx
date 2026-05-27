@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import type { EstadoCombate } from "../../services/combateService";
 import { buscarPersonagem, salvarPersonagem } from "../../services/personagemService";
-import { salvarHistoricoCombate } from "../../services/combateHistoryService";
+import { salvarHistoricoCombate, HistoricoCombate } from "../../services/historicoService";
 import Image from "next/image";
 import "../../styles/combate.css";
 
@@ -15,7 +15,7 @@ type Props = {
 export default function ModalResultadoCombate({ estado, onClose }: Props) {
   const [salvando, setSalvando] = useState(false);
   const [opcoes, setOpcoes] = useState<Record<string, Record<string, boolean>>>({});
-  const [recompensas, setRecompensas] = useState({ xp: 0, ouro: 0, itens: [] as string[] });
+  const [recompensas, setRecompensas] = useState({ xp: 0, ouro: 0 });
 
   const aliados = estado.combatentes.filter((c) => c.lado === "aliado");
   const inimigosDerrotados = estado.combatentes.filter((c) => c.lado === "inimigo" && !c.vivo);
@@ -34,17 +34,16 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
     });
     setOpcoes(initial);
 
-    // Calcular recompensas baseadas nos monstros derrotados
-    // Simplificado: cada monstro dá XP e Ouro proporcional ao nível
+    // Calcular recompensas reais
     let totalXP = 0;
     let totalOuro = 0;
     inimigosDerrotados.forEach(i => {
-      totalXP += (i.nivel * 50);
-      totalOuro += (i.nivel * 10);
+      totalXP += (i.experiencia || 0);
+      totalOuro += (i.drop?.ouro || 0);
     });
 
-    setRecompensas({ xp: totalXP, ouro: totalOuro, itens: [] });
-  }, []);
+    setRecompensas({ xp: totalXP, ouro: totalOuro });
+  }, [aliados, inimigosDerrotados]);
 
   const handleToggle = (combatenteId: string, campo: string) => {
     setOpcoes((prev) => ({
@@ -59,6 +58,9 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
   const aplicarAlteracoes = async (apenasSelecionados = true) => {
     setSalvando(true);
     try {
+      const xpDistribuido: { personagemId: string; valor: number }[] = [];
+      const ouroDistribuido: { personagemId: string; valor: number }[] = [];
+
       for (const combatente of aliados) {
         const pOriginal = await buscarPersonagem(combatente.origemId);
         if (!pOriginal) continue;
@@ -68,10 +70,17 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
 
         if (opt.vida) pAtualizado.vidaAtual = combatente.vidaAtual;
         if (opt.mana) pAtualizado.manaAtual = combatente.manaAtual;
-        if (opt.xp && estado.status === "vitoria") pAtualizado.xpAtual += recompensas.xp;
-        if (opt.ouro && estado.status === "vitoria") pAtualizado.ouro += recompensas.ouro;
         
-        // Efeitos permanentes ou temporários poderiam ser salvos aqui
+        if (opt.xp && estado.status === "vitoria") {
+          pAtualizado.xpAtual += recompensas.xp;
+          xpDistribuido.push({ personagemId: String(pOriginal.id), valor: recompensas.xp });
+        }
+        
+        if (opt.ouro && estado.status === "vitoria") {
+          pAtualizado.ouro += recompensas.ouro;
+          ouroDistribuido.push({ personagemId: String(pOriginal.id), valor: recompensas.ouro });
+        }
+        
         if (opt.efeitos) {
            pAtualizado.efeitosAtivos = combatente.efeitos;
         }
@@ -79,18 +88,18 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
         await salvarPersonagem(pAtualizado);
       }
 
-      // Salvar no histórico
-      await salvarHistoricoCombate({
-        participantes: estado.combatentes.map(c => ({ nome: c.nome, lado: c.lado })),
+      // Salvar no histórico usando o novo serviço
+      const historico: Omit<HistoricoCombate, 'id'> = {
+        data: new Date().toISOString(),
+        participantes: estado.combatentes.map(c => c.nome),
         vencedor: estado.status === "vitoria" ? "Aliados" : "Inimigos",
         derrotados: estado.combatentes.filter(c => !c.vivo).map(c => c.nome),
-        log: estado.log,
-        recompensas: estado.status === "vitoria" ? {
-           xp: recompensas.xp,
-           ouro: recompensas.ouro,
-           itens: recompensas.itens
-        } : undefined
-      });
+        xpDistribuido,
+        ouroDistribuido,
+        itensConsumidos: [] // Lógica de itens consumidos não implementada ainda
+      };
+
+      await salvarHistoricoCombate(historico);
 
       onClose();
     } catch (error) {
@@ -108,9 +117,12 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
           {estado.status === "vitoria" ? "✦ Vitória Gloriosa ✦" : "✦ Derrota Amarga ✦"}
         </h2>
         
-        <div className="recompensasGerais">
+        <div className="recompensasGerais" style={{ marginBottom: '20px', textAlign: 'center', fontSize: '1.2rem' }}>
           {estado.status === "vitoria" && (
-            <p>Recompensas do Grupo: <span className="ouro">{recompensas.ouro} Ouro</span> | <span className="xp">{recompensas.xp} XP</span></p>
+            <div>
+              <span className="xp" style={{ color: 'var(--ouro)', marginRight: '15px' }}>XP: +{recompensas.xp}</span>
+              <span className="ouro" style={{ color: '#ffd700' }}>Ouro: +{recompensas.ouro}</span>
+            </div>
           )}
         </div>
 

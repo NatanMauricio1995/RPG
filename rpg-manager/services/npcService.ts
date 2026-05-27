@@ -1,140 +1,137 @@
 "use client";
 
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  getDoc,
+  setDoc
+} from "firebase/firestore";
+import { db } from "../firebase/config";
 import npcsData from "../data/campanha/npcs.json";
-import {resolverInventario} from "./itemService";
+import { resolverInventario } from "./itemService";
 
-export const NPCS_STORAGE_KEY="npcsPersonalizados";
+export const NPCS_STORAGE_KEY = "npcs_cache";
+const COLECAO = "npcs";
+const colecaoRef = collection(db, COLECAO);
 
-export type NPC={
-id:number;
-nome:string;
-imagem:string;
-idade:number;
-profissao:string;
-alinhamento:string;
-personalidade:string;
-dialogos:string[];
-inventario:any[];
-relacionamento:number;
-padrao?:boolean;
+export type NPC = {
+  id: string;
+  nome: string;
+  imagem: string;
+  idade: number;
+  profissao: string;
+  alinhamento: string;
+  personalidade: string;
+  dialogos: string[];
+  inventario: any[];
+  relacionamento: number;
+  padrao?: boolean;
 };
 
-export function criarModeloNPC():NPC{
-
-return{
-id:Date.now(),
-nome:"",
-imagem:"/imagens/npcs/ChatGPT Image 18 de mai. de 2026, 18_23_40.png",
-idade:30,
-profissao:"",
-alinhamento:"Neutro",
-personalidade:"",
-dialogos:[""],
-inventario:[],
-relacionamento:0
-};
-
+export function criarModeloNPC(): NPC {
+  return {
+    id: "",
+    nome: "",
+    imagem: "/imagens/npcs/ChatGPT Image 18 de mai. de 2026, 18_23_40.png",
+    idade: 30,
+    profissao: "",
+    alinhamento: "Neutro",
+    personalidade: "",
+    dialogos: [""],
+    inventario: [],
+    relacionamento: 0
+  };
 }
 
-export function normalizarNPC(
-npc:any
-):NPC{
-
-const modelo=criarModeloNPC();
-
-return{
-...modelo,
-...npc,
-id:Number(npc?.id || modelo.id),
-idade:Number(npc?.idade || 0),
-dialogos:Array.isArray(npc?.dialogos) ? npc.dialogos : [],
-inventario:resolverInventario(npc?.inventario || []),
-relacionamento:Number(npc?.relacionamento || 0)
-};
-
+export function normalizarNPC(npc: any): NPC {
+  const modelo = criarModeloNPC();
+  return {
+    ...modelo,
+    ...npc,
+    id: String(npc?.id || ""),
+    idade: Number(npc?.idade || 0),
+    dialogos: Array.isArray(npc?.dialogos) ? npc.dialogos : [],
+    inventario: resolverInventario(npc?.inventario || []),
+    relacionamento: Number(npc?.relacionamento || 0)
+  };
 }
 
-export function carregarNPCsPersonalizados(){
+export async function listarNPCs(): Promise<NPC[]> {
+  try {
+    const q = query(colecaoRef, limit(50));
+    const snapshot = await getDocs(q);
+    let npcs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as NPC[];
 
-if(typeof window==="undefined")
-return[];
+    // Se estiver vazio, popula com o seed inicial (npcs.json)
+    if (npcs.length === 0 && npcsData.length > 0) {
+      console.log("Semeando NPCs iniciais no Firebase...");
+      for (const seed of npcsData) {
+        const { id, ...dados } = seed;
+        // Usa o ID numérico como string no Firebase para o seed
+        await setDoc(doc(db, COLECAO, String(id)), dados);
+      }
+      // Recarrega após o seed
+      const newSnapshot = await getDocs(colecaoRef);
+      npcs = newSnapshot.docs.map(doc => ({ ...doc.data(), id: doc.id })) as NPC[];
+    }
 
-return JSON.parse(
-localStorage.getItem(NPCS_STORAGE_KEY) || "[]"
-);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(NPCS_STORAGE_KEY, JSON.stringify(npcs));
+    }
 
+    return npcs;
+  } catch (error) {
+    console.error("Erro ao listar NPCs do Firebase, tentando cache:", error);
+    if (typeof window !== "undefined") {
+      const cache = localStorage.getItem(NPCS_STORAGE_KEY);
+      return cache ? JSON.parse(cache) : [];
+    }
+    return [];
+  }
 }
 
-export function salvarNPCsPersonalizados(
-npcs:NPC[]
-){
-
-localStorage.setItem(
-NPCS_STORAGE_KEY,
-JSON.stringify(npcs)
-);
-
+export async function buscarNPC(id: string): Promise<NPC | null> {
+  try {
+    const docSnap = await getDoc(doc(db, COLECAO, id));
+    if (docSnap.exists()) {
+      return { ...docSnap.data(), id: docSnap.id } as NPC;
+    }
+    
+    // Fallback para o cache
+    const cache = typeof window !== "undefined" ? localStorage.getItem(NPCS_STORAGE_KEY) : null;
+    const npcs = cache ? JSON.parse(cache) : [];
+    return npcs.find((n: NPC) => String(n.id) === id) || null;
+  } catch (error) {
+    console.error("Erro ao buscar NPC:", error);
+    return null;
+  }
 }
 
-export function listarNPCs(){
-
-const porId=new Map<number,NPC>();
-
-(npcsData as any[]).forEach((npc:any)=>{
-porId.set(
-Number(npc.id),
-{
-...normalizarNPC(npc),
-padrao:true
-}
-);
-});
-
-carregarNPCsPersonalizados().forEach((npc:any)=>{
-porId.set(
-Number(npc.id),
-{
-...normalizarNPC(npc),
-padrao:false
-}
-);
-});
-
-return Array.from(porId.values());
-
+export async function salvarNPC(npc: Partial<NPC>) {
+  try {
+    if (npc.id) {
+      const { id, ...dados } = npc;
+      await updateDoc(doc(db, COLECAO, id), dados);
+      return id;
+    } else {
+      const docRef = await addDoc(colecaoRef, npc);
+      return docRef.id;
+    }
+  } catch (error) {
+    console.error("Erro ao salvar NPC:", error);
+    throw error;
+  }
 }
 
-export function buscarNPC(
-id:number
-){
-
-return listarNPCs().find((npc)=>npc.id===id) || null;
-
-}
-
-export function salvarNPC(
-npc:NPC
-){
-
-const personalizados=carregarNPCsPersonalizados();
-const normalizado=normalizarNPC(npc);
-const existe=personalizados.some((item:any)=>Number(item.id)===normalizado.id);
-
-const atualizados=existe
-? personalizados.map((item:any)=>Number(item.id)===normalizado.id ? normalizado : item)
-: [...personalizados,normalizado];
-
-salvarNPCsPersonalizados(atualizados);
-
-}
-
-export function excluirNPC(
-id:number
-){
-
-const atualizados=carregarNPCsPersonalizados()
-.filter((npc:any)=>Number(npc.id)!==id);
-
-salvarNPCsPersonalizados(atualizados);
-
+export async function excluirNPC(id: string) {
+  try {
+    await deleteDoc(doc(db, COLECAO, id));
+  } catch (error) {
+    console.error("Erro ao excluir NPC:", error);
+    throw error;
+  }
 }

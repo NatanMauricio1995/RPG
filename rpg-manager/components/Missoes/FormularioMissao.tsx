@@ -10,8 +10,7 @@ type Props = {
 };
 
 export default function FormularioMissao({ missaoInicial, onSalvar, onCancelar }: Props) {
-  const [missao, setMissao] = useState<Missao>({
-    id: Date.now(),
+  const [missao, setMissao] = useState<Partial<Missao>>({
     nome: "",
     descricao: "",
     objetivo: "",
@@ -30,9 +29,9 @@ export default function FormularioMissao({ missaoInicial, onSalvar, onCancelar }
     setMissao((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    salvarMissao(missao);
+    await salvarMissao(missao);
     onSalvar();
   };
 

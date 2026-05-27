@@ -4,7 +4,9 @@ addDoc,
 getDocs,
 updateDoc,
 deleteDoc,
-doc
+doc,
+query,
+limit
 }
 from "firebase/firestore";
 
@@ -19,10 +21,11 @@ db,
 
 export async function listarClasses(){
 
+const q = query(colecao, limit(50));
 const snapshot=
 
 await getDocs(
-colecao
+q
 );
 
 return snapshot.docs.map(

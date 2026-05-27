@@ -4,7 +4,9 @@ addDoc,
 getDocs,
 updateDoc,
 deleteDoc,
-doc
+doc,
+query,
+limit
 }
 from "firebase/firestore";
 
@@ -15,16 +17,15 @@ const colecao=
 
 collection(
 db,
-"racas"
-);
-
+"racas");
 
 export async function listarRacas(){
 
+const q = query(colecao, limit(50));
 const snapshot=
 
 await getDocs(
-colecao
+q
 );
 
 return snapshot.docs.map(

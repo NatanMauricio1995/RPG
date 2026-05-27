@@ -3,29 +3,24 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import { salvarHabilidade, buscarHabilidade } from "../../services/habilidadeServiceFirebase";
-import type { Habilidade } from "../../types/domain";
+import { criarHabilidade, editarHabilidade, buscarHabilidade, Habilidade } from "../../services/habilidadeService";
 
 type Props = {
   modoEdicao?: boolean;
 };
 
-const MODELO_HABILIDADE: Partial<Habilidade> = {
+const MODELO_HABILIDADE: Omit<Habilidade, 'id'> = {
   nome: "",
   descricao: "",
   imagem: "/imagens/habilidades/padrao.png",
-  tipo: "Físico",
-  categoria: "Ataque",
-  dano: "",
-  cura: "",
+  tipo: "ativa",
+  dano: 0,
+  cura: 0,
   custoMana: 0,
   cooldown: 0,
   alcance: 1,
   area: 1,
-  efeitos: [],
-  nivelMin: 1,
-  castTime: "1 ação",
-  passiva: false,
+  nivelMinimo: 1,
 };
 
 export default function FormularioHabilidade({ modoEdicao = false }: Props) {
@@ -33,9 +28,9 @@ export default function FormularioHabilidade({ modoEdicao = false }: Props) {
   const params = useParams();
   const id = params?.id as string;
 
-  const [habilidade, setHabilidade] = useState<Partial<Habilidade>>(MODELO_HABILIDADE);
+  const [habilidade, setHabilidade] = useState<Omit<Habilidade, 'id'>>(MODELO_HABILIDADE);
   const [arquivoImagem, setArquivoImagem] = useState<File | null>(null);
-  const [previewImagem, setPreviewImagem] = useState<string>(MODELO_HABILIDADE.imagem!);
+  const [previewImagem, setPreviewImagem] = useState<string>(MODELO_HABILIDADE.imagem);
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => {
@@ -43,7 +38,8 @@ export default function FormularioHabilidade({ modoEdicao = false }: Props) {
       setCarregando(true);
       buscarHabilidade(id).then((dados) => {
         if (dados) {
-          setHabilidade(dados);
+          const { id: _, ...rest } = dados;
+          setHabilidade(rest);
           if (dados.imagem) setPreviewImagem(dados.imagem);
         }
         setCarregando(false);
@@ -56,14 +52,6 @@ export default function FormularioHabilidade({ modoEdicao = false }: Props) {
     setHabilidade((anterior) => ({
       ...anterior,
       [name]: type === "number" ? Number(value) : value,
-    }));
-  }
-
-  function alterarCheckbox(evento: React.ChangeEvent<HTMLInputElement>) {
-    const { name, checked } = evento.target;
-    setHabilidade((anterior) => ({
-      ...anterior,
-      [name]: checked,
     }));
   }
 
@@ -82,10 +70,12 @@ export default function FormularioHabilidade({ modoEdicao = false }: Props) {
   async function salvar() {
     setCarregando(true);
     try {
-      const idSalvo = await salvarHabilidade(habilidade, arquivoImagem || undefined);
-      if (idSalvo) {
-        router.push("/habilidades");
+      if (modoEdicao && id) {
+        await editarHabilidade(id, habilidade, arquivoImagem || undefined);
+      } else {
+        await criarHabilidade(habilidade, arquivoImagem || undefined);
       }
+      router.push("/habilidades");
     } catch (erro) {
       console.error("Erro ao salvar habilidade:", erro);
       alert("Erro ao salvar habilidade.");
@@ -99,39 +89,17 @@ export default function FormularioHabilidade({ modoEdicao = false }: Props) {
   }
 
   return (
-    <div className="formularioHabilidade">
+    <div className="formulario">
       <h2 className="formularioTitulo">
         {modoEdicao ? "✦ Editar Habilidade ✦" : "✦ Criar Habilidade ✦"}
       </h2>
 
-      <div className="campoHabilidade">
+      <div className="campo">
         <label>Nome da Habilidade</label>
         <input name="nome" value={habilidade.nome} onChange={alterarCampo} placeholder="Ex: Bola de Fogo" />
       </div>
 
-      <div className="gridHabilidade">
-        <div className="campoHabilidade">
-          <label>Tipo</label>
-          <select name="tipo" value={habilidade.tipo} onChange={alterarCampo}>
-            <option value="Físico">Físico</option>
-            <option value="Mágico">Mágico</option>
-            <option value="Especial">Especial</option>
-            <option value="Passiva">Passiva</option>
-          </select>
-        </div>
-
-        <div className="campoHabilidade">
-          <label>Categoria</label>
-          <select name="categoria" value={habilidade.categoria} onChange={alterarCampo}>
-            <option value="Ataque">Ataque</option>
-            <option value="Defesa">Defesa</option>
-            <option value="Suporte">Suporte</option>
-            <option value="Utilitário">Utilitário</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="campoHabilidade">
+      <div className="campo">
         <label>Descrição</label>
         <textarea
           name="descricao"
@@ -142,79 +110,73 @@ export default function FormularioHabilidade({ modoEdicao = false }: Props) {
         />
       </div>
 
-      <div className="gridHabilidade">
-        <div className="campoHabilidade">
-          <label>Dano (Expressão)</label>
-          <input name="dano" value={habilidade.dano} onChange={alterarCampo} placeholder="Ex: 2d6 + 4" />
+      <div className="bonusGrid">
+        <div className="campo">
+          <label>Tipo</label>
+          <select name="tipo" value={habilidade.tipo} onChange={alterarCampo}>
+            <option value="ativa">Ativa</option>
+            <option value="passiva">Passiva</option>
+            <option value="reacao">Reação</option>
+          </select>
         </div>
-        <div className="campoHabilidade">
-          <label>Cura (Expressão)</label>
-          <input name="cura" value={habilidade.cura} onChange={alterarCampo} placeholder="Ex: 1d8 + 2" />
+
+        <div className="campo">
+          <label>Nível Mínimo</label>
+          <input type="number" name="nivelMinimo" value={habilidade.nivelMinimo} onChange={alterarCampo} />
         </div>
       </div>
 
-      <div className="gridHabilidade">
-        <div className="campoHabilidade">
+      <div className="bonusGrid">
+        <div className="campo">
+          <label>Dano</label>
+          <input type="number" name="dano" value={habilidade.dano} onChange={alterarCampo} />
+        </div>
+        <div className="campo">
+          <label>Cura</label>
+          <input type="number" name="cura" value={habilidade.cura} onChange={alterarCampo} />
+        </div>
+      </div>
+
+      <div className="bonusGrid">
+        <div className="campo">
           <label>Custo de Mana</label>
           <input type="number" name="custoMana" value={habilidade.custoMana} onChange={alterarCampo} />
         </div>
-        <div className="campoHabilidade">
+        <div className="campo">
           <label>Recarga (Turnos)</label>
           <input type="number" name="cooldown" value={habilidade.cooldown} onChange={alterarCampo} />
         </div>
       </div>
 
-      <div className="gridHabilidade">
-        <div className="campoHabilidade">
+      <div className="bonusGrid">
+        <div className="campo">
           <label>Alcance (Metros)</label>
           <input type="number" name="alcance" value={habilidade.alcance} onChange={alterarCampo} />
         </div>
-        <div className="campoHabilidade">
+        <div className="campo">
           <label>Área (Metros)</label>
           <input type="number" name="area" value={habilidade.area} onChange={alterarCampo} />
         </div>
       </div>
 
-      <div className="gridHabilidade">
-        <div className="campoHabilidade">
-          <label>Nível Mínimo</label>
-          <input type="number" name="nivelMin" value={habilidade.nivelMin} onChange={alterarCampo} />
-        </div>
-        <div className="campoHabilidade">
-          <label>Tempo de Conjuração</label>
-          <input name="castTime" value={habilidade.castTime} onChange={alterarCampo} placeholder="Ex: 1 ação" />
-        </div>
-      </div>
-
-      <div className="campoHabilidade" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <input 
-          type="checkbox" 
-          name="passiva" 
-          id="passiva"
-          checked={habilidade.passiva} 
-          onChange={alterarCheckbox}
-          style={{ width: 'auto' }}
-        />
-        <label htmlFor="passiva" style={{ marginBottom: 0 }}>Esta habilidade é passiva</label>
-      </div>
-
-      <div className="campoHabilidade">
+      <div className="campo">
         <label>Imagem da Habilidade</label>
         <input type="file" accept="image/*" onChange={carregarImagem} />
-        <Image 
-          src={previewImagem} 
-          alt="Preview" 
-          width={200} 
-          height={150} 
-          className="previewHabilidade"
-        />
+        <div className="previewImagem">
+          <Image 
+            src={previewImagem} 
+            alt="Preview" 
+            width={200} 
+            height={150} 
+          />
+        </div>
       </div>
 
-      <button className="botaoAcao" onClick={salvar} disabled={carregando} style={{ width: '100%' }}>
+      <button className="botaoSalvar" onClick={salvar} disabled={carregando} style={{ width: '100%' }}>
         {carregando ? "Salvando..." : modoEdicao ? "💾 Salvar Alterações" : "💾 Criar Habilidade"}
       </button>
 
-      <button className="botaoVoltar" onClick={() => router.back()} style={{ width: '100%' }}>
+      <button className="botaoVoltar" onClick={() => router.back()} style={{ width: '100%', marginTop: '10px' }}>
         Cancelar
       </button>
     </div>

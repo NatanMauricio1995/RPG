@@ -1,9 +1,22 @@
 "use client";
 
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  updateDoc, 
+  deleteDoc, 
+  doc,
+  getDoc,
+  query,
+  limit
+} from "firebase/firestore";
+import { db } from "../firebase/config";
+
 export type TipoArea = "Cidade" | "Vila" | "Floresta" | "Caverna" | "Ruína" | "Templo" | "Reino" | "Outro";
 
 export type Area = {
-  id: number;
+  id: string;
   nome: string;
   descricao: string;
   tipo: TipoArea;
@@ -12,30 +25,68 @@ export type Area = {
   observacoes?: string;
 };
 
-const AREAS_STORAGE_KEY = "areas_rpg";
+const COLECAO = "areas";
+const AREAS_CACHE_KEY = "areas_cache";
+const colecaoRef = collection(db, COLECAO);
 
-export function listarAreas(): Area[] {
-  if (typeof window === "undefined") return [];
-  const stored = localStorage.getItem(AREAS_STORAGE_KEY);
-  return stored ? JSON.parse(stored) : [];
+export async function listarAreas(): Promise<Area[]> {
+  try {
+    const q = query(colecaoRef, limit(50));
+    const snapshot = await getDocs(q);
+    const areas = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Area[];
+    
+    if (typeof window !== "undefined") {
+      localStorage.setItem(AREAS_CACHE_KEY, JSON.stringify(areas));
+    }
+    
+    return areas;
+  } catch (error) {
+    console.error("Erro ao listar áreas do Firebase, tentando cache:", error);
+    if (typeof window !== "undefined") {
+      const cache = localStorage.getItem(AREAS_CACHE_KEY);
+      return cache ? JSON.parse(cache) : [];
+    }
+    return [];
+  }
 }
 
-export function salvarArea(area: Area) {
-  const areas = listarAreas();
-  const existe = areas.some((a) => a.id === area.id);
-  const atualizadas = existe
-    ? areas.map((a) => (a.id === area.id ? area : a))
-    : [...areas, area];
-  
-  localStorage.setItem(AREAS_STORAGE_KEY, JSON.stringify(atualizadas));
+export async function salvarArea(area: Partial<Area>) {
+  try {
+    if (area.id) {
+      const { id, ...dados } = area;
+      await updateDoc(doc(db, COLECAO, id), dados);
+      return id;
+    } else {
+      const docRef = await addDoc(colecaoRef, area);
+      return docRef.id;
+    }
+  } catch (error) {
+    console.error("Erro ao salvar área:", error);
+    throw error;
+  }
 }
 
-export function excluirArea(id: number) {
-  const areas = listarAreas();
-  const atualizadas = areas.filter((a) => a.id !== id);
-  localStorage.setItem(AREAS_STORAGE_KEY, JSON.stringify(atualizadas));
+export async function excluirArea(id: string) {
+  try {
+    await deleteDoc(doc(db, COLECAO, id));
+  } catch (error) {
+    console.error("Erro ao excluir área:", error);
+    throw error;
+  }
 }
 
-export function buscarArea(id: number): Area | undefined {
-  return listarAreas().find((a) => a.id === id);
+export async function buscarArea(id: string): Promise<Area | undefined> {
+  try {
+    const docSnap = await getDoc(doc(db, COLECAO, id));
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as Area;
+    }
+    
+    const areas = await listarAreas();
+    return areas.find(a => a.id === id);
+  } catch (error) {
+    console.error("Erro ao buscar área:", error);
+    const areas = await listarAreas();
+    return areas.find(a => a.id === id);
+  }
 }

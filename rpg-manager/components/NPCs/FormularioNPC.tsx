@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import {useParams,useRouter} from "next/navigation";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {buscarNPC,criarModeloNPC,NPC,normalizarNPC,salvarNPC} from "../../services/npcService";
 
 type Props={
@@ -15,18 +15,21 @@ modoEdicao=false
 
 const router=useRouter();
 const params=useParams();
-const id=Number(params?.id);
+const id=params?.id ? String(params.id) : null;
 
-const[npc,setNPC]=useState<NPC>(()=>{
-if(modoEdicao && id){
-const encontrado=buscarNPC(id);
+const[npc,setNPC]=useState<NPC>(criarModeloNPC());
+const [carregando, setCarregando] = useState(modoEdicao);
 
-if(encontrado)
-return normalizarNPC(encontrado);
-}
-
-return criarModeloNPC();
-});
+useEffect(() => {
+  if (modoEdicao && id) {
+    buscarNPC(id).then(encontrado => {
+      if (encontrado) {
+        setNPC(normalizarNPC(encontrado));
+      }
+      setCarregando(false);
+    });
+  }
+}, [modoEdicao, id]);
 
 function alterarCampo(evento:any){
 
@@ -90,8 +93,8 @@ setNPC((anterior)=>({
 ...anterior,
 inventario:valor
 .split(",")
-.map((item)=>Number(item.trim()))
-.filter((item)=>!Number.isNaN(item))
+.map((item)=>item.trim())
+.filter((item)=>item !== "")
 }));
 
 }
@@ -118,9 +121,9 @@ leitor.readAsDataURL(arquivo);
 
 }
 
-function salvar(){
+async function salvar(){
 
-salvarNPC({
+await salvarNPC({
 ...npc,
 dialogos:npc.dialogos.filter((dialogo)=>dialogo.trim())
 });
@@ -128,6 +131,8 @@ dialogos:npc.dialogos.filter((dialogo)=>dialogo.trim())
 router.push("/npcs");
 
 }
+
+if (carregando) return <div>Carregando...</div>;
 
 return(
 <div className="formularioNPC">

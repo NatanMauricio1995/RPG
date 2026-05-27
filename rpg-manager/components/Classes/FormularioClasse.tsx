@@ -3,7 +3,7 @@
 import {useState,useEffect} from "react";
 import {useRouter,useParams} from "next/navigation";
 import Image from "next/image";
-import {listarHabilidades} from "../../services/habilidadeServiceFirebase";
+import {listarHabilidades} from "../../services/habilidadeService";
 import {salvarClasse, editarClasse, listarClasses} from "../../services/classeServiceFirebase";
 
 type Props={
@@ -178,7 +178,7 @@ const atualizadas=[
 const lista=
 
 atualizadas[indice]
-.habilidades;
+.habilidades as string[];
 
 
 if(
@@ -199,23 +199,18 @@ id!==habilidadeId
 }else{
 
 atualizadas[indice]
-.habilidades=[
+.habilidades=
 
+[
 ...lista,
-
 habilidadeId
-
 ];
 
 }
 
 setClasse({
-
 ...classe,
-
-habilidadesPorNivel:
-atualizadas
-
+habilidadesPorNivel:atualizadas
 });
 
 }

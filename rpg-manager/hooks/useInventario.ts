@@ -1,12 +1,16 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { listarItens, buscarItem } from "../services/itemService";
 import { salvarPersonagem } from "../services/personagemService";
 import type { Personagem, InventarioItem, Item } from "../types/domain";
 
 export default function useInventario(personagem: Personagem | null, onUpdate?: (p: Personagem) => void) {
-  const [itensCatalogo] = useState(() => listarItens());
+  const [itensCatalogo, setItensCatalogo] = useState<Item[]>([]);
+
+  useEffect(() => {
+    listarItens().then(setItensCatalogo);
+  }, []);
 
   const adicionarAoInventario = useCallback(
     async (itemId: string) => {
@@ -73,7 +77,7 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
     async (itemId: string) => {
       if (!personagem) return;
 
-      const item = buscarItem(itemId);
+      const item = await buscarItem(itemId);
       if (!item || !item.slot) return;
 
       const novoInventario = [...(personagem.inventario || [])];
@@ -108,12 +112,15 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
     [personagem, onUpdate]
   );
 
+  // Inventário com dados resolvidos - síncrono via itensCatalogo (cache)
+  const inventarioResolvido = (personagem?.inventario || []).map((inv) => ({
+    ...inv,
+    dados: itensCatalogo.find(i => String(i.id) === String(inv.itemId)) || null,
+  }));
+
   return {
     itensCatalogo,
-    inventario: (personagem?.inventario || []).map((inv) => ({
-      ...inv,
-      dados: buscarItem(inv.itemId),
-    })),
+    inventario: inventarioResolvido,
     adicionarAoInventario,
     removerDoInventario,
     alterarQuantidade,

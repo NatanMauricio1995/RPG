@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { listarHabilidades, excluirHabilidade } from "../../services/habilidadeServiceFirebase";
+import { listarHabilidades, excluirHabilidade, Habilidade } from "../../services/habilidadeService";
 import CardHabilidade from "./CardHabilidade";
-import type { Habilidade } from "../../types/domain";
 
 export default function ListaHabilidades() {
   const [habilidades, setHabilidades] = useState<Habilidade[]>([]);
@@ -17,16 +16,24 @@ export default function ListaHabilidades() {
 
   async function carregar() {
     setCarregando(true);
-    const dados = await listarHabilidades();
-    setHabilidades(dados);
-    setCarregando(false);
+    try {
+      const dados = await listarHabilidades();
+      setHabilidades(dados);
+    } catch (error) {
+      console.error("Erro ao carregar habilidades:", error);
+    } finally {
+      setCarregando(false);
+    }
   }
 
   async function handleExcluir(id: string) {
     if (confirm("Tem certeza que deseja excluir esta habilidade?")) {
-      const sucesso = await excluirHabilidade(id);
-      if (sucesso) {
+      try {
+        await excluirHabilidade(id);
         setHabilidades((anterior) => anterior.filter((h) => h.id !== id));
+      } catch (error) {
+        console.error("Erro ao excluir habilidade:", error);
+        alert("Erro ao excluir habilidade.");
       }
     }
   }
@@ -34,7 +41,7 @@ export default function ListaHabilidades() {
   const filtradas = habilidades.filter((h) =>
     h.nome.toLowerCase().includes(busca.toLowerCase()) ||
     h.tipo.toLowerCase().includes(busca.toLowerCase()) ||
-    h.categoria.toLowerCase().includes(busca.toLowerCase())
+    h.descricao.toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
