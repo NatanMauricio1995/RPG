@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState } from "react";
 import useInventario from "../../../hooks/useInventario";
-import { salvarPersonagem } from "../../../services/personagemService";
+import { atualizarPersonagem } from "../../../services/personagemService";
 import type { Personagem, Item } from "../../../types/domain";
 
 // ─── Cores por raridade ───────────────────────────────────────────────────────
@@ -25,6 +25,7 @@ type Props = {
 export default function Inventario({ personagem: propPersonagem, personagemId, onUpdate }: Props) {
   const [aba, setAba] = useState<"inventario" | "catalogo">("inventario");
   const [filtroCatalogo, setFiltroCatalogo] = useState("");
+  const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
 
   const {
     itensCatalogo,
@@ -40,37 +41,48 @@ export default function Inventario({ personagem: propPersonagem, personagemId, o
     corPeso,
   } = useInventario(propPersonagem || personagemId || null, onUpdate);
 
-  // Precisamos do objeto personagem para algumas lógicas locais de cura
-  // O hook retorna o inventário resolvido, mas não o personagem completo
-  // Porém, o hook useInventario agora gerencia o personagem internamente se passar ID.
-  // Vamos tentar obter o personagem do inventário ou passar via props.
+  async function withLoading(itemId: string, fn: () => Promise<void>) {
+    setLoadingIds(prev => new Set(prev).add(itemId));
+    try {
+      await fn();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoadingIds(prev => {
+        const s = new Set(prev);
+        s.delete(itemId);
+        return s;
+      });
+    }
+  }
 
   // ─── Consumir item ────────────────────────────────────────────────────────────
   async function handleConsumir(itemId: string, item: Item | null) {
     if (!item) return;
-    try {
+    
+    await withLoading(itemId, async () => {
       // Se tivermos o objeto personagem completo, podemos aplicar efeitos imediatos (cura/mana)
-      // Caso contrário, apenas consumimos a quantidade.
-      // Idealmente, efeitos seriam processados pelo servidor ou por um serviço de efeitos.
-      
-      if (propPersonagem && item.tipo === "Consumível" && (item.cura || item.mana)) {
-        const vidaMaxima = (propPersonagem as any).vidaMaxima ?? 10;
-        const manaMaxima = (propPersonagem as any).manaMaxima ?? 10;
+      const p = propPersonagem;
+      const id = propPersonagem?.id || personagemId;
+
+      if (p && id && item.tipo === "Consumível" && (item.cura || item.mana)) {
+        // Obter valores máximos (fallback se não existirem)
+        const vidaMaxima = (p as any).vidaMaxima ?? 100;
+        const manaMaxima = (p as any).manaMaxima ?? 100;
         
-        let novaVida = propPersonagem.vidaAtual + (item.cura ?? 0);
+        let novaVida = (p.vidaAtual || 0) + (item.cura ?? 0);
         if (novaVida > vidaMaxima) novaVida = vidaMaxima;
         
-        let novaMana = propPersonagem.manaAtual + (item.mana ?? 0);
+        let novaMana = (p.manaAtual || 0) + (item.mana ?? 0);
         if (novaMana > manaMaxima) novaMana = manaMaxima;
 
-        await salvarPersonagem({ ...propPersonagem, vidaAtual: novaVida, manaAtual: novaMana });
+        // Usar atualizarPersonagem para atualizar apenas o necessário
+        await atualizarPersonagem(id, { vidaAtual: novaVida, manaAtual: novaMana });
       }
 
       // Reduz quantidade via hook
       await hookConsumirItem(itemId, 1);
-    } catch (error: any) {
-      alert(error.message);
-    }
+    });
   }
 
   // ─── Catálogo filtrado ────────────────────────────────────────────────────────
@@ -79,19 +91,27 @@ export default function Inventario({ personagem: propPersonagem, personagemId, o
   );
 
   async function handleAdicionar(itemId: string) {
-    try {
+    await withLoading(itemId, async () => {
       await adicionarAoInventario(itemId);
-    } catch (error: any) {
-      alert(error.message);
-    }
+    });
   }
 
   async function handleAlterarQuantidade(itemId: string, delta: number) {
-    try {
+    await withLoading(itemId, async () => {
       await alterarQuantidade(itemId, delta);
-    } catch (error: any) {
-      alert(error.message);
-    }
+    });
+  }
+
+  async function handleRemover(itemId: string) {
+    await withLoading(itemId, async () => {
+      await removerDoInventario(itemId);
+    });
+  }
+
+  async function handleAlternarEquipamento(itemId: string) {
+    await withLoading(itemId, async () => {
+      await alternarEquipamento(itemId);
+    });
   }
 
   return (
@@ -137,82 +157,91 @@ export default function Inventario({ personagem: propPersonagem, personagemId, o
             <p className="inventarioVazio">Mochila vazia. Adicione itens pelo catálogo.</p>
           )}
 
-          {inventario.map(({ itemId, quantidade, equipado, dados }) => (
-            <div key={itemId} className={`itemInventario ${equipado ? "itemEquipado" : ""}`}>
-              {/* Imagem */}
-              <div className="itemImagemContainer">
-                <Image
-                  src={dados?.imagem || "/imagens/itens/padrao.png"}
-                  alt={dados?.nome ?? itemId}
-                  width={52}
-                  height={52}
-                  className="itemImagem"
-                />
-              </div>
+          {inventario.map(({ itemId, quantidade, equipado, dados }) => {
+            const isLoading = loadingIds.has(itemId);
 
-              {/* Info */}
-              <div className="itemInfo">
-                <span className="itemNome">{dados?.nome ?? itemId}</span>
-                <span
-                  className="itemRaridade"
-                  style={{ color: COR_RARIDADE[dados?.raridade ?? "Comum"] }}
-                >
-                  {dados?.raridade ?? "—"}
-                </span>
-                <span className="itemPeso">
-                  {dados ? `${(dados.peso * quantidade).toFixed(1)} kg` : ""}
-                </span>
-                {equipado && <span className="badgeEquipado">✦ Equipado</span>}
-              </div>
+            return (
+              <div key={itemId} className={`itemInventario ${equipado ? "itemEquipado" : ""} ${isLoading ? "itemLoading" : ""}`}>
+                {/* Imagem */}
+                <div className="itemImagemContainer">
+                  <Image
+                    src={dados?.imagem || "/imagens/itens/padrao.png"}
+                    alt={dados?.nome ?? itemId}
+                    width={52}
+                    height={52}
+                    className="itemImagem"
+                  />
+                </div>
 
-              {/* Quantidade */}
-              <div className="itemQuantidade">
-                <button
-                  className="btnQtd"
-                  onClick={() => handleAlterarQuantidade(itemId, -1)}
-                  title="Diminuir"
-                >
-                  −
-                </button>
-                <span>{quantidade}</span>
-                <button
-                  className="btnQtd"
-                  onClick={() => handleAlterarQuantidade(itemId, +1)}
-                  title="Aumentar"
-                >
-                  +
-                </button>
-              </div>
-
-              {/* Ações */}
-              <div className="itemAcoes">
-                {dados?.slot && dados.slot !== "" && (
-                  <button
-                    className={`btnItem ${equipado ? "btnDesequipar" : "btnEquipar"}`}
-                    onClick={() => alternarEquipamento(itemId)}
+                {/* Info */}
+                <div className="itemInfo">
+                  <span className="itemNome">{dados?.nome ?? itemId}</span>
+                  <span
+                    className="itemRaridade"
+                    style={{ color: COR_RARIDADE[dados?.raridade ?? "Comum"] }}
                   >
-                    {equipado ? "Desequipar" : "Equipar"}
-                  </button>
-                )}
+                    {dados?.raridade ?? "—"}
+                  </span>
+                  <span className="itemPeso">
+                    {dados ? `${(dados.peso * quantidade).toFixed(1)} kg` : ""}
+                  </span>
+                  {equipado && <span className="badgeEquipado">✦ Equipado</span>}
+                </div>
 
-                {dados?.tipo === "Consumível" && (
+                {/* Quantidade */}
+                <div className="itemQuantidade">
                   <button
-                    className="btnItem btnConsumir"
-                    onClick={() => handleConsumir(itemId, dados)}
+                    className="btnQtd"
+                    onClick={() => handleAlterarQuantidade(itemId, -1)}
+                    disabled={isLoading}
+                    title="Diminuir"
                   >
-                    Consumir
+                    −
                   </button>
-                )}
+                  <span className={isLoading ? "textLoading" : ""}>{quantidade}</span>
+                  <button
+                    className="btnQtd"
+                    onClick={() => handleAlterarQuantidade(itemId, +1)}
+                    disabled={isLoading}
+                    title="Aumentar"
+                  >
+                    +
+                  </button>
+                </div>
 
-                <button
-                  className="btnItem btnRemover"
-                  onClick={() => removerDoInventario(itemId)}
-                >
-                  Remover
-                </button>
+                {/* Ações */}
+                <div className="itemAcoes">
+                  {dados?.slot && dados.slot !== "" && (
+                    <button
+                      className={`btnItem ${equipado ? "btnDesequipar" : "btnEquipar"}`}
+                      onClick={() => handleAlternarEquipamento(itemId)}
+                      disabled={isLoading}
+                    >
+                      {equipado ? "Desequipar" : "Equipar"}
+                    </button>
+                  )}
+
+                  {dados?.tipo === "Consumível" && (
+                    <button
+                      className="btnItem btnConsumir"
+                      onClick={() => handleConsumir(itemId, dados)}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "..." : "Usar"}
+                    </button>
+                  )}
+
+                  <button
+                    className="btnItem btnRemover"
+                    onClick={() => handleRemover(itemId)}
+                    disabled={isLoading}
+                  >
+                    Remover
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -227,38 +256,44 @@ export default function Inventario({ personagem: propPersonagem, personagemId, o
           />
 
           <div className="listaCatalogo">
-            {catalogoFiltrado.map((item) => (
-              <div key={item.id} className="itemCatalogo">
-                <Image
-                  src={item.imagem || "/imagens/itens/padrao.png"}
-                  alt={item.nome}
-                  width={44}
-                  height={44}
-                  className="itemImagem"
-                />
+            {catalogoFiltrado.map((item) => {
+              const itemId = String(item.id);
+              const isLoading = loadingIds.has(itemId);
 
-                <div className="itemInfo">
-                  <span className="itemNome">{item.nome}</span>
-                  <span
-                    className="itemRaridade"
-                    style={{ color: COR_RARIDADE[item.raridade ?? "Comum"] }}
+              return (
+                <div key={item.id} className="itemCatalogo">
+                  <Image
+                    src={item.imagem || "/imagens/itens/padrao.png"}
+                    alt={item.nome}
+                    width={44}
+                    height={44}
+                    className="itemImagem"
+                  />
+
+                  <div className="itemInfo">
+                    <span className="itemNome">{item.nome}</span>
+                    <span
+                      className="itemRaridade"
+                      style={{ color: COR_RARIDADE[item.raridade ?? "Comum"] }}
+                    >
+                      {item.raridade}
+                    </span>
+                    <span className="itemTipo">{item.tipo} · {item.subtipo}</span>
+                    {item.nivelMinimo && item.nivelMinimo > 1 && (
+                      <span className="itemRequisito">Nível {item.nivelMinimo}+</span>
+                    )}
+                  </div>
+
+                  <button
+                    className="btnItem btnAdicionar"
+                    onClick={() => handleAdicionar(itemId)}
+                    disabled={isLoading}
                   >
-                    {item.raridade}
-                  </span>
-                  <span className="itemTipo">{item.tipo} · {item.subtipo}</span>
-                  {item.nivelMinimo && item.nivelMinimo > 1 && (
-                    <span className="itemRequisito">Nível {item.nivelMinimo}+</span>
-                  )}
+                    {isLoading ? "..." : "+ Adicionar"}
+                  </button>
                 </div>
-
-                <button
-                  className="btnItem btnAdicionar"
-                  onClick={() => handleAdicionar(String(item.id))}
-                >
-                  + Adicionar
-                </button>
-              </div>
-            ))}
+              );
+            })}
 
             {catalogoFiltrado.length === 0 && (
               <p className="inventarioVazio">Nenhum item encontrado.</p>

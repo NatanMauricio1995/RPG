@@ -908,5 +908,3 @@ export async function listarHistoricos(maxResults: number = 50) {
     return [];
   }
 }
-
-}
