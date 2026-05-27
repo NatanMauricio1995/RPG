@@ -16,36 +16,24 @@ import { db } from "../firebase/config";
 import npcsData from "../data/campanha/npcs.json";
 import { resolverInventario } from "./itemService";
 
+import type { NPC, Dialogo } from "../types/domain";
+
 export const NPCS_STORAGE_KEY = "npcs_cache";
 const COLECAO = "npcs";
 const colecaoRef = collection(db, COLECAO);
-
-export type NPC = {
-  id: string;
-  nome: string;
-  imagem: string;
-  idade: number;
-  profissao: string;
-  alinhamento: string;
-  personalidade: string;
-  dialogos: string[];
-  inventario: any[];
-  relacionamento: number;
-  padrao?: boolean;
-};
 
 export function criarModeloNPC(): NPC {
   return {
     id: "",
     nome: "",
-    imagem: "/imagens/npcs/ChatGPT Image 18 de mai. de 2026, 18_23_40.png",
-    idade: 30,
-    profissao: "",
-    alinhamento: "Neutro",
-    personalidade: "",
-    dialogos: [""],
-    inventario: [],
-    relacionamento: 0
+    imagem: "/imagens/npcs/padrao.png",
+    descricao: "",
+    faccao: "Neutro",
+    funcao: "",
+    localizacao: "",
+    loja: [],
+    dialogos: [],
+    missoes: []
   };
 }
 
@@ -55,10 +43,9 @@ export function normalizarNPC(npc: any): NPC {
     ...modelo,
     ...npc,
     id: String(npc?.id || ""),
-    idade: Number(npc?.idade || 0),
+    loja: Array.isArray(npc?.loja) ? npc.loja : [],
     dialogos: Array.isArray(npc?.dialogos) ? npc.dialogos : [],
-    inventario: resolverInventario(npc?.inventario || []),
-    relacionamento: Number(npc?.relacionamento || 0)
+    missoes: Array.isArray(npc?.missoes) ? npc.missoes : []
   };
 }
 

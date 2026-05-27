@@ -33,30 +33,38 @@ export default function Inventario({ personagem, onUpdate }: Props) {
     adicionarAoInventario,
     removerDoInventario,
     alterarQuantidade,
+    consumirItem: hookConsumirItem,
     alternarEquipamento,
+    pesoTotal,
+    capacidadeMaxima,
+    porcentagemPeso,
+    corPeso,
   } = useInventario(personagem, onUpdate);
 
-  // ─── Peso total ──────────────────────────────────────────────────────────────
-  const pesoAtual = inventario.reduce((soma, inv) => {
-    const peso = inv.dados?.peso ?? 0;
-    return soma + peso * inv.quantidade;
-  }, 0);
-  const pesoMaximo = (personagem as any).pesoMaximo ?? PESO_MAXIMO_PADRAO;
-  const pesoCheio = pesoAtual >= pesoMaximo;
-
   // ─── Consumir item ────────────────────────────────────────────────────────────
-  async function consumirItem(itemId: string, item: Item | null) {
+  async function handleConsumir(itemId: string, item: Item | null) {
     if (!item) return;
-    // Aplica cura se for consumível com cura
-    if (item.tipo === "Consumível" && item.cura) {
-      const vidaMaxima = (personagem as any).vidaMaxima ?? 10;
-      const novaVida = Math.min(personagem.vidaAtual + (item.cura ?? 0), vidaMaxima);
-      const pAtualizado = { ...personagem, vidaAtual: novaVida };
-      await salvarPersonagem(pAtualizado);
-      onUpdate(pAtualizado);
+    try {
+      // Aplica cura se for consumível com cura
+      if (item.tipo === "Consumível" && (item.cura || item.mana)) {
+        const vidaMaxima = (personagem as any).vidaMaxima ?? 10;
+        const manaMaxima = (personagem as any).manaMaxima ?? 10;
+        
+        let novaVida = personagem.vidaAtual + (item.cura ?? 0);
+        if (novaVida > vidaMaxima) novaVida = vidaMaxima;
+        
+        let novaMana = personagem.manaAtual + (item.mana ?? 0);
+        if (novaMana > manaMaxima) novaMana = manaMaxima;
+
+        const pAtualizado = { ...personagem, vidaAtual: novaVida, manaAtual: novaMana };
+        await salvarPersonagem(pAtualizado);
+        if (onUpdate) onUpdate(pAtualizado);
+      }
+      // Reduz quantidade via hook
+      await hookConsumirItem(itemId, 1);
+    } catch (error: any) {
+      alert(error.message);
     }
-    // Reduz quantidade (remove se chegar a 0)
-    await alterarQuantidade(itemId, -1);
   }
 
   // ─── Catálogo filtrado ────────────────────────────────────────────────────────
@@ -64,20 +72,36 @@ export default function Inventario({ personagem, onUpdate }: Props) {
     item.nome.toLowerCase().includes(filtroCatalogo.toLowerCase())
   );
 
+  async function handleAdicionar(itemId: string) {
+    try {
+      await adicionarAoInventario(itemId);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  }
+
+  async function handleAlterarQuantidade(itemId: string, delta: number) {
+    try {
+      await alterarQuantidade(itemId, delta);
+    } catch (error: any) {
+      alert(error.message);
+    }
+  }
+
   return (
     <div className="inventarioContainer">
       {/* Cabeçalho com peso */}
       <div className="inventarioCabecalho">
         <div className="pesoContainer">
-          <span className={`pesoBarra ${pesoCheio ? "pesoAlto" : ""}`}>
-            ⚖️ {pesoAtual.toFixed(1)} / {pesoMaximo} kg
+          <span className="pesoBarra" style={{ color: corPeso }}>
+            ⚖️ {pesoTotal.toFixed(1)} / {capacidadeMaxima} kg
           </span>
           <div className="pesoProgressoFundo">
             <div
               className="pesoProgressoBarra"
               style={{
-                width: `${Math.min(100, (pesoAtual / pesoMaximo) * 100)}%`,
-                backgroundColor: pesoCheio ? "#f44336" : "var(--ouro)",
+                width: `${Math.min(100, porcentagemPeso)}%`,
+                backgroundColor: corPeso,
               }}
             />
           </div>
@@ -137,7 +161,7 @@ export default function Inventario({ personagem, onUpdate }: Props) {
               <div className="itemQuantidade">
                 <button
                   className="btnQtd"
-                  onClick={() => alterarQuantidade(itemId, -1)}
+                  onClick={() => handleAlterarQuantidade(itemId, -1)}
                   title="Diminuir"
                 >
                   −
@@ -145,7 +169,7 @@ export default function Inventario({ personagem, onUpdate }: Props) {
                 <span>{quantidade}</span>
                 <button
                   className="btnQtd"
-                  onClick={() => alterarQuantidade(itemId, +1)}
+                  onClick={() => handleAlterarQuantidade(itemId, +1)}
                   title="Aumentar"
                 >
                   +
@@ -166,7 +190,7 @@ export default function Inventario({ personagem, onUpdate }: Props) {
                 {dados?.tipo === "Consumível" && (
                   <button
                     className="btnItem btnConsumir"
-                    onClick={() => consumirItem(itemId, dados)}
+                    onClick={() => handleConsumir(itemId, dados)}
                   >
                     Consumir
                   </button>
@@ -221,7 +245,7 @@ export default function Inventario({ personagem, onUpdate }: Props) {
 
                 <button
                   className="btnItem btnAdicionar"
-                  onClick={() => adicionarAoInventario(String(item.id))}
+                  onClick={() => handleAdicionar(String(item.id))}
                 >
                   + Adicionar
                 </button>

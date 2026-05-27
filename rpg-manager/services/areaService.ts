@@ -13,21 +13,39 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-export type TipoArea = "Cidade" | "Vila" | "Floresta" | "Caverna" | "Ruína" | "Templo" | "Reino" | "Outro";
+import type { Area } from "../types/domain";
 
-export type Area = {
-  id: string;
-  nome: string;
-  descricao: string;
-  tipo: TipoArea;
-  imagem?: string;
-  mapa?: string;
-  observacoes?: string;
-};
+export type TipoArea = "Cidade" | "Vila" | "Floresta" | "Caverna" | "Ruína" | "Templo" | "Reino" | "Outro";
 
 const COLECAO = "areas";
 const AREAS_CACHE_KEY = "areas_cache";
 const colecaoRef = collection(db, COLECAO);
+
+export function criarModeloArea(): Area {
+  return {
+    id: "",
+    nome: "",
+    descricao: "",
+    npcs: [],
+    monstros: [],
+    missoes: [],
+    eventos: [],
+    mapa: ""
+  };
+}
+
+export function normalizarArea(area: any): Area {
+  const modelo = criarModeloArea();
+  return {
+    ...modelo,
+    ...area,
+    id: String(area?.id || ""),
+    npcs: Array.isArray(area?.npcs) ? area.npcs : [],
+    monstros: Array.isArray(area?.monstros) ? area.monstros : [],
+    missoes: Array.isArray(area?.missoes) ? area.missoes : [],
+    eventos: Array.isArray(area?.eventos) ? area.eventos : []
+  };
+}
 
 export async function listarAreas(): Promise<Area[]> {
   try {
@@ -39,12 +57,12 @@ export async function listarAreas(): Promise<Area[]> {
       localStorage.setItem(AREAS_CACHE_KEY, JSON.stringify(areas));
     }
     
-    return areas;
+    return areas.map(normalizarArea);
   } catch (error) {
     console.error("Erro ao listar áreas do Firebase, tentando cache:", error);
     if (typeof window !== "undefined") {
       const cache = localStorage.getItem(AREAS_CACHE_KEY);
-      return cache ? JSON.parse(cache) : [];
+      return cache ? JSON.parse(cache).map(normalizarArea) : [];
     }
     return [];
   }

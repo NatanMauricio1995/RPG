@@ -67,28 +67,47 @@ export default function FichaNPC({ npc }: Props) {
       { dialogos.length > 0 && (
         <section className="npcSecao">
           <h2>💬 Diálogos</h2>
-          {dialogos.map((dialogo: any, i: number) => {
-            const id = dialogo.id ?? String(i);
-            const aberto = dialogoAberto === id;
-            return (
-              <div key={id} className="dialogoItem">
-                <button
-                  className="dialogoBtnToggle"
-                  onClick={() => setDialogoAberto(aberto ? null : id)}
-                >
-                  {aberto ? "▼" : "▶"} {dialogo.texto?.slice(0, 60) ?? `Diálogo ${i + 1}`}…
-                </button>
-                {aberto && (
-                  <div className="dialogoConteudo">
-                    <p>{dialogo.texto}</p>
-                    {(dialogo.opcoes ?? []).map((op: any, j: number) => (
-                      <div key={j} className="dialogoOpcao">↳ {op.texto}</div>
-                    ))}
-                  </div>
-                )}
+          <div className="dialogoContainer">
+            {dialogoAberto === null ? (
+              <div className="dialogosLista">
+                {dialogos.map((dialogo: any) => (
+                  <button
+                    key={dialogo.id}
+                    className="btnDialogoRaiz"
+                    onClick={() => setDialogoAberto(dialogo.id)}
+                  >
+                    {dialogo.texto.slice(0, 60)}...
+                  </button>
+                ))}
               </div>
-            );
-          })}
+            ) : (
+              <div className="dialogoAtivo">
+                <p className="textoDialogo">
+                  {dialogos.find(d => d.id === dialogoAberto)?.texto || "..."}
+                </p>
+                <div className="opcoesDialogo">
+                  {(dialogos.find(d => d.id === dialogoAberto)?.opcoes || []).map((op: any, i: number) => (
+                    <button
+                      key={i}
+                      className="btnOpcaoDialogo"
+                      onClick={() => {
+                        if (op.proximoId) {
+                          setDialogoAberto(op.proximoId);
+                        } else {
+                          setDialogoAberto(null);
+                        }
+                      }}
+                    >
+                      {op.texto}
+                    </button>
+                  ))}
+                  <button className="btnSairDialogo" onClick={() => setDialogoAberto(null)}>
+                    Sair da conversa
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </section>
       )}
 

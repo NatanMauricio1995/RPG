@@ -10,7 +10,9 @@ import {
   getDoc,
   setDoc,
   query,
-  limit
+  limit,
+  startAfter,
+  QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 

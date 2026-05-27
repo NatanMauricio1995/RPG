@@ -42,6 +42,7 @@ export type InventarioItem = {
 
 export type Personagem = {
   id: string | number;
+  userId?: string;
   nome: string;
   imagem: string;
   racaId: number | string;
@@ -59,6 +60,7 @@ export type Personagem = {
   atributosBase: Atributos;
   efeitosAtivos?: EfeitoAtivo[];
   habilidadesIds?: string[]; // IDs das habilidades adquiridas
+  capacidadeMaxima?: number;
 };
 
 export type PersonagemCompleto = Personagem & {

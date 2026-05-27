@@ -12,24 +12,45 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
     listarItens().then(setItensCatalogo);
   }, []);
 
+  const calcularPesoAtual = useCallback(
+    (inventario: InventarioItem[]) => {
+      return inventario.reduce((acc, inv) => {
+        const item = itensCatalogo.find((i) => String(i.id) === String(inv.itemId));
+        return acc + (item?.peso || 0) * inv.quantidade;
+      }, 0);
+    },
+    [itensCatalogo]
+  );
+
   const adicionarAoInventario = useCallback(
-    async (itemId: string) => {
+    async (itemId: string, quantidade: number = 1) => {
       if (!personagem) return;
+
+      const item = itensCatalogo.find((i) => String(i.id) === String(itemId));
+      if (!item) return;
 
       const novoInventario = [...(personagem.inventario || [])];
       const index = novoInventario.findIndex((i) => i.itemId === itemId);
 
+      const pesoAdicional = item.peso * quantidade;
+      const pesoAtual = calcularPesoAtual(novoInventario);
+      const capacidadeMaxima = personagem.capacidadeMaxima || 50;
+
+      if (pesoAtual + pesoAdicional > capacidadeMaxima) {
+        throw new Error(`Capacidade máxima excedida! (${(pesoAtual + pesoAdicional).toFixed(1)}kg / ${capacidadeMaxima}kg)`);
+      }
+
       if (index >= 0) {
-        novoInventario[index].quantidade += 1;
+        novoInventario[index].quantidade += quantidade;
       } else {
-        novoInventario.push({ itemId, quantidade: 1, equipado: false });
+        novoInventario.push({ itemId, quantidade, equipado: false });
       }
 
       const personagemAtualizado = { ...personagem, inventario: novoInventario };
       await salvarPersonagem(personagemAtualizado);
       if (onUpdate) onUpdate(personagemAtualizado);
     },
-    [personagem, onUpdate]
+    [personagem, itensCatalogo, calcularPesoAtual, onUpdate]
   );
 
   const removerDoInventario = useCallback(
@@ -57,20 +78,51 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
     async (itemId: string, delta: number) => {
       if (!personagem) return;
 
-      const novoInventario = (personagem.inventario || [])
-        .map((i) => {
-          if (i.itemId === itemId) {
-            return { ...i, quantidade: Math.max(0, i.quantidade + delta) };
-          }
-          return i;
-        })
-        .filter((i) => i.quantidade > 0);
+      const item = itensCatalogo.find((i) => String(i.id) === String(itemId));
+      if (!item) return;
+
+      const novoInventario = [...(personagem.inventario || [])];
+      const index = novoInventario.findIndex((i) => i.itemId === itemId);
+      if (index < 0) return;
+
+      const novaQuantidade = Math.max(0, novoInventario[index].quantidade + delta);
+      
+      if (delta > 0) {
+        const pesoAdicional = item.peso * delta;
+        const pesoAtual = calcularPesoAtual(novoInventario);
+        const capacidadeMaxima = personagem.capacidadeMaxima || 50;
+
+        if (pesoAtual + pesoAdicional > capacidadeMaxima) {
+          throw new Error(`Capacidade máxima excedida! (${(pesoAtual + pesoAdicional).toFixed(1)}kg / ${capacidadeMaxima}kg)`);
+        }
+      }
+
+      if (novaQuantidade === 0) {
+        await removerDoInventario(itemId);
+        return;
+      }
+
+      novoInventario[index].quantidade = novaQuantidade;
 
       const personagemAtualizado = { ...personagem, inventario: novoInventario };
       await salvarPersonagem(personagemAtualizado);
       if (onUpdate) onUpdate(personagemAtualizado);
     },
-    [personagem, onUpdate]
+    [personagem, itensCatalogo, calcularPesoAtual, removerDoInventario, onUpdate]
+  );
+
+  const consumirItem = useCallback(
+    async (itemId: string, quantidade: number = 1) => {
+      if (!personagem) return;
+
+      const itemInv = (personagem.inventario || []).find((i) => i.itemId === itemId);
+      if (!itemInv || itemInv.quantidade < quantidade) {
+        throw new Error("Quantidade insuficiente para consumir.");
+      }
+
+      await alterarQuantidade(itemId, -quantidade);
+    },
+    [personagem, alterarQuantidade]
   );
 
   const alternarEquipamento = useCallback(
@@ -118,12 +170,28 @@ export default function useInventario(personagem: Personagem | null, onUpdate?: 
     dados: itensCatalogo.find(i => String(i.id) === String(inv.itemId)) || null,
   }));
 
+  const pesoTotal = calcularPesoAtual(personagem?.inventario || []);
+  const capacidadeMaxima = personagem?.capacidadeMaxima || 50;
+  const porcentagemPeso = (pesoTotal / capacidadeMaxima) * 100;
+  
+  let corPeso = "var(--cor-sucesso)"; // verde
+  if (porcentagemPeso > 90) {
+    corPeso = "var(--cor-perigo)"; // vermelho
+  } else if (porcentagemPeso > 70) {
+    corPeso = "var(--cor-alerta)"; // amarelo
+  }
+
   return {
     itensCatalogo,
     inventario: inventarioResolvido,
     adicionarAoInventario,
     removerDoInventario,
     alterarQuantidade,
+    consumirItem,
     alternarEquipamento,
+    pesoTotal,
+    capacidadeMaxima,
+    porcentagemPeso,
+    corPeso,
   };
 }

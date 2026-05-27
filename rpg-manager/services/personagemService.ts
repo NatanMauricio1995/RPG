@@ -62,6 +62,7 @@ const colecaoRef = collection(db, COLECAO);
 export function criarModeloPersonagem(): Personagem {
   return {
     id: String(Date.now()),
+    userId: "",
     nome: "",
     imagem: "/imagens/racas/padrao.png",
     racaId: (racas[0] as any)?.id || 1,
@@ -75,6 +76,7 @@ export function criarModeloPersonagem(): Personagem {
     inventario: [],
     equipados: { ...EQUIPADOS_PADRAO },
     atributosBase: { ...ATRIBUTOS_PADRAO },
+    capacidadeMaxima: 50,
   };
 }
 
@@ -83,6 +85,7 @@ export function normalizarPersonagem(personagem: any): Personagem {
     ...criarModeloPersonagem(),
     ...personagem,
     id: String(personagem?.id || Date.now()),
+    userId: personagem?.userId || "",
     inventario: Array.isArray(personagem?.inventario) ? personagem.inventario : [],
     equipados: {
       ...EQUIPADOS_PADRAO,
@@ -92,6 +95,7 @@ export function normalizarPersonagem(personagem: any): Personagem {
       ...ATRIBUTOS_PADRAO,
       ...(personagem?.atributosBase || {}),
     },
+    capacidadeMaxima: Number(personagem?.capacidadeMaxima || 50),
   };
 
   p.inventario = p.inventario.map((item: any) => {
@@ -108,9 +112,12 @@ export function normalizarPersonagem(personagem: any): Personagem {
   return p;
 }
 
-export async function listarPersonagens(): Promise<Personagem[]> {
+export async function listarPersonagens(userId?: string): Promise<Personagem[]> {
   try {
-    const q = query(colecaoRef, limit(50));
+    let q = query(colecaoRef, limit(50));
+    if (userId) {
+      q = query(colecaoRef, where("userId", "==", userId), limit(50));
+    }
     const snapshot = await getDocs(q);
     let personagens = snapshot.docs.map((d) => ({
       ...d.data(),
@@ -168,6 +175,17 @@ export async function buscarPersonagem(id: string | number): Promise<Personagem 
   return null;
 }
 
+export function ouvirPersonagem(id: string | number, callback: (p: Personagem | null) => void) {
+  const idStr = String(id);
+  return onSnapshot(doc(db, COLECAO, idStr), (doc) => {
+    if (doc.exists()) {
+      callback(normalizarPersonagem({ ...doc.data(), id: doc.id }));
+    } else {
+      callback(null);
+    }
+  });
+}
+
 export async function salvarPersonagem(personagem: any) {
   const p = normalizarPersonagem(personagem);
   const idStr = String(p.id);
@@ -183,6 +201,36 @@ export async function salvarPersonagem(personagem: any) {
     return normalizarPersonagem({ ...dados, id: idStr });
   } catch (error) {
     console.error("Erro ao salvar personagem:", error);
+    throw error;
+  }
+}
+
+export async function salvarEquipamento(personagemId: string | number, slot: string, itemId: string | null) {
+  try {
+    const p = await buscarPersonagem(personagemId);
+    if (!p) throw new Error("Personagem não encontrado");
+
+    const novosEquipados = { ...p.equipados, [slot]: itemId };
+    
+    // Atualiza inventário: se itemId for null, o item que estava lá deve ser marcado como desequipado
+    // Se itemId não for null, ele deve ser marcado como equipado
+    const idAnterior = (p.equipados as any)[slot];
+    const novoInventario = (p.inventario || []).map((inv) => {
+      if (itemId && String(inv.itemId) === String(itemId)) return { ...inv, equipado: true };
+      if (idAnterior && String(inv.itemId) === String(idAnterior)) {
+        // Só desmarca se não estiver em outro slot
+        const aindaEquipado = Object.entries(novosEquipados).some(([s, id]) => s !== slot && id === idAnterior);
+        if (!aindaEquipado) return { ...inv, equipado: false };
+      }
+      return inv;
+    });
+
+    await atualizarPersonagem(personagemId, {
+      equipados: novosEquipados,
+      inventario: novoInventario
+    });
+  } catch (error) {
+    console.error("Erro ao salvar equipamento:", error);
     throw error;
   }
 }

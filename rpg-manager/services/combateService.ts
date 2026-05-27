@@ -58,7 +58,31 @@ drop?: {
   ouro?: number;
   itens?: string[];
 };
+itensConsumidos?: { itemId: string; quantidade: number }[];
 };
+
+// ... (rest of code)
+
+export function consumirItemCombate(
+  estado: EstadoCombate,
+  combatenteId: string,
+  itemId: string,
+  quantidade: number = 1
+): EstadoCombate {
+  const combatente = buscarCombatente(estado, combatenteId);
+  if (!combatente || !combatente.vivo) return estado;
+
+  return atualizarCombatente(estado, combatenteId, (c) => {
+    const consumidos = [...(c.itensConsumidos || [])];
+    const index = consumidos.findIndex((i) => i.itemId === itemId);
+    if (index >= 0) {
+      consumidos[index].quantidade += quantidade;
+    } else {
+      consumidos.push({ itemId, quantidade });
+    }
+    return { ...c, itensConsumidos: consumidos };
+  });
+}
 
 export type EntradaLog={
 id:number;

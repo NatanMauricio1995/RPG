@@ -118,12 +118,18 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
         }
 
         if (opt.mortes && !combatente.vivo) {
-          // Marca personagem como morto — deixa vida em 0 mesmo que opt.vida=false
           pAtualizado.vidaAtual = 0;
         }
 
-        // TODO: opt.inventario — rastrear itens consumidos durante combate
-        // pAtualizado.inventario = combatente.inventarioPos ?? pOriginal.inventario;
+        if (opt.inventario && combatente.itensConsumidos && combatente.itensConsumidos.length > 0) {
+          pAtualizado.inventario = (pOriginal.inventario || []).map(inv => {
+            const consumido = combatente.itensConsumidos?.find(c => c.itemId === inv.itemId);
+            if (consumido) {
+              return { ...inv, quantidade: Math.max(0, inv.quantidade - consumido.quantidade) };
+            }
+            return inv;
+          }).filter(inv => inv.quantidade > 0);
+        }
 
         await salvarPersonagem(pAtualizado);
       }
@@ -238,6 +244,16 @@ export default function ModalResultadoCombate({ estado, onClose }: Props) {
                         <Diff label="XP"   antes={original.xpAtual}  depois={original.xpAtual + recompensas.xp} />
                         <Diff label="Ouro" antes={original.ouro ?? 0} depois={(original.ouro ?? 0) + recompensas.ouro} />
                       </>
+                    )}
+                    {c.itensConsumidos && c.itensConsumidos.length > 0 && (
+                      <div className="itensConsumidos">
+                        <span>Itens consumidos:</span>
+                        <ul>
+                          {c.itensConsumidos.map((item) => (
+                            <li key={item.itemId}>ID: {item.itemId} x{item.quantidade}</li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
                 )}
