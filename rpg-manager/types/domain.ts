@@ -373,13 +373,22 @@ export type Missao = {
   nivelRecomendado?: number;
 };
 
+export type EventoArea = {
+  nome: string;
+  probabilidade: number; // 0 a 100
+  descricao: string;
+};
+
+export type ClimaArea = 'ensolarado' | 'nublado' | 'chuva' | 'tempestade' | 'neve';
+
 export type Area = {
   id: string;
   nome: string;
   descricao: string;
-  npcs: string[]; // IDs de NPCs na área
-  monstros: string[]; // IDs de monstros que podem aparecer
-  eventos?: string[];
-  missoes: string[]; // IDs de missões relacionadas
-  mapa?: string; // URL da imagem do mapa
+  npcsIds: string[];
+  monstrosIds: string[];
+  missoesIds: string[];
+  eventos: EventoArea[];
+  clima: ClimaArea;
+  mapa?: string;
 };

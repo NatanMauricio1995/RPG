@@ -13,9 +13,10 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-import type { Area } from "../types/domain";
-
-export type TipoArea = "Cidade" | "Vila" | "Floresta" | "Caverna" | "Ruína" | "Templo" | "Reino" | "Outro";
+import type { Area, NPC, Monstro, Missao, Personagem, EventoArea } from "../types/domain";
+import { buscarNPC } from "./npcService";
+import { listarMonstros } from "./combateService";
+import { listarMissoes } from "./missaoService";
 
 const COLECAO = "areas";
 const AREAS_CACHE_KEY = "areas_cache";
@@ -26,10 +27,11 @@ export function criarModeloArea(): Area {
     id: "",
     nome: "",
     descricao: "",
-    npcs: [],
-    monstros: [],
-    missoes: [],
+    npcsIds: [],
+    monstrosIds: [],
+    missoesIds: [],
     eventos: [],
+    clima: "ensolarado",
     mapa: ""
   };
 }
@@ -40,10 +42,11 @@ export function normalizarArea(area: any): Area {
     ...modelo,
     ...area,
     id: String(area?.id || ""),
-    npcs: Array.isArray(area?.npcs) ? area.npcs : [],
-    monstros: Array.isArray(area?.monstros) ? area.monstros : [],
-    missoes: Array.isArray(area?.missoes) ? area.missoes : [],
-    eventos: Array.isArray(area?.eventos) ? area.eventos : []
+    npcsIds: Array.isArray(area?.npcsIds) ? area.npcsIds : (Array.isArray(area?.npcs) ? area.npcs : []),
+    monstrosIds: Array.isArray(area?.monstrosIds) ? area.monstrosIds : (Array.isArray(area?.monstros) ? area.monstros : []),
+    missoesIds: Array.isArray(area?.missoesIds) ? area.missoesIds : (Array.isArray(area?.missoes) ? area.missoes : []),
+    eventos: Array.isArray(area?.eventos) ? area.eventos : [],
+    clima: area?.clima || "ensolarado"
   };
 }
 
@@ -68,20 +71,64 @@ export async function listarAreas(): Promise<Area[]> {
   }
 }
 
-export async function sortearInimigosArea(areaId: string): Promise<string[]> {
+/**
+ * Retorna a lista de NPCs presentes na área.
+ */
+export async function listarNpcsDaArea(areaId: string): Promise<NPC[]> {
   const area = await buscarArea(areaId);
-  if (!area || !area.monstros || area.monstros.length === 0) return [];
+  if (!area || !area.npcsIds.length) return [];
 
-  // Sorteia de 1 a 3 tipos de monstros da lista da área
-  const numTipos = Math.floor(Math.random() * 3) + 1;
-  const sorteados: string[] = [];
-  
-  for (let i = 0; i < numTipos; i++) {
-    const randomIdx = Math.floor(Math.random() * area.monstros.length);
-    sorteados.push(area.monstros[randomIdx]);
+  const npcs: NPC[] = [];
+  for (const id of area.npcsIds) {
+    const npc = await buscarNPC(id);
+    if (npc) npcs.push(npc);
+  }
+  return npcs;
+}
+
+/**
+ * Retorna a lista de monstros que podem aparecer na área.
+ */
+export async function listarMonstrosDaArea(areaId: string): Promise<Monstro[]> {
+  const area = await buscarArea(areaId);
+  if (!area || !area.monstrosIds.length) return [];
+
+  const todosMonstros = await listarMonstros();
+  return todosMonstros.filter((m: any) => area.monstrosIds.includes(String(m.id)));
+}
+
+/**
+ * Sorteia um evento da área baseado em sua probabilidade (0-100).
+ */
+export function sortearEvento(area: Area): EventoArea | null {
+  if (!area.eventos || area.eventos.length === 0) return null;
+
+  const sorteio = Math.random() * 100;
+  let acumulado = 0;
+
+  for (const evento of area.eventos) {
+    acumulado += evento.probabilidade;
+    if (sorteio <= acumulado) {
+      return evento;
+    }
   }
 
-  return sorteados;
+  return null;
+}
+
+/**
+ * Obtém as missões disponíveis na área que o personagem pode aceitar.
+ */
+export async function obterMissoesDisponiveis(areaId: string, personagem: Personagem): Promise<Missao[]> {
+  const area = await buscarArea(areaId);
+  if (!area || !area.missoesIds.length) return [];
+
+  const todasMissoes = await listarMissoes();
+  return todasMissoes.filter(m => 
+    area.missoesIds.includes(m.id) && 
+    m.status === "disponivel" &&
+    (!m.nivelRecomendado || m.nivelRecomendado <= personagem.nivel)
+  );
 }
 
 export async function salvarArea(area: Partial<Area>) {
